@@ -74,8 +74,6 @@ class PyBulletSceneObject(PyBulletObject):
         # pybullet.changeDynamics(bodyUniqueId=self.ID)
         raise NotImplementedError("")
 
-
-
 class PyBulletRobot(PyBulletObject):
 
     def __init__(self, urdf_file_name, end_effector_name, base_position, use_fixed_base):
