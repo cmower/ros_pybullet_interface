@@ -52,13 +52,13 @@ def closePyBullet():
 
 class PyBulletObject:
 
-    def load(self, urdf_file_name, base_position, use_fixed_base=True):
+    def loadFromURDF(self, urdf_file_name, base_position, use_fixed_base):
         self.ID = pybullet.loadURDF(urdf_file_name, basePosition=base_position, useFixedBase=use_fixed_base)
 
 class PyBulletRobot(PyBulletObject):
 
-    def __init__(self, urdf_file_name, end_effector_name, base_position, use_fixed_base=True):
-        self.load(urdf_file_name, base_position, use_fixed_base)
+    def __init__(self, urdf_file_name, end_effector_name, base_position, use_fixed_base):
+        self.loadFromURDF(urdf_file_name, base_position, use_fixed_base)
         self.joint_id = []
         self.joint_name = []
         for i in range(pybullet.getNumJoints(self.ID)):
