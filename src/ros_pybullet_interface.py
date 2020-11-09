@@ -55,6 +55,27 @@ class PyBulletObject:
     def loadFromURDF(self, urdf_file_name, base_position, use_fixed_base):
         self.ID = pybullet.loadURDF(urdf_file_name, basePosition=base_position, useFixedBase=use_fixed_base)
 
+class PyBulletSceneObject(PyBulletObject):
+
+    def __init__(self, file_name, config):
+        if file_name.endswith('.urdf'):
+            self.loadFromURDF(file_name, config['base_position'], config['use_fixed_base'])
+        elif file_name.endswith('.obj'):
+            self.loadFromOBJ(file_name, config)
+        self.changeDynamics(config)
+
+    def loadFromOBJ(self, file_name, config):
+        # pybullet.createVisualShape()
+        # pybullet.createCollisionShape()
+        # pybullet.createMultiBody()
+        raise NotImplementedError("")
+
+    def changeDynamics(self, config):
+        # pybullet.changeDynamics(bodyUniqueId=self.ID)
+        raise NotImplementedError("")
+
+
+
 class PyBulletRobot(PyBulletObject):
 
     def __init__(self, urdf_file_name, end_effector_name, base_position, use_fixed_base):
