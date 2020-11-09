@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model
+  href="http://download.ros.org/schema/package_format3.xsd"
+  schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ros_pybullet_interface</name>
+  <version>0.0.0</version>
+  <description>The ros_pybullet_interface package</description>
+
+  <maintainer email="chris.mower@ed.ac.uk">Christopher E. Mower</maintainer>
+  <license>BSD</license>
+  <url type="website">http://wiki.ros.org/ros_pybullet_interface</url>
+  <author email="chris.mower@ed.ac.uk">Christopher E. Mower</author>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+</package>
