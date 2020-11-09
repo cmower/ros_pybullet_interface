@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import sys
+import math
+import time
 
 import rospy
-import math
 from sensor_msgs.msg import JointState
 
 NDOF = 7
@@ -17,6 +18,7 @@ class Test:
         self.traj_index = 0
         self.joint_traj = [math.sin(0.5*2.0*math.pi*float(i)/100.0) for i in range(200)]
         self.pub = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=10)
+        time.sleep(2.0) # wait for initialisation to complete
 
     def updateJointIndex(self):
         self.joint_index += self.d
