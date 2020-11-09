@@ -25,7 +25,8 @@ class Test:
         if self.joint_index == NDOF:
             self.joint_index -= 2
             self.d = -1
-        if self.joint_index == 0:
+        if self.joint_index == -1:
+            self.joint_index = 0
             self.d = 1
 
     def updateTrajIndex(self):
