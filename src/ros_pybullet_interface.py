@@ -32,11 +32,11 @@ def loadYAMLConfig(file_name):
 
 def initPyBullet(time_step):
     pybullet.connect(pybullet.GUI)
+    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.resetSimulation()
     pybullet.setTimeStep(time_step)
 
 def setupPyBulletCamera(distance, yaw, pitch, target_position):
-    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.resetDebugVisualizerCamera(
         cameraDistance=distance,
         cameraYaw=yaw,
