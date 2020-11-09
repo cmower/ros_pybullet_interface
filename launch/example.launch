@@ -12,4 +12,11 @@
         value="/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/camera.yaml"
         type="str"/>
   </node>
+
+  <node
+      name="test_ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="test_ros_pybullet_interface.py"
+      output="screen"/>
+
 </launch>
