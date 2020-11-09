@@ -4,5 +4,5 @@
 
 distance: 2.0
 yaw: 0.0
-pitch: 0.0
+pitch: -40.0
 target_position: [0, 0, 0]
