@@ -1,0 +1,9 @@
+#
+# PyBullet KUKA configuration file
+#
+
+urdf: "/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/robots/kuka_lwr_force/kuka.urdf"
+end_effector: "end_effector_sponge"
+use_fixed_base: True
+base_position: [0.0, 0.0, 0.0]
+init_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
