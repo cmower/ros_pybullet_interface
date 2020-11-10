@@ -3,7 +3,7 @@ import pybullet
 import rospy
 import yaml
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
 
 # ------------------------------------------------------
 #
@@ -153,7 +153,7 @@ class ROSPyBulletInterface:
         self.setupPyBulletCamera(camera_config_file_name)
 
         # Setup ros publishers
-        self.end_effector_state_publisher = rospy.Publisher(CURRENT_END_EFFECTOR_TOPIC, Pose, queue_size=10)
+        self.end_effector_state_publisher = rospy.Publisher(CURRENT_END_EFFECTOR_TOPIC, PoseStamped, queue_size=10)
         self.joint_state_publisher = rospy.Publisher(CURRENT_JOINT_STATE_TOPIC, JointState, queue_size=10)
 
         # Setup ros subscriber
@@ -195,14 +195,14 @@ class ROSPyBulletInterface:
         self.target_joint_position = msg.position
 
     def publishPyBulletJointStateToROS(self, event):
-        self.joint_state_publisher.publish(
-            JointState(
-                name = self.robot.getJointName(),
-                position = self.robot.getJointPosition(),
-                velocity = self.robot.getJointVelocity(),
-                effort = self.robot.getJointMotorTorque(),
-            )
+        msg = JointState(
+            name = self.robot.getJointName(),
+            position = self.robot.getJointPosition(),
+            velocity = self.robot.getJointVelocity(),
+            effort = self.robot.getJointMotorTorque(),
         )
+        msg.header.stamp = rospy.Time.now()
+        self.joint_state_publisher.publish(msg)
 
     def publishPyBulletEndEffectorPoseToROS(self, event):
 
@@ -211,14 +211,15 @@ class ROSPyBulletInterface:
         orientation = self.robot.getEndEffectorOrientation()
 
         # Pack pose msg
-        msg = Pose()
-        msg.position.x = position[0]
-        msg.position.y = position[1]
-        msg.position.z = position[2]
-        msg.orientation.x = orientation[0]
-        msg.orientation.y = orientation[1]
-        msg.orientation.z = orientation[2]
-        msg.orientation.w = orientation[3] # NOTE: the ordering here may be wrong
+        msg = PoseStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.pose.position.x = position[0]
+        msg.pose.position.y = position[1]
+        msg.pose.position.z = position[2]
+        msg.pose.orientation.x = orientation[0]
+        msg.pose.orientation.y = orientation[1]
+        msg.pose.orientation.z = orientation[2]
+        msg.pose.orientation.w = orientation[3] # NOTE: the ordering here may be wrong
 
         # Publish msg
         self.end_effector_state_publisher.publish(msg)
