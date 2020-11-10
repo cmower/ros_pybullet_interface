@@ -1,16 +1,21 @@
 <launch>
+
   <node
       name="ros_pybullet_interface"
       pkg="ros_pybullet_interface"
       type="ros_pybullet_interface.py"
       output="screen">
+      
     <param
-        name="robot_config" value="/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/kuka.yaml"
+        name="robot_config"
+        value="/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/kuka.yaml"
         type="str"/>
+
     <param
         name="camera_config"
         value="/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/camera.yaml"
         type="str"/>
+
   </node>
 
   <node
