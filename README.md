@@ -17,7 +17,7 @@ Joint states (`sensor_msgs/JointState`) from PyBullet are streamed to
     /ros_pybullet_interface/joint_state/current
 ```
 
-End-effector poses (`geometry_msgs/Pose`) from PyBullet are streamed to
+End-effector poses (`geometry_msgs/PoseStamped`) from PyBullet are streamed to
 ```
     /ros_pybullet_interface/end_effector/current
 ```
