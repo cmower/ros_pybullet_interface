@@ -5,7 +5,7 @@ Install:
 1. `$ git clone git@github.com:cmower/ros_pybullet_interface.git`
 1. `$ cd ros_pybullet_interface`
 1. `$ rosdep update ; rosdep install --from-paths ./ -iry`
-1. Build workspace run test, `$ roslaunch ros_pybullet_interface example.launch`
+1. Build workspace run test, `$ roslaunch ros_pybullet_interface example.launch` (*note*, you'll need to modify the `urdf` attribute in `configs/kuka.yaml`)
 
 Stream joint states (`sensor_msgs/JointState`) to
 ```
