@@ -95,13 +95,13 @@ class ROSPyBulletInterface:
             config['target_position']
         )
 
-    def setupPyBulletRobot(self, file_name):
+    def setupPyBulletRobot(self, cur_dir, file_name):
 
         # Load robot configuration
-        config = loadYAMLConfig(file_name)
+        config = loadYAMLConfig(cur_dir + file_name)
 
         # Setup robot
-        self.robot = pybullet_interface.PyBulletRobot(config['urdf_file_name'])
+        self.robot = pybullet_interface.PyBulletRobot(cur_dir + config['urdf_file_name'])
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
             config['base_orientation']
