@@ -2,24 +2,28 @@
 # PyBullet KUKA configuration file
 #
 
-urdf_file_name: "/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/robots/kuka_lwr_force/kuka.urdf"
+urdf_file_name: "/robots/kuka_lwr_force/kuka.urdf"
+end_effector: "end_effector_sponge"
 use_fixed_base: True
 base_position: [0.0, 0.0, 0.0]
-base_orientation: [0.0, 0.0, 0.0, 1.0]
-init_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# base_orientation
+base_orient_mat: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+# base_orient_mat: [[0.0, 0.0, -1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]] # rotate around Y 90
+# base_orient_mat: [[1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]]  # rotate around X 90
+init_position: [0.0, 0.5, 0.3, -0.5, 0.2, 0.8, 0.0]
 
 sensors:
 
-  # 
+  #
   # You can have multiple sensors on the robot, each attribute label should be
   # specified as follows
-  # 
+  #
   #     SENSOR_TYPE__LABEL
   #
   # where SENSOR_TYPE is one of the following
-  # 
+  #
   #  - joint_force_torque_sensor
-  #  
+  #
   # and LABEL is some unique label. Each sensor type requires certain arguments
   # to be set, see below.
   #
