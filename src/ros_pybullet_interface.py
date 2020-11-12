@@ -57,6 +57,11 @@ class ROSPyBulletInterface:
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
 
+        # Name of node
+        self.name = rospy.get_name()
+        # Initialization message
+        rospy.loginfo("%s: Initializing class", self.name)
+
         # get an instance of RosPack with the default search paths
         rospack = rospkg.RosPack()
 
@@ -82,10 +87,10 @@ class ROSPyBulletInterface:
         # Main pybullet update
         rospy.Timer(self.dur, self.updatePyBullet)
 
-    def setupPyBulletCamera(self, file_name):
+    def setupPyBulletCamera(self, cur_dir, file_name):
 
         # Load camera config
-        config = loadYAMLConfig(file_name)
+        config = loadYAMLConfig(cur_dir + file_name)
 
         # Extract data from configuration
         pybullet_interface.setupPyBulletCamera(
@@ -148,10 +153,10 @@ class ROSPyBulletInterface:
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
 
-    def setupPyBulletCollisionObject(self, file_name):
+    def setupPyBulletCollisionObject(self, cur_dir, file_name):
 
         # Load config
-        config = loadYAMLConfig(file_name)
+        config = loadYAMLConfig(cur_dir + file_name)
 
         # Setup collision object
         obj = pybullet_interface.PyBulletCollisionObject(
@@ -286,7 +291,10 @@ class ROSPyBulletInterface:
 # ------------------------------------------------------
 
 if __name__=='__main__':
-    rospy.init_node('ros_pybullet_interface', anonymous=True)
-    ROSPyBulletInterface()
-    rospy.on_shutdown(pybullet_interface.closePyBullet)
-    rospy.spin()
+    try:
+        rospy.init_node('ros_pybullet_interface', anonymous=True)
+        ROSPyBulletInterface()
+        rospy.on_shutdown(pybullet_interface.closePyBullet)
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
