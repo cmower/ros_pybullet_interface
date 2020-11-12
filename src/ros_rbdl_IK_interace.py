@@ -10,6 +10,18 @@ from utils import loadYAMLConfig
 # ROS message types
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
+<<<<<<< HEAD
+=======
+# from pyquaternion import Quaternion
+# ## from std_msgs.msg import Float64
+# from geometry_msgs.msg import WrenchStamped
+# from std_msgs.msg import Float64MultiArray
+# from ipab_lwr_msgs.msg import FriState
+# from ipab_lwr_msgs.msg import FriCommandCartesianStiffness
+# from ipab_lwr_msgs.msg import FriCommandJointPosition
+# from ipab_lwr_msgs.msg import FriCommandMode
+
+>>>>>>> Mid-point commit for IK with rbdl
 
 # ------------------------------------------------------
 #
