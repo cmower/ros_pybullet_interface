@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 
@@ -6,6 +6,7 @@ import numpy
 import rospkg
 import rospy
 import tf2_ros
+from utils import loadYAMLConfig
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped, WrenchStamped
 
@@ -19,6 +20,7 @@ sys.path.append(
 import pybullet_interface
 from utils import *
 
+
 # ------------------------------------------------------
 #
 # Constants
@@ -29,6 +31,7 @@ DT = 1.0/float(FREQ)
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
+# CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # publishes end-effector poses on this topic
 
 # ------------------------------------------------------
 #
@@ -49,18 +52,32 @@ class ROSPyBulletInterface:
         self.dynamic_collision_objects = []
         self.static_collision_objects = []
 
+        # Name of node
+        self.name = rospy.get_name()
+        # Initialization message
+        rospy.loginfo("%s: Initializing class", self.name)
+
+        # get an instance of RosPack with the default search paths
+        rospack = rospkg.RosPack()
+
+        # get the path to this catkin ws
+        current_dir = rospack.get_path('ros_pybullet_interface')
+
         # Get ros parameters
-        robot_config_file_name = rospy.get_param('~robot_config')
-        camera_config_file_name = rospy.get_param('~camera_config')
-        collision_object_file_names = rospy.get_param('~collision_object_config_file_names', [])
+        robot_config_file_name = current_dir + rospy.get_param('~robot_config')
+        camera_config_file_name = current_dir + rospy.get_param('~camera_config')
+        collision_object_file_names = current_dir + rospy.get_param('~collision_object_config_file_names', [])
 
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
+
+        # Initialise pybullet
         pybullet_interface.initPyBullet(DT)
-        self.setupPyBulletCamera(camera_config_file_name)
-        self.setupPyBulletRobot(robot_config_file_name)
+        self.setupPyBulletCamera(current_dir, camera_config_file_name)
+        self.setupPyBulletRobot(current_dir, robot_config_file_name)
+
         for file_name in collision_object_file_names:
-            self.setupPyBulletCollisionObject(file_name)
+            self.setupPyBulletCollisionObject(current_dir, file_name)
 
         # Main pybullet update
         rospy.Timer(self.dur, self.updatePyBullet)
