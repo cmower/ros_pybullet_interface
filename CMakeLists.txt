@@ -4,6 +4,8 @@ project(ros_pybullet_interface)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
+  tf2
+  tf2_ros
   )
 
 catkin_package()
