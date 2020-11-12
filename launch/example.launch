@@ -9,12 +9,12 @@
 
     <param
         name="robot_config"
-        value="/home/theo/software/pybullet/pybullet-ROS-ws/src/ros_pybullet_interface/configs/kuka.yaml"
+        value="/configs/kuka.yaml"
         type="str"/>
 
     <param
         name="camera_config"
-        value="/home/theo/software/pybullet/pybullet-ROS-ws/src/ros_pybullet_interface/configs/camera.yaml"
+        value="/configs/camera.yaml"
         type="str"/>
 
     <rosparam param="collision_object_config_file_names">
