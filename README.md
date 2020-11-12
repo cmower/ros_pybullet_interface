@@ -17,7 +17,4 @@ Joint states (`sensor_msgs/JointState`) from PyBullet are streamed to
     /ros_pybullet_interface/joint_state/current
 ```
 
-End-effector poses (`geometry_msgs/PoseStamped`) from PyBullet are streamed to
-```
-    /ros_pybullet_interface/end_effector/current
-```
+The end-effector transform in the world coordinate system is broadcast as a `tf` using the `tf2` package.

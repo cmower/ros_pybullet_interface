@@ -2,8 +2,9 @@
 import pybullet
 import rospy
 import yaml
+import tf2_ros
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import TransformStamped
 
 # ------------------------------------------------------
 #
@@ -13,7 +14,8 @@ from geometry_msgs.msg import PoseStamped
 FREQ = 100 # PyBullet sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
-CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # publishes end-effector poses on this topic
+ROBOT_BASE_FRAME_ID = 'ros_pybullet_interface/world'
+END_EFFECTOR_FRAME_ID = 'ros_pybullet_interface/end_effector'
 
 # ------------------------------------------------------
 #
@@ -152,8 +154,8 @@ class ROSPyBulletInterface:
         self.setupPyBulletRobot(robot_config_file_name)
         self.setupPyBulletCamera(camera_config_file_name)
 
-        # Setup ros publishers
-        self.end_effector_state_publisher = rospy.Publisher(CURRENT_END_EFFECTOR_TOPIC, PoseStamped, queue_size=10)
+        # Setup ros publishers/tf broadcasters
+        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
         self.joint_state_publisher = rospy.Publisher(CURRENT_JOINT_STATE_TOPIC, JointState, queue_size=10)
 
         # Setup ros subscriber
@@ -211,18 +213,20 @@ class ROSPyBulletInterface:
         orientation = self.robot.getEndEffectorOrientation()
 
         # Pack pose msg
-        msg = PoseStamped()
+        msg = TransformStamped()
         msg.header.stamp = rospy.Time.now()
-        msg.pose.position.x = position[0]
-        msg.pose.position.y = position[1]
-        msg.pose.position.z = position[2]
-        msg.pose.orientation.x = orientation[0]
-        msg.pose.orientation.y = orientation[1]
-        msg.pose.orientation.z = orientation[2]
-        msg.pose.orientation.w = orientation[3] # NOTE: the ordering here may be wrong
+        msg.header.frame_id = ROBOT_BASE_FRAME_ID
+        msg.child_frame_id = END_EFFECTOR_FRAME_ID
+        msg.transform.translation.x = position[0]
+        msg.transform.translation.y = position[1]
+        msg.transform.translation.z = position[2]
+        msg.transform.rotation.x = orientation[0]
+        msg.transform.rotation.y = orientation[1]
+        msg.transform.rotation.z = orientation[2]
+        msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
 
-        # Publish msg
-        self.end_effector_state_publisher.publish(msg)
+        # Broadcast tf
+        self.tfBroadcaster.sendTransform(msg)
 
     def updatePyBullet(self, event):
         self.robot.commandJointPosition(self.target_joint_position)

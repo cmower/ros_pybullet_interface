@@ -13,6 +13,8 @@
   <author email="chris.mower@ed.ac.uk">Christopher E. Mower</author>
   <buildtool_depend>catkin</buildtool_depend>
   <depend>rospy</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
   <depend>sensor_msgs</depend>
   <depend>python-yaml</depend>
 </package>
