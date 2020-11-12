@@ -1,0 +1,24 @@
+<launch>
+
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="/configs/kuka.yaml"
+        type="str"/>
+
+  </node>
+
+  <!-- Testing node (publisher) -->
+  <!-- <node
+      name="test_ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="test_ros_pybullet_interface.py"
+      output="screen"/> -->
+
+</launch>
