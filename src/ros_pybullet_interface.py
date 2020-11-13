@@ -4,7 +4,7 @@ import rospy
 import yaml
 import tf2_ros
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 # ------------------------------------------------------
 #
@@ -14,8 +14,7 @@ from geometry_msgs.msg import TransformStamped
 FREQ = 100 # PyBullet sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
-ROBOT_BASE_FRAME_ID = 'ros_pybullet_interface/world'
-END_EFFECTOR_FRAME_ID = 'ros_pybullet_interface/end_effector'
+WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 
 # ------------------------------------------------------
 #
@@ -78,18 +77,24 @@ class PyBulletSceneObject(PyBulletObject):
 
 class PyBulletRobot(PyBulletObject):
 
-    def __init__(self, urdf_file_name, end_effector_name, base_position, use_fixed_base):
+    sensor_type_to_index_mapping = {
+        'joint_force_torque': 2
+    }
+
+    def __init__(self, urdf_file_name, base_position, use_fixed_base):
         self.loadFromURDF(urdf_file_name, base_position, use_fixed_base)
         self.joint_id = []
         self.joint_name = []
-        for i in range(pybullet.getNumJoints(self.ID)):
+        self.num_joints = pybullet.getNumJoints(self.ID)
+        self.link_names = []
+        for i in range(self.num_joints):
             info = pybullet.getJointInfo(self.ID, i)
+            self.link_names.append(info[12].decode('utf-8'))
             if info[2] in {pybullet.JOINT_REVOLUTE, pybullet.JOINT_PRISMATIC}:
                 self.joint_id.append(info[0])
                 self.joint_name.append(info[1].decode("utf-8"))
-            if info[12].decode("utf-8")  == end_effector_name:
-                self.end_effector_id = info[0]
         self.ndof = len(self.joint_id)
+        self.sensors = []
 
     def resetJointPosition(self, position):
         for i in range(self.ndof):
@@ -107,21 +112,16 @@ class PyBulletRobot(PyBulletObject):
     def getJointMotorTorque(self):
         return [joint_state[3] for joint_state in pybullet.getJointStates(self.ID, self.joint_id)]
 
-    def getEndEffectorPosition(self):
-        return pybullet.getLinkState(
-            self.ID,
-            self.end_effector_id,
-            computeLinkVelocity = 1,
-            computeForwardKinematics = 1
-        )[4]
-
-    def getEndEffectorOrientation(self):
-        return pybullet.getLinkState(
-            self.ID,
-            self.end_effector_id,
-            computeLinkVelocity = 1,
-            computeForwardKinematics = 1
-        )[5]
+    def getLinkStates(self):
+        states = [None]*self.num_joints
+        for i in range(self.num_joints):
+            state = pybullet.getLinkState(self.ID, i, computeLinkVelocity = 0, computeForwardKinematics = 1)
+            states[i] = {
+                'label': self.link_names[i],
+                'position': state[4],
+                'orientation': state[5],
+            }
+        return states
 
     def commandJointPosition(self, target_position):
         pybullet.setJointMotorControlArray(
@@ -130,6 +130,16 @@ class PyBulletRobot(PyBulletObject):
             pybullet.POSITION_CONTROL,
             targetPositions = target_position,
         )
+
+    def setupJointForceTorqueSensor(self, label, joint_index):
+        pybullet.enableJointForceTorqueSensor(self.ID, joint_index, enableSensor=True)
+        self.sensors.append({'type': 'joint_force_torque', 'label': label, 'joint_index': joint_index})
+
+    def getSensorReading(self, label):
+        for sensor in self.sensors:
+            if sensor['label']==label:
+                sensor_idx = self.sensor_type_to_index_mapping[sensor['type']]
+                return pybullet.getJointState(self.ID, sensor['joint_index'])[sensor_idx]
 
 # ------------------------------------------------------
 #
@@ -142,6 +152,11 @@ class ROSPyBulletInterface:
 
         # Setup constants
         self.dt = 1.0/float(FREQ)
+        self.dur = rospy.Duration(self.dt)
+        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
+
+        # Setup variables
+        self.sensors = []
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
@@ -155,30 +170,57 @@ class ROSPyBulletInterface:
         self.setupPyBulletCamera(camera_config_file_name)
 
         # Setup ros publishers/tf broadcasters
-        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
         self.joint_state_publisher = rospy.Publisher(CURRENT_JOINT_STATE_TOPIC, JointState, queue_size=10)
 
         # Setup ros subscriber
         rospy.Subscriber(TARGET_JOINT_STATE_TOPIC, JointState, self.readTargetJointStateFromROS)
+
+        # Main pybullet update
+        rospy.Timer(self.dur, self.updatePyBullet)
 
     def setupPyBulletRobot(self, config_file_name):
 
         # Load robot configuration
         config = loadYAMLConfig(config_file_name)
 
-        # Extract data from configuration
+        # Extract required data from configuration
         urdf_file_name = config['urdf']
-        end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
         target_joint_position = config['init_position']
 
         # Create pybullet robot instance
-        self.robot = PyBulletRobot(urdf_file_name, end_effector_name, base_position, use_fixed_base)
+        self.robot = PyBulletRobot(urdf_file_name, base_position, use_fixed_base)
 
         # Reset joint state
         self.robot.resetJointPosition(target_joint_position)
         self.target_joint_position = target_joint_position
+
+        # Setup ros timers
+        rospy.Timer(self.dur, self.publishPyBulletJointStateToROS)
+        rospy.Timer(self.dur, self.publishPybulletLinkStatesToROS)
+
+        # Setup sensors
+        if 'sensors' in config:
+
+            for label, sensor_parameters in config['sensors'].items():
+
+                # Setup a joint force torque sensor
+                if 'joint_force_torque_sensor' in label:
+                    joint_index = sensor_parameters['joint_index']
+                    self.robot.setupJointForceTorqueSensor(label, joint_index)
+
+                    self.sensors.append({
+                        'type': 'joint_force_torque',
+                        'label': label,
+                        'pub': rospy.Publisher(
+                            f'ros_pybullet_interface/joint_force_torque_sensor/{label}',
+                            WrenchStamped,
+                            queue_size=10,
+                        ),
+                    })
+
+            rospy.Timer(rospy.Duration(self.dt), self.publishPybulletSensorReadingsToROS)
 
     def setupPyBulletCamera(self, config_file_name):
 
@@ -206,27 +248,44 @@ class ROSPyBulletInterface:
         msg.header.stamp = rospy.Time.now()
         self.joint_state_publisher.publish(msg)
 
-    def publishPyBulletEndEffectorPoseToROS(self, event):
-
-        # Retrieve position and orientation
-        position = self.robot.getEndEffectorPosition()
-        orientation = self.robot.getEndEffectorOrientation()
-
-        # Pack pose msg
-        msg = TransformStamped()
+    def packJointForceTorqueROSMsg(self, reading):
+        msg = WrenchStamped()
         msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = ROBOT_BASE_FRAME_ID
-        msg.child_frame_id = END_EFFECTOR_FRAME_ID
-        msg.transform.translation.x = position[0]
-        msg.transform.translation.y = position[1]
-        msg.transform.translation.z = position[2]
-        msg.transform.rotation.x = orientation[0]
-        msg.transform.rotation.y = orientation[1]
-        msg.transform.rotation.z = orientation[2]
-        msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
+        msg.wrench.force.x = reading[0]
+        msg.wrench.force.y = reading[1]
+        msg.wrench.force.z = reading[2]
+        msg.wrench.torque.x = reading[3]
+        msg.wrench.torque.y = reading[4]
+        msg.wrench.torque.z = reading[5]
+        return msg
 
-        # Broadcast tf
-        self.tfBroadcaster.sendTransform(msg)
+    def publishPybulletSensorReadingsToROS(self, event):
+        for sensor in self.sensors:
+            reading = self.robot.getSensorReading(sensor['label'])
+            if sensor['type'] == 'joint_force_torque':
+                sensor['pub'].publish(self.packJointForceTorqueROSMsg(reading))
+
+    def publishPybulletLinkStatesToROS(self, event):
+
+        for state in self.robot.getLinkStates():
+            position = state['position']
+            orientation = state['orientation']
+
+            # Pack pose msg
+            msg = TransformStamped()
+            msg.header.stamp = rospy.Time.now()
+            msg.header.frame_id = WORLD_FRAME_ID
+            msg.child_frame_id = 'ros_pybullet_interface/robot/'+state['label']
+            msg.transform.translation.x = position[0]
+            msg.transform.translation.y = position[1]
+            msg.transform.translation.z = position[2]
+            msg.transform.rotation.x = orientation[0]
+            msg.transform.rotation.y = orientation[1]
+            msg.transform.rotation.z = orientation[2]
+            msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
+
+            # Broadcast tf
+            self.tfBroadcaster.sendTransform(msg)
 
     def updatePyBullet(self, event):
         self.robot.commandJointPosition(self.target_joint_position)
@@ -239,10 +298,6 @@ class ROSPyBulletInterface:
 
 if __name__=='__main__':
     rospy.init_node('ros_pybullet_interface', anonymous=True)
-    interface = ROSPyBulletInterface()
-    dur = rospy.Duration(interface.dt)
-    rospy.Timer(dur, interface.updatePyBullet)
-    rospy.Timer(dur, interface.publishPyBulletJointStateToROS)
-    rospy.Timer(dur, interface.publishPyBulletEndEffectorPoseToROS)
+    ROSPyBulletInterface()
     rospy.on_shutdown(closePyBullet)
     rospy.spin()
