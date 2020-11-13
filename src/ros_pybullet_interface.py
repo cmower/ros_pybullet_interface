@@ -4,7 +4,7 @@ import rospy
 import yaml
 import tf2_ros
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 # ------------------------------------------------------
 #
@@ -77,6 +77,10 @@ class PyBulletSceneObject(PyBulletObject):
 
 class PyBulletRobot(PyBulletObject):
 
+    sensor_type_to_index_mapping = {
+        'joint_force_torque': 2
+    }
+
     def __init__(self, urdf_file_name, base_position, use_fixed_base):
         self.loadFromURDF(urdf_file_name, base_position, use_fixed_base)
         self.joint_id = []
@@ -90,6 +94,7 @@ class PyBulletRobot(PyBulletObject):
                 self.joint_id.append(info[0])
                 self.joint_name.append(info[1].decode("utf-8"))
         self.ndof = len(self.joint_id)
+        self.sensors = []
 
     def resetJointPosition(self, position):
         for i in range(self.ndof):
@@ -126,6 +131,16 @@ class PyBulletRobot(PyBulletObject):
             targetPositions = target_position,
         )
 
+    def setupJointForceTorqueSensor(self, label, joint_index):
+        pybullet.enableJointForceTorqueSensor(self.ID, joint_index, enableSensor=True)
+        self.sensors.append({'type': 'joint_force_torque', 'label': label, 'joint_index': joint_index})
+
+    def getSensorReading(self, label):
+        for sensor in self.sensors:
+            if sensor['label']==label:
+                sensor_idx = self.sensor_type_to_index_mapping[sensor['type']]
+                return pybullet.getJointState(self.ID, sensor['joint_index'])[sensor_idx]
+
 # ------------------------------------------------------
 #
 # ROS/PyBullet interface
@@ -137,7 +152,11 @@ class ROSPyBulletInterface:
 
         # Setup constants
         self.dt = 1.0/float(FREQ)
+        self.dur = rospy.Duration(self.dt)
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
+
+        # Setup variables
+        self.sensors = []
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
@@ -180,6 +199,29 @@ class ROSPyBulletInterface:
         # Setup ros timers
         rospy.Timer(self.dur, self.publishPyBulletJointStateToROS)
         rospy.Timer(self.dur, self.publishPybulletLinkStatesToROS)
+
+        # Setup sensors
+        if 'sensors' in config:
+
+            for label, sensor_parameters in config['sensors'].items():
+
+                # Setup a joint force torque sensor
+                if 'joint_force_torque_sensor' in label:
+                    joint_index = sensor_parameters['joint_index']
+                    self.robot.setupJointForceTorqueSensor(label, joint_index)
+
+                    self.sensors.append({
+                        'type': 'joint_force_torque',
+                        'label': label,
+                        'pub': rospy.Publisher(
+                            f'ros_pybullet_interface/joint_force_torque_sensor/{label}',
+                            WrenchStamped,
+                            queue_size=10,
+                        ),
+                    })
+
+            rospy.Timer(rospy.Duration(self.dt), self.publishPybulletSensorReadingsToROS)
+
     def setupPyBulletCamera(self, config_file_name):
 
         # Load camera config
@@ -206,7 +248,23 @@ class ROSPyBulletInterface:
         msg.header.stamp = rospy.Time.now()
         self.joint_state_publisher.publish(msg)
 
+    def packJointForceTorqueROSMsg(self, reading):
+        msg = WrenchStamped()
         msg.header.stamp = rospy.Time.now()
+        msg.wrench.force.x = reading[0]
+        msg.wrench.force.y = reading[1]
+        msg.wrench.force.z = reading[2]
+        msg.wrench.torque.x = reading[3]
+        msg.wrench.torque.y = reading[4]
+        msg.wrench.torque.z = reading[5]
+        return msg
+
+    def publishPybulletSensorReadingsToROS(self, event):
+        for sensor in self.sensors:
+            reading = self.robot.getSensorReading(sensor['label'])
+            if sensor['type'] == 'joint_force_torque':
+                sensor['pub'].publish(self.packJointForceTorqueROSMsg(reading))
+
     def publishPybulletLinkStatesToROS(self, event):
 
         for state in self.robot.getLinkStates():
