@@ -36,30 +36,57 @@ EEBodyPointPosition = np.zeros(3)
 
 class PyRBDLRobot:
 
-    def __init__(self, urdf_file_name, end_effector_name, base_position, q0):
+    def __init__(self, urdf_file_name, end_effector_name, base_position, base_orient_mat, q0):
 
         # Load Robot rbdl model
-        self.rbdlModel = rbdl.loadModel(urdf_file_name.encode('utf-8'), verbose = False, floating_base = False)
-
-        # place robot to the base position and orientation
-        # RoboTtrans = rbdl.SpatialTransform()
-        # RoboTtrans.r = np.array(base_position)
-        # RoboTtrans.E = np.array([[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
-        # self.rbdlModel.X_base[0] = RoboTtrans
-        # print(self.rbdlModel.X_base[0].r)
-        # sdsds
+        self.rbdlModel = rbdl.loadModel(urdf_file_name.encode('utf-8'), verbose = False, floating_base = True)
 
         # Get end-effector body for rbdl
         self.rbdlEndEffectorID = rbdl.Model.GetBodyId(self.rbdlModel, end_effector_name)
 
-        # print(self.rbdlModel.dof_count)
-        # print(self.rbdlModel.mBodies[0].mCenterOfMass)
-        # sdsds
-
         # IK Variables initialization
         self.numJoints = self.rbdlModel.qdot_size
         self.rbdlEEBodyPointPosition = EEBodyPointPosition
+        self.qBasePos = np.array(base_position)
+        self.qBaseOrientQuat = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(np.asarray(base_orient_mat)))
         self.qInitial = np.array(q0)
+
+        # ---- place robot to the base position and orientation
+
+        # Create numpy arrays for the state
+        self.q = np.zeros(self.rbdlModel.q_size)
+        # Modify the state to place robot in appropriate position and orientation
+        self.q[0:3] = self.qBasePos
+        self.q[3:6] = self.qBaseOrientQuat[0:3]
+        self.q[-1] = self.qBaseOrientQuat[3]
+        self.q[6:self.numJoints] = self.qInitial
+
+        def updateJointConfig(self, qNew):
+            self.q[6:self.numJoints] = qNew
+
+        def updateBasePos(self, posNew):
+            self.q[0:3] = pos
+
+        def updateBaseOrient(self, orient_matNew):
+            qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(np.asarray(orient_matNew)))
+            self.q[3:6] = qBaseOrientQuatNew[0:3]
+            self.q[-1] = qBaseOrientQuatNew[3]
+
+        # ---------------------------------------------------------------------#
+        # Test funtion
+        # ---------------------------------------------------------------------#
+        def testFK4baseNewPoseOrient4LWR(self):
+            ''' Test forward kinematics, when the the position, orientation and
+            configuration of the robot is changed. '''
+            # Get first link body of the LWR arm rbdl
+            body_base_ID = rbdl.Model.GetBodyId(self.rbdlModel, "lwr_arm_0_link")
+
+            # Transform coordinates from local to global coordinates
+            # define a local point w.r.t to a body
+            point_local = np.array([0, 0., 0.])
+            print(" Local position of the point ", point_local)
+            global_point_base = rbdl.CalcBodyToBaseCoordinates (self.rbdlModel, self.q, body_base, point_local)
+            print(" Global position of the point ", global_point_base)
 
 
 class PyRBDL4dIK(PyRBDLRobot):
@@ -122,6 +149,7 @@ class ROSdIKInterface(object):
         #  PyRBDLRobot
         self.setupPyRBDLRobot(current_dir, robot_config_file_name)
 
+
         # Setup ros publishers
         self.target_joint_state_publisher = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=1)
 
@@ -156,10 +184,11 @@ class ROSdIKInterface(object):
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
+        base_orient_mat = config['base_orient_mat']
         init_joint_position = config['init_position']
 
         # Create pybullet robot instance
-        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, init_joint_position)
+        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, base_orient_mat, init_joint_position)
 
 
 
