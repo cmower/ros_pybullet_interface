@@ -2,7 +2,7 @@
 
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
-      name="ros_pybullet_interface"
+      name="ros_PyRBDL4dIK_interface"
       pkg="ros_pybullet_interface"
       type="ros_rbdl_IK_interace.py"
       output="screen">
@@ -14,11 +14,11 @@
 
   </node>
 
-  <!-- Testing node (publisher) -->
-  <!-- <node
-      name="test_ros_pybullet_interface"
+  <!-- Testing node cartesian poistions (publisher) -->
+  <node
+      name="test_ros_rbdlIK_interface"
       pkg="ros_pybullet_interface"
-      type="test_ros_pybullet_interface.py"
-      output="screen"/> -->
+      type="test_ros_rbdlIK_interface.py"
+      output="screen"/>
 
 </launch>

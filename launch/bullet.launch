@@ -1,0 +1,22 @@
+<launch>
+
+  <!-- PyBullet Environmet node (receiver) -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="/configs/kuka.yaml"
+        type="str"/>
+
+    <param
+        name="camera_config"
+        value="/configs/camera.yaml"
+        type="str"/>
+
+  </node>
+
+</launch>
