@@ -89,14 +89,12 @@ class PyRBDLRobot:
         configuration of the robot is changed. '''
         # Get first link body of the LWR arm rbdl
         body_base_ID = rbdl.Model.GetBodyId(self.rbdlModel, "lwr_arm_0_link")
-
         # Transform coordinates from local to global coordinates
         # define a local point w.r.t to a body
         point_local = np.array([0, 0., 0.])
         print(" Local position of the point ", point_local)
         global_point_base = rbdl.CalcBodyToBaseCoordinates (self.rbdlModel, self.q, body_base, point_local)
         print(" Global position of the point ", global_point_base)
-
 
 class PyRBDL4dIK:
 
@@ -176,7 +174,6 @@ class ROSdIKInterface(object):
 
         #  PyRBDLRobot
         self.setupPyRBDLRobot(current_dir, robot_config_file_name)
-
 
         # Setup ros publishers
         self.target_joint_state_publisher = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=1)
