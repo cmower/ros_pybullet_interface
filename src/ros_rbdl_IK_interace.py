@@ -10,15 +10,6 @@ from utils import loadYAMLConfig
 # ROS message types
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
-# from pyquaternion import Quaternion
-# ## from std_msgs.msg import Float64
-# from geometry_msgs.msg import WrenchStamped
-# from std_msgs.msg import Float64MultiArray
-# from ipab_lwr_msgs.msg import FriState
-# from ipab_lwr_msgs.msg import FriCommandCartesianStiffness
-# from ipab_lwr_msgs.msg import FriCommandJointPosition
-# from ipab_lwr_msgs.msg import FriCommandMode
-
 
 # ------------------------------------------------------
 #
@@ -61,68 +52,105 @@ class PyRBDLRobot:
         self.q[-1] = self.qBaseOrientQuat[3]
         self.q[6:self.numJoints] = self.qInitial
 
-        def updateJointConfig(self, qNew):
-            self.q[6:self.numJoints] = qNew
+        # build the name list of joints
+        self.joint_name = []
+        for i in range(len(self.rbdlModel.mJoints)):
+            # JointTypeRevolute
+            index = self.rbdlModel.mJoints[i].q_index
+            # the index 3 indicates the floating base
+            if index > 3:
+                self.joint_name.append("Joint_"+str(index)+"_"+self.rbdlModel.mJoints[i].mJointType)
 
-        def updateBasePos(self, posNew):
-            self.q[0:3] = pos
+    def updateJointConfig(self, qNew):
+        self.q[6:self.numJoints] = qNew
 
-        def updateBaseOrient(self, orient_matNew):
-            qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(np.asarray(orient_matNew)))
-            self.q[3:6] = qBaseOrientQuatNew[0:3]
-            self.q[-1] = qBaseOrientQuatNew[3]
+    def updateBasePos(self, posNew):
+        self.q[0:3] = pos
 
-        # ---------------------------------------------------------------------#
-        # Test funtion
-        # ---------------------------------------------------------------------#
-        def testFK4baseNewPoseOrient4LWR(self):
-            ''' Test forward kinematics, when the the position, orientation and
-            configuration of the robot is changed. '''
-            # Get first link body of the LWR arm rbdl
-            body_base_ID = rbdl.Model.GetBodyId(self.rbdlModel, "lwr_arm_0_link")
+    def updateBaseOrient(self, orient_matNew):
+        qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(np.asarray(orient_matNew)))
+        self.q[3:6] = qBaseOrientQuatNew[0:3]
+        self.q[-1] = qBaseOrientQuatNew[3]
 
-            # Transform coordinates from local to global coordinates
-            # define a local point w.r.t to a body
-            point_local = np.array([0, 0., 0.])
-            print(" Local position of the point ", point_local)
-            global_point_base = rbdl.CalcBodyToBaseCoordinates (self.rbdlModel, self.q, body_base, point_local)
-            print(" Global position of the point ", global_point_base)
+    def getJointConfig(self):
+        return self.q[6:self.numJoints]
+
+    def getJointName(self):
+        return self.joint_name
+
+    def getCurEEPos(self):
+        return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, np.array([0., 0., 0.]))
+
+    # ---------------------------------------------------------------------#
+    # Test funtion
+    # ---------------------------------------------------------------------#
+    def testFK4baseNewPoseOrient4LWR(self):
+        ''' Test forward kinematics, when the the position, orientation and
+        configuration of the robot is changed. '''
+        # Get first link body of the LWR arm rbdl
+        body_base_ID = rbdl.Model.GetBodyId(self.rbdlModel, "lwr_arm_0_link")
+
+        # Transform coordinates from local to global coordinates
+        # define a local point w.r.t to a body
+        point_local = np.array([0, 0., 0.])
+        print(" Local position of the point ", point_local)
+        global_point_base = rbdl.CalcBodyToBaseCoordinates (self.rbdlModel, self.q, body_base, point_local)
+        print(" Global position of the point ", global_point_base)
 
 
-class PyRBDL4dIK(PyRBDLRobot):
-    def __init__(self, time_step):
+class PyRBDL4dIK:
+
+    def __init__(self, time_step, urdf_file_name, end_effector_name, base_position, base_orient_mat, q0):
+        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, base_orient_mat, q0)
         self.dt = time_step
 
-    def ComputeDelta(self, qprev):
-        delta = numpy.concatenate((dpos,dori), axis=None)
+    def FullDiffIKstep(self, globalTargetPos3D, globalTargetOri3D):
+        delta = self.ComputeDelta(globalTargetPos3D, globalTargetOri3D)
+        JG = self.ComputeGlobalJacobian()
+        self.FullDiffIK(JG, delta)
+
+    """ --------------- Functions made for self use -------------------------"""
+
+    def ComputeDelta(self, globalTargetPos3D, globalTargetOri3D):
+        # retrieve global position of the end-effector
+        global_eePos = self.robot.getCurEEPos()
+        # position error
+        dpos = globalTargetPos3D - global_eePos
+
+        """  Orientation PENDING!!! """
+        # Orientation delta in what parametrization??????
+        # compute global orientation of the end-effector
+        # global_eeOri = CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
+
+        # orientation error
+        # dpos = globalTargetOri3D - global_eeOri
+
+        # poistion and orientation error
+        # delta = numpy.concatenate((dpos,dori), axis=None)
+
+        delta = np.asarray(dpos)
         return delta
 
-    def ComputeGlobalJacobian(self, qprev):
+    def ComputeGlobalJacobian(self):
          # Compute Jacobian
-        JG = np.zeros([6, self.numJoints])
-        rbdl.CalcPointJacobian6D(self.rbdlModel, qprev, self.rbdlEndEffectorID, self.rbdlEEBodyPointPosition, JG, update_kinematics=True)
+        JG = np.zeros([6, self.robot.numJoints])
+        rbdl.CalcPointJacobian6D(self.robot.rbdlModel, self.robot.q, self.robot.rbdlEndEffectorID, self.robot.rbdlEEBodyPointPosition, JG, update_kinematics=True)
         return JG
 
-    def FullDiffIK(self, J, delta, qprev):
+    def FullDiffIK(self, J, delta):
          # Compute Jacobian pseudo-inverse
         Jpinv = np.linalg.pinv(J)
+        Jpinv_pos = Jpinv[6:self.robot.numJoints, -3:] # select joints and dimensions
         # Compute differential kinematics
-        dq = Jpinv_x.dot(delta)
-        qnext = qprev + dq.dot(self.dt)#.flatten()
-        return qnext
+        dq = Jpinv_pos.dot(delta)
 
-    def FullDiffIKstep(self, J, delta, qprev):
-        a = s
+        # retrieve current configuration
+        qprev = self.robot.getJointConfig()
+        # compute new configuration
+        qnext = qprev + dq #dot(self.dt)#.flatten()
+        #  update configuration
+        self.robot.updateJointConfig(qnext)
 
-
-            # a = rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, np.array(q0), self.rbdlEndEffectorID, self.rbdlEEBodyPointPosition, update_kinematics=True)
-
-        # JL = numpy.zeros([6, self.numJoints])
-        # rbdl.CalcBodySpatialJacobian(self.rbdlModel, self.qprev, self.rbdlEndEffectorID, self.rbdlBodyPointPosition, JL, update_kinematics=False)
-
-    # Compute position and orientation of end-effector and force sensor
-            # G_pos_Contact = rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.qprev, self.rbdlEndEffectorID, self.rbdlBodyPointPosition, update_kinematics=False)
-            # G_R_Contact = rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.qprev, self.rbdlEndEffectorID, update_kinematics=False)
 
 
 class ROSdIKInterface(object):
@@ -149,29 +177,14 @@ class ROSdIKInterface(object):
         #  PyRBDLRobot
         self.setupPyRBDLRobot(current_dir, robot_config_file_name)
 
-
         # Setup ros publishers
         self.target_joint_state_publisher = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=1)
 
-        # Setup ros subscriber
-        rospy.Subscriber(TARGET_END_EFFECTOR_TOPIC, PoseStamped, self.readTargetEEStateFromROS)
-        rospy.Subscriber(CURRENT_JOINT_STATE_TOPIC, JointState, self.readCurrentJointStateFromROS)
+        # initialization
+        self.target_EE_position = self.robotIK.robot.getCurEEPos()
+        self.target_EE_orientation = np.zeros(3)
 
-
-         # Initialize command message
-        self.msg_out = JointState()
-        self.msg_out.jointPosition = np.zeros(self.ndof)
-
-        # # Maximum end effector velocities
-        # self.drMAX = 0.2
-        # self.dfzMAX = 0.01
-        # self.doriMAX = 1.5
-        #
-        # # Initialize task space velocity vector
-        # self.vel = np.zeros(2)
-        #
-        # # Flag for running in task space global
-        # self.globalTaskSpace = True
+        # print(self.robotIK.robot.getCurEEPos())
 
 
     def setupPyRBDLRobot(self, current_dir, config_file_name):
@@ -188,44 +201,56 @@ class ROSdIKInterface(object):
         init_joint_position = config['init_position']
 
         # Create pybullet robot instance
-        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, base_orient_mat, init_joint_position)
-
-
+        self.robotIK = PyRBDL4dIK(self.dt, urdf_file_name, end_effector_name, base_position, base_orient_mat, init_joint_position)
 
     def publishdIKJointStateToROS(self, event):
-        # msg = JointState(
-        #     name = self.robot.getJointName(),
-        #     position =  self.robot.getJointPosition(),
-        #     velocity = self.robot.getJointVelocity(),
-        #     effort = self.robot.getJointMotorTorque(),
-        # )
+        msg = JointState(
+            name = self.robotIK.robot.getJointName(),
+            position =  self.robotIK.robot.getJointConfig(),
+            velocity = self.robotIK.robot.getJointConfig()*0,
+            effort = self.robotIK.robot.getJointConfig()*0,
+        )
         msg.header.stamp = rospy.Time.now()
-        self.joint_state_publisher.publish(msg)
+        self.target_joint_state_publisher.publish(msg)
+
+    def startListening2EETargets(self, msg):
+        # Subscribe target end-effector callback
+        rospy.Subscriber(TARGET_END_EFFECTOR_TOPIC, PoseStamped, self.readTargetEEStateFromROS)
+
+    def startListening2JointState(self, msg):
+        # Setup ros subscriber
+        rospy.Subscriber(CURRENT_JOINT_STATE_TOPIC, JointState, self.readCurrentJointStateFromROS)
+
 
     def readTargetEEStateFromROS(self, msg):
-        self.target_EE_position = msg.pose.position
-        self.target_EE_orientation = msg.pose.orientation
+        # update current target for end-effector
+        self.target_EE_position = np.asarray([msg.pose.position.x, msg.pose.position.y,msg.pose.position.z])
+        self.target_EE_orientation = np.asarray([msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w])
 
     def readCurrentJointStateFromROS(self, msg):
+        """ PENDING - not used at the moment"""
+        # this can be modified to be used as closed loop
         self.current_joint_position = msg.position
+        # print(self.robotIK.robot.getJointConfig() - np.asarray(msg.position))
 
     def updateRBDL(self, event):
-        self.robot.compute(self.target_EE_position, self.target_EE_orientation)
+        self.robotIK.FullDiffIKstep(self.target_EE_position, self.target_EE_orientation)
 
-
-    # def cleanShutdown(self):
-    #     print('')
-    #     rospy.loginfo("%s: Sending to safe configuration", self.name)
-    #     # Shut down write callback
-    #     self.writeCallbackTimer.shutdown()
-    #     # Send to safe configuration
-    #     # TODO: Actually here the safe configuration should depend on the current configuration
-    #     qSafe = self.q + np.asarray([0.0, 0.0873, 0.0, 0.0, 0.0, 0.0, 0.0])
-    #     self.msg_out.jointPosition = qSafe
-    #     self.msg_out.header.stamp = rospy.get_rostime()
-    #     # Publish configuration
-    #     self.pubState.publish(self.msg_out)
-    #     rospy.sleep(1.0)
+    def cleanShutdown(self):
+        print('')
+        rospy.loginfo("%s: Sending to safe configuration", self.name)
+        # Shut down write callback
+        self.writeCallbackTimer.shutdown()
+        # Send to current configuration
+        msg = JointState(
+            name = self.robotIK.robot.getJointName(),
+            position =  self.robotIK.robot.getJointConfig(),
+            velocity = self.robotIK.robot.getJointConfig()*0,
+            effort = self.robotIK.robot.getJointConfig()*0,
+        )
+        msg.header.stamp = rospy.Time.now()
+        self.target_joint_state_publisher.publish(msg)
+        rospy.sleep(1.0)
 
 
 if __name__ == '__main__':
@@ -236,24 +261,22 @@ if __name__ == '__main__':
         ROSdIKinterface = ROSdIKInterface()
 
         # Establish connection with Robot in PyBullet environment
-        rospy.loginfo("%s: Waiting for /kuka_lwr_state topic", ROSdIKinterface.name)
-        # change.....
-        msgRobotState = rospy.wait_for_message("/kuka_lwr_state", FriState)
-        # ROSdIKinterface.changeMode(msgRobotState)
+        rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", ROSdIKinterface.name)
+        msgRobotState = rospy.wait_for_message(CURRENT_JOINT_STATE_TOPIC, JointState)
+        ROSdIKinterface.startListening2JointState(msgRobotState)
 
         # Establish connection with end-effector commander
-        rospy.loginfo("%s: Waiting for /operator_signal/velocity", ROSdIKinterface.name)
-        # change.....
-        msgJoystick = rospy.wait_for_message("/operator_signal/velocity", Float64MultiArray)
-        # ROSdIKinterface.startJoystick(msgJoystick)
+        rospy.loginfo("%s: Waiting for "+TARGET_END_EFFECTOR_TOPIC+" topic", ROSdIKinterface.name)
+        msgEETarget = rospy.wait_for_message(TARGET_END_EFFECTOR_TOPIC, PoseStamped)
+        ROSdIKinterface.startListening2EETargets(msgEETarget)
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSdIKinterface.dt)
         rospy.Timer(dur, ROSdIKinterface.updateRBDL)
         ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, ROSdIKinterface.publishdIKJointStateToROS)
-        # ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, my_node.writePosCallback)
+
         # Ctrl-C will stop the script
-        rospy.on_shutdown(my_node.cleanShutdown)
+        rospy.on_shutdown(ROSdIKinterface.cleanShutdown)
         # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
     except rospy.ROSInterruptException:
