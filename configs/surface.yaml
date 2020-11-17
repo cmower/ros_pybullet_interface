@@ -1,19 +1,19 @@
 file_name: '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/objects/surface.obj'
 
 # Basic parameters
-mesh_scale: [0.1,0.1,0.1]
+mesh_scale: [0.0015,0.0015,0.0015]
 rgba_color: [0.5, 0.5, 0.2, 1]
 base_mass: 0.0
 
 # Dynamic parameters
 lateral_friction: 1.0
-spinning_friction: 0.0
-rolling_friction: 0.0
-restitution: 0.0
+spinning_friction: 0.5
+rolling_friction: 0.5
+restitution: 0.5
 linear_damping: 0.04
 angular_damping: 0.04
-contact_stiffness: -1 # 2000.0
-contact_damping: -1 # 0.7
+contact_stiffness: 2000.0
+contact_damping: 0.7
 
 link_state:
 
@@ -33,5 +33,6 @@ link_state:
   #   world frame is called 'ros_pybullet_interface/world'.
   #
   
-  position: [0., -0.2, -0.05]
+  # position: [0., -0.2, -0.05]
+  position: [0.3, 0., 0.9]
   orientation: [0, 0, 0]
