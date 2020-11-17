@@ -47,6 +47,7 @@ class ROSPyBulletInterface:
         self.sensor_pubs = {}
         self.tfs = {}
         self.dynamic_collision_objects = []
+        self.static_collision_objects = []
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
@@ -167,6 +168,11 @@ class ROSPyBulletInterface:
                 config['link_state']['position'],
                 config['link_state']['orientation']
             )
+            self.static_collision_objects.append({
+                'object': obj,
+                'position': config['link_state']['position'],
+                'orientation': config['link_state']['orientation']
+            })
 
     def setPyBulletCollisionObjectPositionAndOrientation(self):
         for obj in self.dynamic_collision_objects:
