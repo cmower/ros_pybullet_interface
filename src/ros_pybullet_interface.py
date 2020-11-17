@@ -1,10 +1,23 @@
 #!/usr/bin/env python
-import pybullet
+import os
+import sys
+
+import numpy
+import rospkg
 import rospy
-import yaml
 import tf2_ros
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped, WrenchStamped
+
+sys.path.append(
+    os.path.join(
+        rospkg.RosPack().get_path('ros_pybullet_interface'),
+        'include'
+    )
+)
+
+import pybullet_interface
+from utils import *
 
 # ------------------------------------------------------
 #
@@ -12,134 +25,10 @@ from geometry_msgs.msg import TransformStamped, WrenchStamped
 # ------------------------------------------------------
 
 FREQ = 100 # PyBullet sampling frequency
+DT = 1.0/float(FREQ)
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
-
-# ------------------------------------------------------
-#
-# Helpful functions
-# ------------------------------------------------------
-
-def loadYAMLConfig(file_name):
-    with open(file_name, 'r') as configfile:
-         config = yaml.load(configfile, Loader=yaml.FullLoader)
-    return config
-
-# ------------------------------------------------------
-#
-# PyBullet interface
-# ------------------------------------------------------
-
-def initPyBullet(time_step):
-    pybullet.connect(pybullet.GUI)
-    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
-    pybullet.resetSimulation()
-    pybullet.setTimeStep(time_step)
-
-def setupPyBulletCamera(distance, yaw, pitch, target_position):
-    pybullet.resetDebugVisualizerCamera(
-        cameraDistance=distance,
-        cameraYaw=yaw,
-        cameraPitch=pitch,
-        cameraTargetPosition=target_position
-    )
-
-def stepPyBullet():
-    pybullet.stepSimulation()
-
-def closePyBullet():
-    pybullet.disconnect()
-
-class PyBulletObject:
-
-    def loadFromURDF(self, urdf_file_name, base_position, use_fixed_base):
-        self.ID = pybullet.loadURDF(urdf_file_name, basePosition=base_position, useFixedBase=use_fixed_base)
-
-class PyBulletSceneObject(PyBulletObject):
-
-    def __init__(self, file_name, config):
-        if file_name.endswith('.urdf'):
-            self.loadFromURDF(file_name, config['base_position'], config['use_fixed_base'])
-        elif file_name.endswith('.obj'):
-            self.loadFromOBJ(file_name, config)
-        self.changeDynamics(config)
-
-    def loadFromOBJ(self, file_name, config):
-        # pybullet.createVisualShape()
-        # pybullet.createCollisionShape()
-        # pybullet.createMultiBody()
-        raise NotImplementedError("")
-
-    def changeDynamics(self, config):
-        # pybullet.changeDynamics(bodyUniqueId=self.ID)
-        raise NotImplementedError("")
-
-class PyBulletRobot(PyBulletObject):
-
-    sensor_type_to_index_mapping = {
-        'joint_force_torque': 2
-    }
-
-    def __init__(self, urdf_file_name, base_position, use_fixed_base):
-        self.loadFromURDF(urdf_file_name, base_position, use_fixed_base)
-        self.joint_id = []
-        self.joint_name = []
-        self.num_joints = pybullet.getNumJoints(self.ID)
-        self.link_names = []
-        for i in range(self.num_joints):
-            info = pybullet.getJointInfo(self.ID, i)
-            self.link_names.append(info[12].decode('utf-8'))
-            if info[2] in {pybullet.JOINT_REVOLUTE, pybullet.JOINT_PRISMATIC}:
-                self.joint_id.append(info[0])
-                self.joint_name.append(info[1].decode("utf-8"))
-        self.ndof = len(self.joint_id)
-        self.sensors = []
-
-    def resetJointPosition(self, position):
-        for i in range(self.ndof):
-            pybullet.resetJointState(self.ID, i, position[i])
-
-    def getJointName(self):
-        return self.joint_name
-
-    def getJointPosition(self):
-        return [joint_state[0] for joint_state in pybullet.getJointStates(self.ID, self.joint_id)]
-
-    def getJointVelocity(self):
-        return [joint_state[1] for joint_state in pybullet.getJointStates(self.ID, self.joint_id)]
-
-    def getJointMotorTorque(self):
-        return [joint_state[3] for joint_state in pybullet.getJointStates(self.ID, self.joint_id)]
-
-    def getLinkStates(self):
-        states = [None]*self.num_joints
-        for i in range(self.num_joints):
-            state = pybullet.getLinkState(self.ID, i, computeLinkVelocity = 0, computeForwardKinematics = 1)
-            states[i] = {
-                'label': self.link_names[i],
-                'position': state[4],
-                'orientation': state[5],
-            }
-        return states
-
-    def commandJointPosition(self, target_position):
-        pybullet.setJointMotorControlArray(
-            self.ID,
-            self.joint_id,
-            pybullet.POSITION_CONTROL,
-            targetPositions = target_position,
-        )
-
-    def setupJointForceTorqueSensor(self, label, joint_index):
-        pybullet.enableJointForceTorqueSensor(self.ID, joint_index, enableSensor=True)
-        self.sensors.append({'type': 'joint_force_torque', 'label': label, 'joint_index': joint_index})
-
-    def getSensorReading(self, label):
-        for sensor in self.sensors:
-            if sensor['label']==label:
-                sensor_idx = self.sensor_type_to_index_mapping[sensor['type']]
-                return pybullet.getJointState(self.ID, sensor['joint_index'])[sensor_idx]
 
 # ------------------------------------------------------
 #
@@ -150,103 +39,175 @@ class ROSPyBulletInterface:
 
     def __init__(self):
 
-        # Setup constants
-        self.dt = 1.0/float(FREQ)
-        self.dur = rospy.Duration(self.dt)
+        # Setup
+        self.dur = rospy.Duration(DT)
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
-
-        # Setup variables
-        self.sensors = []
+        self.tfBuffer = tf2_ros.Buffer()
+        self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
+        self.sensor_pubs = {}
+        self.tfs = {}
+        self.dynamic_collision_objects = []
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
         camera_config_file_name = rospy.get_param('~camera_config')
+        collision_object_file_names = rospy.get_param('~collision_object_config_file_names', [])
 
-        # Initialise pybullet
-        initPyBullet(self.dt)
-
-        # Setup pybullet
-        self.setupPyBulletRobot(robot_config_file_name)
+        # Setup PyBullet, note publishers/subscribers are also setup internally
+        # to these setup functions
+        pybullet_interface.initPyBullet(DT)
         self.setupPyBulletCamera(camera_config_file_name)
-
-        # Setup ros publishers/tf broadcasters
-        self.joint_state_publisher = rospy.Publisher(CURRENT_JOINT_STATE_TOPIC, JointState, queue_size=10)
-
-        # Setup ros subscriber
-        rospy.Subscriber(TARGET_JOINT_STATE_TOPIC, JointState, self.readTargetJointStateFromROS)
+        self.setupPyBulletRobot(robot_config_file_name)
+        for file_name in collision_object_file_names:
+            self.setupPyBulletCollisionObject(file_name)
 
         # Main pybullet update
         rospy.Timer(self.dur, self.updatePyBullet)
 
-    def setupPyBulletRobot(self, config_file_name):
-
-        # Load robot configuration
-        config = loadYAMLConfig(config_file_name)
-
-        # Extract required data from configuration
-        urdf_file_name = config['urdf']
-        use_fixed_base = config['use_fixed_base']
-        base_position = config['base_position']
-        target_joint_position = config['init_position']
-
-        # Create pybullet robot instance
-        self.robot = PyBulletRobot(urdf_file_name, base_position, use_fixed_base)
-
-        # Reset joint state
-        self.robot.resetJointPosition(target_joint_position)
-        self.target_joint_position = target_joint_position
-
-        # Setup ros timers
-        rospy.Timer(self.dur, self.publishPyBulletJointStateToROS)
-        rospy.Timer(self.dur, self.publishPybulletLinkStatesToROS)
-
-        # Setup sensors
-        if 'sensors' in config:
-
-            for label, sensor_parameters in config['sensors'].items():
-
-                # Setup a joint force torque sensor
-                if 'joint_force_torque_sensor' in label:
-                    joint_index = sensor_parameters['joint_index']
-                    self.robot.setupJointForceTorqueSensor(label, joint_index)
-
-                    self.sensors.append({
-                        'type': 'joint_force_torque',
-                        'label': label,
-                        'pub': rospy.Publisher(
-                            f'ros_pybullet_interface/joint_force_torque_sensor/{label}',
-                            WrenchStamped,
-                            queue_size=10,
-                        ),
-                    })
-
-            rospy.Timer(rospy.Duration(self.dt), self.publishPybulletSensorReadingsToROS)
-
-    def setupPyBulletCamera(self, config_file_name):
+    def setupPyBulletCamera(self, file_name):
 
         # Load camera config
-        config = loadYAMLConfig(config_file_name)
+        config = loadYAMLConfig(file_name)
 
         # Extract data from configuration
-        setupPyBulletCamera(
+        pybullet_interface.setupPyBulletCamera(
             config['distance'],
             config['yaw'],
             config['pitch'],
             config['target_position']
         )
 
+    def setupPyBulletRobot(self, file_name):
+
+        # Load robot configuration
+        config = loadYAMLConfig(file_name)
+
+        # Setup robot
+        self.robot = pybullet_interface.PyBulletRobot(config['urdf_file_name'])
+        self.robot.setBasePositionAndOrientation(
+            config['base_position'],
+            config['base_orientation']
+        )
+        self.robot.setJointPositions(config['init_position'])
+
+        # Specify target joint position
+        self.target_joint_position = config['init_position']
+
+        # Setup ros publishers
+        self.joint_state_pub = rospy.Publisher(
+            CURRENT_JOINT_STATE_TOPIC,
+            JointState,
+            queue_size=10
+        )
+
+        # Setup ros timers
+        rospy.Timer(self.dur, self.publishPyBulletJointStateToROS)
+        rospy.Timer(self.dur, self.publishPyBulletLinkStatesToROS)
+
+        # Setup ros subscriber
+        rospy.Subscriber(TARGET_JOINT_STATE_TOPIC, JointState, self.readTargetJointStateFromROS)
+
+        # Setup sensors
+        if 'sensors' in config:
+
+            # Setup sensors in PyBullet and their respective ROS publishers
+            for label, sensor_parameters in config['sensors'].items():
+
+                # Setup a joint force torque sensor
+                if 'joint_force_torque_sensor' in label:
+
+                    # Extract info
+                    joint_index = sensor_parameters['joint_index']
+                    label = label.split('__')[1] # remove joint_force_torque_sensor__
+
+                    # Setup sensor
+                    self.robot.setupJointForceTorqueSensor(label, joint_index)
+
+                    # Setup publisher
+                    topic = f'ros_pybullet_interface/joint_force_torque_sensor/{label}'
+                    self.sensor_pubs[label] = rospy.Publisher(topic, WrenchStamped, queue_size=10)
+
+            # Setup ros timer to publish sensor readings
+            rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+
+    def setupPyBulletCollisionObject(self, file_name):
+
+        # Load config
+        config = loadYAMLConfig(file_name)
+
+        # Setup collision object
+        obj = pybullet_interface.PyBulletCollisionObject(
+            config['file_name'],
+            config['mesh_scale'],
+            config['rgba_color'],
+            config['base_mass'],
+        )
+
+        obj.changeDynamics(
+            -1,
+            config['lateral_friction'],
+            config['spinning_friction'],
+            config['rolling_friction'],
+            config['restitution'],
+            config['linear_damping'],
+            config['angular_damping'],
+            config['contact_stiffness'],
+            config['contact_damping'],
+        )
+
+        if 'tf_frame_id' in config['link_state']:
+            tf_frame_id = config['link_state']['tf_frame_id']
+            self.tfs[tf_frame_id] = {'received': False, 'position': None, 'orientation': None}
+            self.dynamic_collision_objects.append({
+                'object': obj,
+                'tf_frame_id': tf_frame_id,
+            })
+        else:
+            obj.setBasePositionAndOrientation(
+                config['link_state']['position'],
+                config['link_state']['orientation']
+            )
+
+    def setPyBulletCollisionObjectPositionAndOrientation(self):
+        for obj in self.dynamic_collision_objects:
+            tf = self.tfs[obj['tf_frame_id']]
+            if not tf['received']: continue
+            obj['object'].setBasePositionAndOrientation(tf['position'], tf['orientation'])
+
+    def readROSTfs(self):
+        for tf_frame_id in self.tfs.keys():
+            try:
+                tf = self.tfBuffer.lookup_transform(WORLD_FRAME_ID, tf_frame_id, rospy.Time())
+            except (tf2_ros.LookupException,
+                    tf2_ros.ConnectivityException,
+                    tf2_ros.ExtrapolationException):
+                continue
+            self.tfs[tf_frame_id]['position'] = [
+                tf.transform.translation.x,
+                tf.transform.translation.y,
+                tf.transform.translation.z
+            ]
+            self.tfs[tf_frame_id]['orientation'] = [
+                tf.transform.rotation.x,
+                tf.transform.rotation.y,
+                tf.transform.rotation.z,
+                tf.transform.rotation.w
+            ]
+            self.tfs[tf_frame_id]['received'] = True
+
     def readTargetJointStateFromROS(self, msg):
         self.target_joint_position = msg.position
 
     def publishPyBulletJointStateToROS(self, event):
+        states = self.robot.getActiveJointStates()
         msg = JointState(
-            name = self.robot.getJointName(),
-            position = self.robot.getJointPosition(),
-            velocity = self.robot.getJointVelocity(),
-            effort = self.robot.getJointMotorTorque(),
+            name = [state['name'] for state in states],
+            position = [state['position'] for state in states],
+            velocity = [state['velocity'] for state in states],
+            effort = [state['motor_torque'] for state in states],
         )
         msg.header.stamp = rospy.Time.now()
-        self.joint_state_publisher.publish(msg)
+        self.joint_state_pub.publish(msg)
 
     def packJointForceTorqueROSMsg(self, reading):
         msg = WrenchStamped()
@@ -259,15 +220,16 @@ class ROSPyBulletInterface:
         msg.wrench.torque.z = reading[5]
         return msg
 
-    def publishPybulletSensorReadingsToROS(self, event):
-        for sensor in self.sensors:
-            reading = self.robot.getSensorReading(sensor['label'])
-            if sensor['type'] == 'joint_force_torque':
-                sensor['pub'].publish(self.packJointForceTorqueROSMsg(reading))
+    def publishPyBulletSensorReadingsToROS(self, event):
+        for reading in self.robot.getSensorReadings():
+            if reading['type'] == 'joint_force_torque':
+                msg = self.packJointForceTorqueROSMsg(reading['reading'])
+                self.sensor_pubs[reading['label']].publish(msg)
 
-    def publishPybulletLinkStatesToROS(self, event):
-
+    def publishPyBulletLinkStatesToROS(self, event):
         for state in self.robot.getLinkStates():
+
+            label = state['label']
             position = state['position']
             orientation = state['orientation']
 
@@ -288,8 +250,12 @@ class ROSPyBulletInterface:
             self.tfBroadcaster.sendTransform(msg)
 
     def updatePyBullet(self, event):
+        if not pybullet_interface.isPyBulletConnected():
+            rospy.signal_shutdown('PyBullet quit!')
         self.robot.commandJointPosition(self.target_joint_position)
-        stepPyBullet()
+        self.readROSTfs()
+        self.setPyBulletCollisionObjectPositionAndOrientation()
+        pybullet_interface.stepPyBullet()
 
 # ------------------------------------------------------
 #
@@ -299,5 +265,5 @@ class ROSPyBulletInterface:
 if __name__=='__main__':
     rospy.init_node('ros_pybullet_interface', anonymous=True)
     ROSPyBulletInterface()
-    rospy.on_shutdown(closePyBullet)
+    rospy.on_shutdown(pybullet_interface.closePyBullet)
     rospy.spin()
