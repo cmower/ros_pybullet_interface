@@ -12,8 +12,8 @@ rolling_friction: 0.0
 restitution: 0.0
 linear_damping: 0.04
 angular_damping: 0.04
-contact_stiffness: -1 # 2000.0
-contact_damping: -1 # 0.7
+contact_stiffness: 2000.0
+contact_damping: 0.7
 
 link_state:
 
