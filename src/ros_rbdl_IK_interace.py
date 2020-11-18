@@ -1,7 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
 # license removed for brevity
 import rospkg
 import rospy
+import sys
+print(sys.version)
+
 import rbdl
 
 import numpy as np
