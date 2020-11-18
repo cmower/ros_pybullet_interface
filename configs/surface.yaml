@@ -1,4 +1,4 @@
-file_name: '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/objects/surface.obj'
+file_name: '/objects/surface.obj'
 
 # Basic parameters
 mesh_scale: [0.0015,0.0015,0.0015]
@@ -25,14 +25,14 @@ link_state:
   #   You must specify here a position attribute and orientation attribute.
   #
   # dynamic object
-  # 
+  #
   #   You must specify an attribute tf_frame_id. The position/orientation of the
   #   collision object in PyBullet will be updated according to the
   #   position/orientation of the respective tf frame. In ROS, you must ensure
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
   #
-  
+
   # position: [0., -0.2, -0.05]
   position: [0.3, 0., 0.9]
-  orientation: [0, 0, 0]
+  orientation_mat: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]

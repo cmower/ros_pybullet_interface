@@ -6,7 +6,6 @@ urdf_file_name: "/robots/kuka_lwr_force/kuka.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
 base_position: [0.0, 0.0, 0.0]
-# base_orientation
 base_orient_mat: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 # base_orient_mat: [[0.0, 0.0, -1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]] # rotate around Y 90
 # base_orient_mat: [[1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]]  # rotate around X 90
