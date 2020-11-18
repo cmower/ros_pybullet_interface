@@ -35,3 +35,11 @@ RBDL need to be installed: (instructions according to https://github.com/rbdl/rb
     5iv.  press c e g ... etc (to configure)
 5. make 
 6. make install 
+
+wherever you run the roslaunch ros_pybullet_interface exampleIK.launch, before you launch the following path needs to be sourced:
+export PYTHONPATH=$PYTHONPATH:"local path" + /rbdl/build/python
+
+
+
+
+
