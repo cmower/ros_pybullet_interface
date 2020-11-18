@@ -19,8 +19,8 @@
 
     <rosparam param="collision_object_config_file_names">
       [
-      '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/surface.yaml',
-      '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/whiteboard.yaml'
+      '/configs/surface.yaml',
+      '/configs/whiteboard.yaml'
       ]
     </rosparam>
 

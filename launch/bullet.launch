@@ -17,6 +17,13 @@
         value="/configs/camera.yaml"
         type="str"/>
 
+    <rosparam param="collision_object_config_file_names">
+      [
+      '/configs/surface.yaml',
+      '/configs/whiteboard.yaml'
+      ]
+    </rosparam>
+
   </node>
 
 </launch>

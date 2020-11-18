@@ -1,4 +1,10 @@
+# ------------------------------------------------------
+#
+# Helpful functions
+# ------------------------------------------------------
+
 import yaml
+
 
 def loadYAMLConfig(file_name):
     with open(file_name, 'r') as configfile:
