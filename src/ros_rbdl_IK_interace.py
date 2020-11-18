@@ -194,7 +194,7 @@ class ROSdIKInterface(object):
         config = loadYAMLConfig(current_dir + config_file_name)
 
         # Extract data from configuration
-        urdf_file_name = current_dir + config['urdf']
+        urdf_file_name = current_dir + config['urdf_file_name']
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']

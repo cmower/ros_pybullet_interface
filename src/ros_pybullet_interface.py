@@ -7,7 +7,6 @@ import numpy
 import rospkg
 import rospy
 import tf2_ros
-from utils import loadYAMLConfig
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped, WrenchStamped
 
@@ -19,7 +18,8 @@ sys.path.append(
 )
 
 import pybullet_interface
-from utils import *
+from utils import loadYAMLConfig
+
 
 
 # ------------------------------------------------------
@@ -70,9 +70,9 @@ class ROSPyBulletInterface:
         current_dir = rospack.get_path('ros_pybullet_interface')
 
         # Get ros parameters
-        robot_config_file_name = current_dir + rospy.get_param('~robot_config')
-        camera_config_file_name = current_dir + rospy.get_param('~camera_config')
-        collision_object_file_names = current_dir + rospy.get_param('~collision_object_config_file_names', [])
+        robot_config_file_name = rospy.get_param('~robot_config')
+        camera_config_file_name = rospy.get_param('~camera_config')
+        collision_object_file_names = rospy.get_param('~collision_object_config_file_names', [])
 
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
@@ -110,7 +110,7 @@ class ROSPyBulletInterface:
         self.robot = pybullet_interface.PyBulletRobot(cur_dir + config['urdf_file_name'])
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
-            config['base_orientation']
+            config['base_orient_mat']
         )
         self.robot.setJointPositions(config['init_position'])
 
@@ -161,7 +161,7 @@ class ROSPyBulletInterface:
 
         # Setup collision object
         obj = pybullet_interface.PyBulletCollisionObject(
-            config['file_name'],
+            cur_dir + config['file_name'],
             config['mesh_scale'],
             config['rgba_color'],
             config['base_mass'],
@@ -189,12 +189,12 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                config['link_state']['orientation']
+                config['link_state']['orientation_mat']
             )
             self.static_collision_objects.append({
                 'object': obj,
                 'position': config['link_state']['position'],
-                'orientation': config['link_state']['orientation']
+                'orientation': config['link_state']['orientation_mat']
             })
 
     def setPyBulletCollisionObjectPositionAndOrientation(self):

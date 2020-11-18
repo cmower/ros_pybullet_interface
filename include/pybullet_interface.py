@@ -1,6 +1,8 @@
+import tf_conversions
 import pybullet
 import math
-import tf_conversions
+import numpy as np
+
 
 __all__=[
     'initPyBullet',
@@ -42,14 +44,15 @@ def closePyBullet():
 
 class PyBulletObject:
 
-    def setBasePositionAndOrientation(self, position, orientation):
+    def setBasePositionAndOrientation(self, position, orientation_mat):
 
         # Ensure orientation is a quaternion
-        if len(orientation) == 3:
-            orientation = tf_conversions.transformations.quaternion_from_euler(
-                orientation[2],
-                orientation[1],
-                orientation[0]
+        ori_mat = np.array(orientation_mat)
+        orientationEuler = tf_conversions.transformations.euler_from_matrix(ori_mat)
+        orientation = tf_conversions.transformations.quaternion_from_euler(
+            orientationEuler[0],
+            orientationEuler[1],
+            orientationEuler[2]
             )
 
         # Reset base position/orientation
