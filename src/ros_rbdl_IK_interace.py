@@ -20,7 +20,7 @@ sys.path.append(
         'include'
     )
 )
-from utils4localPck import loadYAMLConfig
+from ros_pybullet_interface_utils import loadYAMLConfig
 
 # ------------------------------------------------------
 #
@@ -146,7 +146,7 @@ class PyRBDL4dIK:
         # dori = global_eeOriTarget * Inv_global_eeOri
         # dori = global_eeOri * Inv_global_eeOriTarget
 
-        # least square error between two frames 
+        # least square error between two frames
         dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
 
         # get delta orientation as a vector + also scale it

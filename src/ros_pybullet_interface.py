@@ -18,7 +18,7 @@ sys.path.append(
 )
 
 import pybullet_interface
-from utils4localPck import loadYAMLConfig
+from ros_pybullet_interface_utils import loadYAMLConfig
 
 
 
