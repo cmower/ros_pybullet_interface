@@ -2,7 +2,8 @@
 # license removed for brevity
 import rospkg
 import rospy
-import sys, os
+import sys
+import os
 print(sys.version)
 
 import rbdl
