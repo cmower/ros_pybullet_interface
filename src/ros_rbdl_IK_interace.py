@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 # license removed for brevity
 import rospkg
 import rospy
