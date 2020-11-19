@@ -35,6 +35,7 @@ CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # pub
 
 EEBodyPointPosition = np.zeros(3)
 
+scale_dOri = 0.1 # this parameter needs to go to a yaml file
 
 class PyRBDLRobot:
 
@@ -94,6 +95,9 @@ class PyRBDLRobot:
     def getCurEEPos(self):
         return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, np.array([0., 0., 0.]))
 
+    def getCurEEOri(self):
+        return rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
+
     # ---------------------------------------------------------------------#
     # Test funtion
     # ---------------------------------------------------------------------#
@@ -128,18 +132,33 @@ class PyRBDL4dIK:
         # position error
         dpos = globalTargetPos3D - global_eePos
 
-        """  Orientation PENDING!!! """
-        # Orientation delta in what parametrization??????
         # compute global orientation of the end-effector
-        # global_eeOri = CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
+        global_eeOri_mat = self.robot.getCurEEOri()
+        global_eeOri = R.from_matrix(global_eeOri_mat)
+        # Inv_global_eeOri = global_eeOri.inv()
 
-        # orientation error
-        # dpos = globalTargetOri3D - global_eeOri
+        # globalTargetOri3D is a quaternion in the form x,y,z,w
+        global_eeOriTarget = R.from_quat(globalTargetOri3D)
+        # Inv_global_eeOriTarget = global_eeOriTarget.inv()
 
-        # poistion and orientation error
-        # delta = numpy.concatenate((dpos,dori), axis=None)
+        # orientation error as in quaternions --- it did not work!
+        # diff * q1 = q2  --->  diff = q2 * inverse(q1)
+        # dori = global_eeOriTarget * Inv_global_eeOri
+        # dori = global_eeOri * Inv_global_eeOriTarget
 
-        delta = np.asarray(dpos)
+        # least square error between two frames 
+        dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
+
+        # get delta orientation as a vector + also scale it
+        doriVec = dori.as_rotvec() * scale_dOri
+        # print(np.linalg.norm(doriVec))
+
+        # position and orientation (in euler angles) error
+        #  we stuck first angular error and then position error because of the RBDL jacobian form (see below)
+        # Computes the 6-D Jacobian $G(q)$ that when multiplied with $\dot{q}$ gives a 6-D vector
+        # that has the angular velocity as the first three entries and the linear velocity as the last three entries.
+        delta = np.concatenate((doriVec, dpos), axis=None)
+
         return delta
 
     def ComputeGlobalJacobian(self):
@@ -151,7 +170,7 @@ class PyRBDL4dIK:
     def FullDiffIK(self, J, delta):
          # Compute Jacobian pseudo-inverse
         Jpinv = np.linalg.pinv(J)
-        Jpinv_pos = Jpinv[6:self.robot.numJoints, -3:] # select joints and dimensions
+        Jpinv_pos = Jpinv[6:self.robot.numJoints,:] # select joints and dimensions
         # Compute differential kinematics
         dq = Jpinv_pos.dot(delta)
 
@@ -193,10 +212,12 @@ class ROSdIKInterface(object):
 
         # initialization
         self.target_EE_position = self.robotIK.robot.getCurEEPos()
-        self.target_EE_orientation = np.zeros(3)
+        curOri = R.from_matrix(self.robotIK.robot.getCurEEOri())
+        self.target_EE_orientation = curOri.as_quat()
 
         # print(self.robotIK.robot.getCurEEPos())
-
+        # riq = R.from_matrix(self.robotIK.robot.getCurEEOri())
+        # print(riq.as_rotvec())
 
     def setupPyRBDLRobot(self, config_file_name):
 
@@ -280,6 +301,7 @@ if __name__ == '__main__':
         rospy.loginfo("%s: Waiting for "+TARGET_END_EFFECTOR_TOPIC+" topic", ROSdIKinterface.name)
         msgEETarget = rospy.wait_for_message(TARGET_END_EFFECTOR_TOPIC, PoseStamped)
         ROSdIKinterface.startListening2EETargets(msgEETarget)
+
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSdIKinterface.dt)
