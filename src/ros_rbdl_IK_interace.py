@@ -2,17 +2,25 @@
 # license removed for brevity
 import rospkg
 import rospy
-import sys
+import sys, os
 print(sys.version)
 
 import rbdl
-
 import numpy as np
-from utils import loadYAMLConfig
+from scipy.spatial.transform import Rotation as R
 
 # ROS message types
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
+
+
+sys.path.append(
+    os.path.join(
+        rospkg.RosPack().get_path('ros_pybullet_interface'),
+        'include'
+    )
+)
+from utils4localPck import loadYAMLConfig
 
 # ------------------------------------------------------
 #
@@ -30,7 +38,7 @@ EEBodyPointPosition = np.zeros(3)
 
 class PyRBDLRobot:
 
-    def __init__(self, urdf_file_name, end_effector_name, base_position, base_orient_mat, q0):
+    def __init__(self, urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
 
         # Load Robot rbdl model
         self.rbdlModel = rbdl.loadModel(urdf_file_name.encode('utf-8'), verbose = False, floating_base = True)
@@ -42,7 +50,8 @@ class PyRBDLRobot:
         self.numJoints = self.rbdlModel.qdot_size
         self.rbdlEEBodyPointPosition = EEBodyPointPosition
         self.qBasePos = np.array(base_position)
-        self.qBaseOrientQuat = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(np.asarray(base_orient_mat)))
+        ori = R.from_euler('xyz', base_orient_eulerXYZ, degrees=True)
+        self.qBaseOrientQuat = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(ori.as_matrix()))
         self.qInitial = np.array(q0)
 
         # ---- place robot to the base position and orientation
@@ -70,8 +79,9 @@ class PyRBDLRobot:
     def updateBasePos(self, posNew):
         self.q[0:3] = pos
 
-    def updateBaseOrient(self, orient_matNew):
-        qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(np.asarray(orient_matNew)))
+    def updateBaseOrient(self, orient_eulerXYZNew):
+        ori_mat = np.asarray(XYZeuler2RotationMat(orient_eulerXYZNew))
+        qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(ori_mat))
         self.q[3:6] = qBaseOrientQuatNew[0:3]
         self.q[-1] = qBaseOrientQuatNew[3]
 
@@ -101,8 +111,8 @@ class PyRBDLRobot:
 
 class PyRBDL4dIK:
 
-    def __init__(self, time_step, urdf_file_name, end_effector_name, base_position, base_orient_mat, q0):
-        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, base_orient_mat, q0)
+    def __init__(self, time_step, urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
+        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0)
         self.dt = time_step
 
     def FullDiffIKstep(self, globalTargetPos3D, globalTargetOri3D):
@@ -170,13 +180,13 @@ class ROSdIKInterface(object):
         rospack = rospkg.RosPack()
 
         # get the path to this catkin ws
-        current_dir = rospack.get_path('ros_pybullet_interface')
+        self.current_dir = rospack.get_path('ros_pybullet_interface')
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
 
         #  PyRBDLRobot
-        self.setupPyRBDLRobot(current_dir, robot_config_file_name)
+        self.setupPyRBDLRobot(robot_config_file_name)
 
         # Setup ros publishers
         self.target_joint_state_publisher = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=1)
@@ -188,28 +198,28 @@ class ROSdIKInterface(object):
         # print(self.robotIK.robot.getCurEEPos())
 
 
-    def setupPyRBDLRobot(self, current_dir, config_file_name):
+    def setupPyRBDLRobot(self, config_file_name):
 
         # Load robot configuration
-        config = loadYAMLConfig(current_dir + config_file_name)
+        config = loadYAMLConfig(os.path.join(self.current_dir,config_file_name))
 
         # Extract data from configuration
-        urdf_file_name = current_dir + config['urdf_file_name']
+        urdf_file_name = os.path.join(self.current_dir,config['urdf_file_name'])
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
-        base_orient_mat = config['base_orient_mat']
+        base_orient_eulerXYZ = config['base_orient_eulerXYZ']
         init_joint_position = config['init_position']
 
         # Create pybullet robot instance
-        self.robotIK = PyRBDL4dIK(self.dt, urdf_file_name, end_effector_name, base_position, base_orient_mat, init_joint_position)
+        self.robotIK = PyRBDL4dIK(self.dt, urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position)
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(
             name = self.robotIK.robot.getJointName(),
             position =  self.robotIK.robot.getJointConfig(),
-            velocity = self.robotIK.robot.getJointConfig()*0,
-            effort = self.robotIK.robot.getJointConfig()*0,
+            # velocity = self.robotIK.robot.getJointConfig(),
+            # effort = self.robotIK.robot.getJointConfig(),
         )
         msg.header.stamp = rospy.Time.now()
         self.target_joint_state_publisher.publish(msg)

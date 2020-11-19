@@ -18,7 +18,7 @@ sys.path.append(
 )
 
 import pybullet_interface
-from utils import loadYAMLConfig
+from utils4localPck import loadYAMLConfig
 
 
 
@@ -67,7 +67,7 @@ class ROSPyBulletInterface:
         rospack = rospkg.RosPack()
 
         # get the path to this catkin ws
-        current_dir = rospack.get_path('ros_pybullet_interface')
+        self.current_dir = rospack.get_path('ros_pybullet_interface')
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
@@ -79,19 +79,19 @@ class ROSPyBulletInterface:
 
         # Initialise pybullet
         pybullet_interface.initPyBullet(DT)
-        self.setupPyBulletCamera(current_dir, camera_config_file_name)
-        self.setupPyBulletRobot(current_dir, robot_config_file_name)
+        self.setupPyBulletCamera(camera_config_file_name)
+        self.setupPyBulletRobot(robot_config_file_name)
 
         for file_name in collision_object_file_names:
-            self.setupPyBulletCollisionObject(current_dir, file_name)
+            self.setupPyBulletCollisionObject(file_name)
 
         # Main pybullet update
         rospy.Timer(self.dur, self.updatePyBullet)
 
-    def setupPyBulletCamera(self, cur_dir, file_name):
+    def setupPyBulletCamera(self, file_name):
 
         # Load camera config
-        config = loadYAMLConfig(cur_dir + file_name)
+        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
 
         # Extract data from configuration
         pybullet_interface.setupPyBulletCamera(
@@ -101,16 +101,16 @@ class ROSPyBulletInterface:
             config['target_position']
         )
 
-    def setupPyBulletRobot(self, cur_dir, file_name):
+    def setupPyBulletRobot(self, file_name):
 
         # Load robot configuration
-        config = loadYAMLConfig(cur_dir + file_name)
+        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
 
         # Setup robot
-        self.robot = pybullet_interface.PyBulletRobot(cur_dir + config['urdf_file_name'])
+        self.robot = pybullet_interface.PyBulletRobot(os.path.join(self.current_dir, config['urdf_file_name']))
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
-            config['base_orient_mat']
+            config['base_orient_eulerXYZ']
         )
         self.robot.setJointPositions(config['init_position'])
 
@@ -154,14 +154,14 @@ class ROSPyBulletInterface:
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
 
-    def setupPyBulletCollisionObject(self, cur_dir, file_name):
+    def setupPyBulletCollisionObject(self, file_name):
 
         # Load config
-        config = loadYAMLConfig(cur_dir + file_name)
+        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
 
         # Setup collision object
         obj = pybullet_interface.PyBulletCollisionObject(
-            cur_dir + config['file_name'],
+            os.path.join(self.current_dir, config['file_name']),
             config['mesh_scale'],
             config['rgba_color'],
             config['base_mass'],
@@ -189,12 +189,12 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                config['link_state']['orientation_mat']
+                config['link_state']['orientation_eulerXYZ']
             )
             self.static_collision_objects.append({
                 'object': obj,
                 'position': config['link_state']['position'],
-                'orientation': config['link_state']['orientation_mat']
+                'orientation': config['link_state']['orientation_eulerXYZ']
             })
 
     def setPyBulletCollisionObjectPositionAndOrientation(self):
