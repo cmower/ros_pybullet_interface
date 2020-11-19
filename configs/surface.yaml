@@ -1,4 +1,4 @@
-file_name: '/objects/surface.obj'
+file_name: 'objects/surface.obj'
 
 # Basic parameters
 mesh_scale: [0.0015,0.0015,0.0015]
@@ -35,4 +35,4 @@ link_state:
 
   # position: [0., -0.2, -0.05]
   position: [0.3, 0., 0.9]
-  orientation_mat: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+  orientation_eulerXYZ: [0.0, 0.0, 0.0]

@@ -9,18 +9,18 @@
 
     <param
         name="robot_config"
-        value="/configs/kuka.yaml"
+        value="configs/kuka.yaml"
         type="str"/>
 
     <param
         name="camera_config"
-        value="/configs/camera.yaml"
+        value="configs/camera.yaml"
         type="str"/>
 
     <rosparam param="collision_object_config_file_names">
       [
-      '/configs/surface.yaml',
-      '/configs/whiteboard.yaml'
+      'configs/surface.yaml',
+      'configs/whiteboard.yaml'
       ]
     </rosparam>
 

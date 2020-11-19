@@ -9,7 +9,7 @@
 
     <param
         name="robot_config"
-        value="/configs/kuka.yaml"
+        value="configs/kuka.yaml"
         type="str"/>
 
   </node>

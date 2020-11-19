@@ -1,4 +1,4 @@
-file_name: '/objects/whiteboard.obj'
+file_name: 'objects/whiteboard.obj'
 
 # Basic parameters
 mesh_scale: [1.0, 1.0, 1.0]
