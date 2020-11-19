@@ -11,6 +11,7 @@ def loadYAMLConfig(file_name):
          config = yaml.load(configfile, Loader=yaml.FullLoader)
     return config
 
+
 __all__=[
     'loadYAMLConfig'
 ]
