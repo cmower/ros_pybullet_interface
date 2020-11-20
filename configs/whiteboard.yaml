@@ -1,4 +1,4 @@
-file_name: '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/objects/whiteboard.obj'
+file_name: 'objects/whiteboard.obj'
 
 # Basic parameters
 mesh_scale: [1.0, 1.0, 1.0]
@@ -25,12 +25,12 @@ link_state:
   #   You must specify here a position attribute and orientation attribute.
   #
   # dynamic object
-  # 
+  #
   #   You must specify an attribute tf_frame_id. The position/orientation of the
   #   collision object in PyBullet will be updated according to the
   #   position/orientation of the respective tf frame. In ROS, you must ensure
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
-  #   
+  #
 
   tf_frame_id: "whiteboard"

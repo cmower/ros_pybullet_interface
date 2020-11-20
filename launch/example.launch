@@ -1,30 +1,32 @@
 <launch>
 
+  <!-- PyBullet Environmet node (receiver) -->
   <node
       name="ros_pybullet_interface"
       pkg="ros_pybullet_interface"
       type="ros_pybullet_interface.py"
       output="screen">
-      
+
     <param
         name="robot_config"
-        value="/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/kuka.yaml"
+        value="configs/kuka.yaml"
         type="str"/>
 
     <param
         name="camera_config"
-        value="/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/camera.yaml"
+        value="configs/camera.yaml"
         type="str"/>
 
     <rosparam param="collision_object_config_file_names">
       [
-      '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/surface.yaml',
-      '/home/chris/Projects/kuka_ws/src/ros_pybullet_interface/configs/whiteboard.yaml'
+      'configs/surface.yaml',
+      'configs/whiteboard.yaml'
       ]
     </rosparam>
 
   </node>
 
+  <!-- Testing node (publisher) -->
   <node
       name="test_ros_pybullet_interface"
       pkg="ros_pybullet_interface"

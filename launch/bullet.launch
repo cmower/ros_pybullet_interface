@@ -1,5 +1,6 @@
 <launch>
 
+  <!-- PyBullet Environmet node (receiver) -->
   <node
       name="ros_pybullet_interface"
       pkg="ros_pybullet_interface"
@@ -18,16 +19,11 @@
 
     <rosparam param="collision_object_config_file_names">
       [
+      'configs/surface.yaml',
       'configs/whiteboard.yaml'
       ]
     </rosparam>
 
   </node>
-
-  <node
-      pkg="tf2_ros"
-      type="static_transform_publisher"
-      name="whiteboard_tf_broadcaster"
-      args="-0.3 -0.7 0.25 0 0 0 ros_pybullet_interface/world whiteboard"/>
 
 </launch>
