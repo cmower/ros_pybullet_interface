@@ -40,10 +40,10 @@ scale_dOri = 0.1 # this parameter needs to go to a yaml file
 
 class PyRBDLRobot:
 
-    def __init__(self, urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
+    def __init__(self, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
 
         # Load Robot rbdl model
-        self.rbdlModel = rbdl.loadModel(urdf_file_name.encode('utf-8'), verbose = False, floating_base = True)
+        self.rbdlModel = rbdl.loadModel(file_name.encode('utf-8'), verbose = False, floating_base = True)
 
         # Get end-effector body for rbdl
         self.rbdlEndEffectorID = rbdl.Model.GetBodyId(self.rbdlModel, end_effector_name)
@@ -116,8 +116,8 @@ class PyRBDLRobot:
 
 class PyRBDL4dIK:
 
-    def __init__(self, time_step, urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
-        self.robot = PyRBDLRobot(urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0)
+    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
+        self.robot = PyRBDLRobot(file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0)
         self.dt = time_step
 
     def FullDiffIKstep(self, globalTargetPos3D, globalTargetOri3D):
@@ -226,7 +226,7 @@ class ROSdIKInterface(object):
         config = loadYAMLConfig(os.path.join(self.current_dir,config_file_name))
 
         # Extract data from configuration
-        urdf_file_name = os.path.join(self.current_dir,config['urdf_file_name'])
+        file_name = os.path.join(self.current_dir,config['file_name'])
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
@@ -234,7 +234,7 @@ class ROSdIKInterface(object):
         init_joint_position = config['init_position']
 
         # Create pybullet robot instance
-        self.robotIK = PyRBDL4dIK(self.dt, urdf_file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position)
+        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position)
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(

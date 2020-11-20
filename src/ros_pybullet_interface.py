@@ -107,7 +107,7 @@ class ROSPyBulletInterface:
         config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
 
         # Setup robot
-        self.robot = pybullet_interface.PyBulletRobot(os.path.join(self.current_dir, config['urdf_file_name']))
+        self.robot = pybullet_interface.PyBulletRobot(os.path.join(self.current_dir, config['file_name']))
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
             config['base_orient_eulerXYZ']
