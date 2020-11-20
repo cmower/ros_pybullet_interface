@@ -1,33 +1,46 @@
 <launch>
 
+  <!-- Launch ROS-PyBullet interface node -->
   <node
       name="ros_pybullet_interface"
       pkg="ros_pybullet_interface"
       type="ros_pybullet_interface.py"
       output="screen">
 
+    <!-- Robot config (required) -->
     <param
         name="robot_config"
         value="configs/kuka.yaml"
         type="str"/>
 
+    <!-- Camera config (required) -->
     <param
         name="camera_config"
         value="configs/camera.yaml"
         type="str"/>
 
+    <!-- List collision objects (optional) -->
     <rosparam param="collision_object_config_file_names">
       [
+      'configs/surface.yaml',
       'configs/whiteboard.yaml'
       ]
     </rosparam>
 
   </node>
 
+  <!-- Testing node (publisher) -->
+  <node
+      name="test_ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="test_ros_pybullet_interface.py"
+      output="screen"/>
+
+  <!-- Setup a static tf for the whiteboard in the ros_pybullet_interface/world frame -->
   <node
       pkg="tf2_ros"
       type="static_transform_publisher"
       name="whiteboard_tf_broadcaster"
-      args="-0.3 -0.7 0.25 0 0 0 ros_pybullet_interface/world whiteboard"/>
+      args="0.1 0.2 0.3 0 0 0.6283185307179586 ros_pybullet_interface/world whiteboard"/>
 
 </launch>

@@ -1,5 +1,26 @@
 <launch>
 
+  <!-- Launch ROS-PyBullet interface node -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface.py"
+      output="screen">
+
+    <!-- Robot config (required) -->
+    <param
+        name="robot_config"
+        value="configs/kuka.yaml"
+        type="str"/>
+
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="configs/camera.yaml"
+        type="str"/>
+
+  </node>
+
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
       name="ros_PyRBDL4dIK_interface"
