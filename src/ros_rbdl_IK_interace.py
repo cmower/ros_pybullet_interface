@@ -6,13 +6,12 @@ import sys
 import os
 
 import rbdl
+import tf2_ros
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # ROS message types
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseStamped
-
 
 sys.path.append(
     os.path.join(
@@ -30,7 +29,6 @@ from ros_pybullet_interface_utils import loadYAMLConfig
 FREQ = 100 # IK sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
-TARGET_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/target' # publishes end-effector poses on this topic
 CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # publishes end-effector poses on this topic
 
 EEBodyPointPosition = np.zeros(3)
@@ -245,19 +243,23 @@ class ROSdIKInterface(object):
         msg.header.stamp = rospy.Time.now()
         self.target_joint_state_publisher.publish(msg)
 
-    def startListening2EETargets(self, msg):
+    def startListening2EETargets(self):
         # Subscribe target end-effector callback
-        rospy.Subscriber(TARGET_END_EFFECTOR_TOPIC, PoseStamped, self.readTargetEEStateFromROS)
+        self.tfBuffer = tf2_ros.Buffer()
+        self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
+        rospy.Timer(rospy.Duration(self.dt), self.readTargetEEStateFromTF)
+
+    def readTargetEEStateFromTF(self, event):
+        try:
+            tf = self.tfBuffer.lookup_transform('ros_pybullet_interface/world', 'ros_pybullet_interface/end_effector/target', rospy.Time())
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            return
+        self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
+        self.target_EE_orientation = np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w])
 
     def startListening2JointState(self, msg):
         # Setup ros subscriber
         rospy.Subscriber(CURRENT_JOINT_STATE_TOPIC, JointState, self.readCurrentJointStateFromROS)
-
-
-    def readTargetEEStateFromROS(self, msg):
-        # update current target for end-effector
-        self.target_EE_position = np.asarray([msg.pose.position.x, msg.pose.position.y,msg.pose.position.z])
-        self.target_EE_orientation = np.asarray([msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w])
 
     def readCurrentJointStateFromROS(self, msg):
         """ PENDING - not used at the moment"""
@@ -298,10 +300,8 @@ if __name__ == '__main__':
         ROSdIKinterface.startListening2JointState(msgRobotState)
 
         # Establish connection with end-effector commander
-        rospy.loginfo("%s: Waiting for "+TARGET_END_EFFECTOR_TOPIC+" topic", ROSdIKinterface.name)
-        msgEETarget = rospy.wait_for_message(TARGET_END_EFFECTOR_TOPIC, PoseStamped)
-        ROSdIKinterface.startListening2EETargets(msgEETarget)
-
+        rospy.loginfo("%s: Setup target reader.", ROSdIKinterface.name)
+        ROSdIKinterface.startListening2EETargets()
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSdIKinterface.dt)
