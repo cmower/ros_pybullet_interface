@@ -4,7 +4,6 @@ import rospkg
 import rospy
 import sys
 import os
-print(sys.version)
 
 import rbdl
 import numpy as np
