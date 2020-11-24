@@ -30,7 +30,8 @@ FREQ = 100 # IK sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
 CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # publishes end-effector poses on this topic
-
+WORLD_FRAME_ID = 'ros_pybullet_interface/world'
+END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
 EEBodyPointPosition = np.zeros(3)
 
 scale_dOri = 0.1 # this parameter needs to go to a yaml file
@@ -251,7 +252,7 @@ class ROSdIKInterface(object):
 
     def readTargetEEStateFromTF(self, event):
         try:
-            tf = self.tfBuffer.lookup_transform('ros_pybullet_interface/world', 'ros_pybullet_interface/end_effector/target', rospy.Time())
+            tf = self.tfBuffer.lookup_transform(WORLD_FRAME_ID, END_EFFECTOR_TARGET_FRAME_ID, rospy.Time())
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             return
         self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
