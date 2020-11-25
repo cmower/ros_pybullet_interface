@@ -40,6 +40,69 @@ wherever you run the roslaunch ros_pybullet_interface exampleIK.launch, before y
 export PYTHONPATH=$PYTHONPATH:"local path" + /rbdl/build/python
 
 
+# Style guide
 
+In the first instance, the following should be used as reference for style and how we should structure a ROS node. Regarding strings, try to always use double quotes `"`.
 
+```python
+import os
+import sys
+
+GLOBAL_VARIABLE_NAME = 0
+
+def methodName(variable_name):
+    pass
+
+class ClassName:
+
+    CLASS_CONSTANT = 0
+
+    def __init__(self):
+        rospy.init_node(name, disable_signals=True)
+        self.variable_name = 0
+        
+    def publicMethod(self):
+        pass
+        
+    def setupSomePublisher(self):
+        self.pub = rospy.Publisher(TOPIC, MessageType, queue_size=10)
+        
+    def setupSubscriber(self):
+        msg = rospy.wait_for_message(TOPIC, MessageType)
+        self.__readSomething(msg)
+        rospy.Subscriber(TOPIC, MessageType, self.__readSomething)
+        
+    def start(self):
+        rospy.Timer(rospy.Duration(DT), self.__mainLoop)
+      
+    def __privateMethod(self):
+        pass
+        
+    def __readSomething(self, msg):
+        self.something = msg
+        
+    def __mainLoop(self, event):
+        if not self.in_finish_state:
+            pass
+        else:
+            self.shutdown()
+        
+    def spin(self):
+        rospy.spin()
+        
+    def shutdown(self, reason=''):
+        rospy.signal_shutdown(reason)
+    
+if __name__ == "__main__":
+   node = ClassName()
+   node.setupPublisher()
+   node.setupSubscriber()
+   node.start()
+   try:
+       node.spin()
+   except rospy.ROSException as err:
+       node.shutdown(err)
+```
+
+If in doubt, refer to the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide.
 
