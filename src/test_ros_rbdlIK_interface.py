@@ -4,11 +4,10 @@ import math
 import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-
+import tf2_ros
 import rospy
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import TransformStamped
 
-TARGET_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/target' # publishes end-effector poses on this topic
 r = 0.1 # radius
 
 
@@ -88,7 +87,7 @@ class TestIK:
         eeOri_traj_Rot = R.from_rotvec(eeOri_traj)
         self.eeOri_traj = eeOri_traj_Rot.as_quat()
 
-        self.pub = rospy.Publisher(TARGET_END_EFFECTOR_TOPIC, PoseStamped, queue_size=1)
+        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
         time.sleep(2.0) # wait for initialisation to complete
 
 
@@ -115,18 +114,20 @@ class TestIK:
         orientation = self.eeOri_traj[self.traj_index, :]
 
         # Pack pose msg
-        msg = PoseStamped()
+        msg = TransformStamped()
         msg.header.stamp = rospy.Time.now()
-        msg.pose.position.x = position[0]
-        msg.pose.position.y = position[1]
-        msg.pose.position.z = position[2]
-        msg.pose.orientation.x = orientation[0]
-        msg.pose.orientation.y = orientation[1]
-        msg.pose.orientation.z = orientation[2]
-        msg.pose.orientation.w = orientation[3] # NOTE: the ordering here may be wrong
+        msg.header.frame_id = 'ros_pybullet_interface/world'
+        msg.child_frame_id = 'ros_pybullet_interface/end_effector/target'
+        msg.transform.translation.x = position[0]
+        msg.transform.translation.y = position[1]
+        msg.transform.translation.z = position[2]
+        msg.transform.rotation.x = orientation[0]
+        msg.transform.rotation.y = orientation[1]
+        msg.transform.rotation.z = orientation[2]
+        msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
 
         # Publish msg
-        self.pub.publish(msg)
+        self.tfBroadcaster.sendTransform(msg)
         self.updateTrajIndex()
 
 
