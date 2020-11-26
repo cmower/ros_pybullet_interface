@@ -70,39 +70,41 @@ class ClassName:
     def setupSubscriber(self):
         msg = rospy.wait_for_message(TOPIC, MessageType)
         self.__readSomething(msg)
-        rospy.Subscriber(TOPIC, MessageType, self.__readSomething)
+        self.sub = rospy.Subscriber(TOPIC, MessageType, self.__readSomething)
+
+    def setupTimer(self):
+        self.timer = rospy.Timer(rospy.Duration(DT), self.__update_timer)
+
+    def spin(self):
+        try:
+            rospy.spin()
+        except rospy.ROSException as err:
+            self.shutdown(err)
         
-    def start(self):
-        rospy.Timer(rospy.Duration(DT), self.__mainLoop)
-      
+    def shutdown(self, reason=''):
+        self.timer.shutdown()
+        self.sub.unregister()
+        rospy.signal_shutdown(reason)
+
     def __privateMethod(self):
         pass
-        
-    def __readSomething(self, msg):
-        self.something = msg
-        
-    def __mainLoop(self, event):
+
+    def __update_timer(self, event):
         if not self.in_finish_state:
             pass
         else:
             self.shutdown()
         
-    def spin(self):
-        rospy.spin()
-        
-    def shutdown(self, reason=''):
-        rospy.signal_shutdown(reason)
+    def __readSomething(self, msg):
+        self.something = msg
     
 if __name__ == "__main__":
-   node = ClassName()
-   node.setupPublisher()
-   node.setupSubscriber()
-   node.start()
-   try:
-       node.spin()
-   except rospy.ROSException as err:
-       node.shutdown(err)
+    node = ClassName()
+    node.setupPublisher()
+    node.setupSubscriber()
+    node.start()
+    node.spin()
 ```
 
-If in doubt, refer to the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide.
+Keep the class method `shutdown` public, since sometimes you may not want to specify `disable_signals=True` in `rospy.init_node` and then `shutdown` needs to be passed to `rospy.on_shutdown` (*note*, in this case you don't need to call `rospy.signal_shutdown`). If in doubt, refer to the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide.
 
