@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-print(sys.version)
 
 import numpy
 import rospkg
@@ -19,7 +18,6 @@ sys.path.append(
 
 import pybullet_interface
 from ros_pybullet_interface_utils import loadYAMLConfig
-
 
 
 # ------------------------------------------------------
