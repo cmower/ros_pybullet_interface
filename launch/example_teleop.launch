@@ -1,0 +1,42 @@
+<launch>
+
+  <!-- Launch ROS-PyBullet interface -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface.py">
+
+    <!-- Robot config (required) -->
+    <param
+        name="robot_config"
+        value="configs/kuka_teleop.yaml"
+        type="str"/>
+
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="configs/camera.yaml"
+        type="str"/>
+
+  </node>
+
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <node
+      name="ros_PyRBDL4dIK_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace.py">
+
+    <param
+        name="robot_config"
+        value="configs/kuka_teleop.yaml"
+        type="str"/>
+
+  </node>
+
+  <!-- Launch keyboard -->
+  <node name="keyboard" pkg="keyboard" type="keyboard"/>
+
+  <!-- Launch teleop node -->
+  <node name="teleop" pkg="ros_pybullet_interface" type="teleop_example_node.py" output="screen"/>
+
+</launch>

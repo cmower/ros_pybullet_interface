@@ -108,3 +108,26 @@ if __name__ == "__main__":
 
 Keep the class method `shutdown` public, since sometimes you may not want to specify `disable_signals=True` in `rospy.init_node` and then `shutdown` needs to be passed to `rospy.on_shutdown` (*note*, in this case you don't need to call `rospy.signal_shutdown`). If in doubt, refer to the [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide.
 
+# Install SDL and ros-keyboard
+
+To run the teleoperation example you need to install [SDL](http://www.libsdl.org/index.php) and [ros-keyboard](https://github.com/lrse/ros-keyboard). Follow these instructions.
+
+*Install SDL*
+```
+#install sdl2
+sudo apt install libsdl2-dev libsdl2-2.0-0 -y;
+
+#install sdl image
+sudo apt install libjpeg-dev libwebp-dev libtiff5-dev libsdl2-image-dev libsdl2-image-2.0-0 -y;
+
+#install sdl mixer
+sudo apt install libmikmod-dev libfishsound1-dev libsmpeg-dev liboggz2-dev libflac-dev libfluidsynth-dev libsdl2-mixer-dev libsdl2-mixer-2.0-0 -y;
+
+#install sdl true type fonts
+sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
+```
+
+*Install ros-keyboard*
+1. `cd /path/to/catkin_ws/src`
+1. `git clone git@github.com:lrse/ros-keyboard.git`
+1. `catkin build`
