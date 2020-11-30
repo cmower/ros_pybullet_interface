@@ -44,13 +44,16 @@ def closePyBullet():
 
 class PyBulletObject:
 
-    def setBasePositionAndOrientation(self, position, orientation_euler):
+    def setBasePositionAndOrientation(self, position, orientation):
+        '''Note: if len(orientation) is 3 then it is treated as euler angles, otherwise
+        we expect a quaternion.'''
 
         # Ensure orientation is a quaternion
-        orientation = tf_conversions.transformations.quaternion_from_euler(
-            np.deg2rad(orientation_euler[0]),
-            np.deg2rad(orientation_euler[1]),
-            np.deg2rad(orientation_euler[2])
+        if len(orientation) == 3:
+            orientation = tf_conversions.transformations.quaternion_from_euler(
+                np.deg2rad(orientation[0]),
+                np.deg2rad(orientation[1]),
+                np.deg2rad(orientation[2])
             )
 
         # Reset base position/orientation
