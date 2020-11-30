@@ -1,9 +1,15 @@
 for tf2_ros, tf_conversions, PyKDL....
 
+# the following packages should be installed
+pip3 install rospkg
+pip3 install sip
+sudo apt-get install python3-sip-dev
+
 mkdir -p ~/catkin_ws/src;
 cd ~/catkin_ws
 catkin build
 source devel/setup.bash
+
 wstool init
 wstool set -y src/geometry2 --git https://github.com/ros/geometry2 -v 0.6.5
 wstool set -y src/geometry --git https://github.com/ros/geometry -v 1.12.1
