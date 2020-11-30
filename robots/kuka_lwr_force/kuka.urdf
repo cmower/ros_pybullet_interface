@@ -31,14 +31,13 @@
             </geometry>
             <material name="Grey"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.055"/>
             <geometry>
                 <cylinder length="0.11" radius="0.07"/>
             </geometry>
         </collision>
-        -->
     </link>
     <joint name="lwr_arm_0_joint" type="revolute">
         <origin rpy="0 0 3.14159265359" xyz="0 0 0.11"/>
@@ -62,7 +61,7 @@
             </geometry>
             <material name="Blue"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <geometry>
@@ -81,7 +80,6 @@
                 <cylinder length="0.208" radius="0.07"/>
             </geometry>
         </collision>
-        -->
     </link>
     <transmission name="lwr_arm_0_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_0_motor"/>
@@ -110,7 +108,7 @@
             </geometry>
             <material name="Blue"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.2"/>
             <geometry>
@@ -129,7 +127,6 @@
                 <cylinder length="0.208" radius="0.07"/>
             </geometry>
         </collision>
-        -->
     </link>
     <transmission name="lwr_arm_1_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_1_motor"/>
@@ -158,7 +155,7 @@
             </geometry>
             <material name="Blue"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <geometry>
@@ -177,7 +174,6 @@
                 <cylinder length="0.208" radius="0.07"/>
             </geometry>
         </collision>
-        -->
     </link>
     <transmission name="lwr_arm_2_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_2_motor"/>
@@ -206,7 +202,7 @@
                 </geometry>
             <material name="Blue"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.2"/>
             <geometry>
@@ -225,7 +221,6 @@
                 <cylinder length="0.208" radius="0.07"/>
             </geometry>
         </collision>
-        -->
     </link>
     <transmission name="lwr_arm_3_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_3_motor"/>
@@ -254,7 +249,7 @@
             </geometry>
             <material name="Blue"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <geometry>
@@ -273,7 +268,6 @@
                 <cylinder length="0.198" radius="0.07"/>
             </geometry>
         </collision>
-        -->
     </link>
     <transmission name="lwr_arm_4_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_4_motor"/>
@@ -337,14 +331,13 @@
             </geometry>
             <material name="DarkGrey"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
                 <cylinder length="0.046" radius="0.04"/>
             </geometry>
         </collision>
-        -->
     </link>
     <joint name="lwr_arm_7_joint" type="fixed">
         <parent link="lwr_arm_7_link"/>
@@ -364,14 +357,13 @@
             </geometry>
             <material name="Black"/>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 3.1416 0" xyz="0 0 0"/>
             <geometry>
                 <mesh filename="meshes/visual/adaptor_kuka.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
-        -->
     </link>
     <joint name="force_torque_sensor_mount" type="fixed">
         <origin rpy="0 0 0" xyz="0 0 0.0453"/>
@@ -391,14 +383,13 @@
                 <mesh filename="meshes/visual/force_sensor.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
-        <!--
+        
         <collision>
             <origin rpy="0 0 0" xyz="0 0 -0.0333"/>
             <geometry>
                 <cylinder length="0.0333" radius="0.04"/>
             </geometry>
         </collision>
-        -->
     </link>
     <joint name="end_effector_joint" type="fixed">
         <origin rpy="0 0 0.0" xyz="0 0 0.02"/>
