@@ -9,7 +9,9 @@
 1. `$ rosdep update ; rosdep install --from-paths ./ -iry`
 1. Build workspace run test, `$ roslaunch ros_pybullet_interface example.launch` (*note*, you'll need to modify the `urdf` attribute in `configs/kuka.yaml`)
 
-Stream joint states (`sensor_msgs/JointState`) to
+# Usage
+
+Stream target joint states (`sensor_msgs/JointState`) to
 ```
     /ros_pybullet_interface/joint_state/target
 ```
