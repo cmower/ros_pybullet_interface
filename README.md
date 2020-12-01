@@ -35,22 +35,21 @@ Joint states (`sensor_msgs/JointState`) from PyBullet are streamed to
 
 The end-effector transform in the world coordinate system is broadcast as a `tf` using the `tf2` package.
 
-
 # ros_rbdl_IK_interace
 
 RBDL need to be installed: (instructions according to https://github.com/rbdl/rbdl)
-1. Create folder, and `cd` into 
+1. Create folder, and `cd` into
 2. `$ git clone https://github.com/rbdl/rbdl`
-3. mkdir build, and cd build/ 
-3,5.  NOTE:  Eigen3 linear algebra library should be installed, probably is installed already, but check!  
-4. cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="local path" ../ 
+3. mkdir build, and cd build/
+3,5.  NOTE:  Eigen3 linear algebra library should be installed, probably is installed already, but check!
+4. cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX="local path" ../
 5. Configure cmake:
     5i.   ccmake .
-    5ii.  find RBDL_BUILD_PYTHON_WRAPPER  and set it to ON 
+    5ii.  find RBDL_BUILD_PYTHON_WRAPPER  and set it to ON
     5iii. find RBDL_USE_ROS_URDF_LIBRARY  and set it to OFF
     5iv.  press c e g ... etc (to configure)
-5. make 
-6. make install 
+5. make
+6. make install
 
 wherever you run the roslaunch ros_pybullet_interface exampleIK.launch, before you launch the following path needs to be sourced:
 export PYTHONPATH=$PYTHONPATH:"local path" + /rbdl/build/python
@@ -76,13 +75,13 @@ class ClassName:
     def __init__(self):
         rospy.init_node(name, disable_signals=True)
         self.variable_name = 0
-        
+
     def publicMethod(self):
         pass
-        
+
     def setupSomePublisher(self):
         self.pub = rospy.Publisher(TOPIC, MessageType, queue_size=10)
-        
+
     def setupSubscriber(self):
         msg = rospy.wait_for_message(TOPIC, MessageType)
         self.__readSomething(msg)
@@ -96,7 +95,7 @@ class ClassName:
             rospy.spin()
         except rospy.ROSException as err:
             self.shutdown(err)
-        
+
     def shutdown(self, reason=''):
         self.timer.shutdown()
         self.sub.unregister()
@@ -110,10 +109,10 @@ class ClassName:
             pass
         else:
             self.shutdown()
-        
+
     def __readSomething(self, msg):
         self.something = msg
-    
+
 if __name__ == "__main__":
     node = ClassName()
     node.setupPublisher()
