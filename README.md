@@ -1,6 +1,8 @@
 # ros_pybullet_interface
 
-Install:
+
+# Install
+
 1. Create catkin workspace, and `cd` into `src/`
 1. `$ git clone git@github.com:cmower/ros_pybullet_interface.git`
 1. `$ cd ros_pybullet_interface`
