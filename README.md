@@ -1,5 +1,17 @@
 # ros_pybullet_interface
 
+# Contributing
+
+When contributing changes to the repository please follow these steps.
+1. Pull latest commits from `main` branch, use `$ git checkout main; git pull origin main`
+1. Checkout onto a new branch `$ git checkout -b YOURNAME-SHORTDESCRIPTION`.
+1. Make your changes and commit as many small steps as necessary.
+1. Push your local branch to the remote, use `$ git push origin YOURNAME-SHORTDESCRIPTION`
+1. On GitHub create a pull request, add a description of the changes, then do one of the following:
+    1. If your changes are minor and you know the changes are not likely to break on a different system or something else then go ahead and merge to main (e.g. updates to README.md)
+    1. Otherwise, set one of us as a reviewer and then we will review and merge when necessary.
+
+As you go, update/comment on any related issues/project to-dos as you need.
 
 # Install
 
