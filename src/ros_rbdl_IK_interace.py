@@ -231,6 +231,14 @@ class ROSdIKInterface(object):
         base_orient_eulerXYZ = config['base_orient_eulerXYZ']
         init_joint_position = config['init_position']
 
+        # Establish connection with Robot in PyBullet environment
+        rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", self.name)
+        msgRobotState = rospy.wait_for_message(CURRENT_JOINT_STATE_TOPIC, JointState)
+
+        # set robot to the curent configuration obtained from pybullet env
+        init_joint_position = list(msgRobotState.position)
+        self.startListening2JointState(msgRobotState)
+
         # Create pybullet robot instance
         self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position)
 
@@ -294,11 +302,6 @@ if __name__ == '__main__':
         rospy.init_node("ros_rbdl_IK_interface", anonymous=True)
         # Initialize node class
         ROSdIKinterface = ROSdIKInterface()
-
-        # Establish connection with Robot in PyBullet environment
-        rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", ROSdIKinterface.name)
-        msgRobotState = rospy.wait_for_message(CURRENT_JOINT_STATE_TOPIC, JointState)
-        ROSdIKinterface.startListening2JointState(msgRobotState)
 
         # Establish connection with end-effector commander
         rospy.loginfo("%s: Setup target reader.", ROSdIKinterface.name)
