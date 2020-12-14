@@ -1,0 +1,67 @@
+<launch>
+
+  <!-- Launch ROS-PyBullet interface -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface.py">
+
+    <!-- Robot config (required) -->
+    <param
+        name="robot_config"
+        value="configs/kuka_teleop.yaml"
+        type="str"/>
+
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="configs/camera.yaml"
+        type="str"/>
+
+
+    <!-- List collision objects (optional) -->
+    <rosparam param="collision_object_config_file_names">
+      [
+      'configs/table.yaml',
+      'configs/box.yaml'
+      ]
+    </rosparam>
+
+  </node>
+
+
+  <node
+      pkg="tf2_ros"
+      type="static_transform_publisher"
+      name="whiteboard_tf_broadcaster"
+      args="1.25 1.25 -0.075 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world whiteboard"
+      />
+
+    <!-- <node
+        pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="box_tf_broadcaster"
+        args="0.5 0.5 0.0 0.0 0.0 1.5707963267948966 ros_pybullet_interface/world ros_pybullet_interface/box"
+        /> -->
+
+    <!-- Testing node cartesian poistions (publisher) -->
+    <node
+        name="test_ros_interpolation_interface"
+        pkg="ros_pybullet_interface"
+        type="test_ros_interpolation_interface.py"
+        output="screen"/>
+
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <!-- <node
+      name="ros_PyRBDL4dIK_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace.py">
+
+    <param
+        name="robot_config"
+        value="configs/kuka_teleop.yaml"
+        type="str"/>
+
+  </node> -->
+
+</launch>
