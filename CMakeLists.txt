@@ -17,7 +17,10 @@ include_directories(
   )
 
 catkin_install_python(PROGRAMS
-  scripts/ros_pybullet_interface.py
+  scripts/ros_pybullet_interface_node.py
+  scripts/ros_rbdl_IK_interace.py
+  scripts/teleop_example_node.py
   scripts/test_ros_pybullet_interface.py
+  scripts/test_ros_rbdlIK_interface.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )

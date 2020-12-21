@@ -9,15 +9,8 @@ import tf2_ros
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped, WrenchStamped
 
-sys.path.append(
-    os.path.join(
-        rospkg.RosPack().get_path('ros_pybullet_interface'),
-        'include'
-    )
-)
-
-import pybullet_interface
-from ros_pybullet_interface_utils import loadYAMLConfig
+from ros_pybullet_interface import pybullet_interface
+from ros_pybullet_interface.utils import loadYAMLConfig
 
 
 # ------------------------------------------------------

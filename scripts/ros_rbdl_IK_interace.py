@@ -2,7 +2,6 @@
 # license removed for brevity
 import rospkg
 import rospy
-import sys
 import os
 
 import rbdl
@@ -13,13 +12,8 @@ from scipy.spatial.transform import Rotation as R
 # ROS message types
 from sensor_msgs.msg import JointState
 
-sys.path.append(
-    os.path.join(
-        rospkg.RosPack().get_path('ros_pybullet_interface'),
-        'include'
-    )
-)
-from ros_pybullet_interface_utils import loadYAMLConfig
+# from ros_pybullet_interface.utils import loadYAMLConfig
+import ros_pybullet_interface.utils as utils
 
 # ------------------------------------------------------
 #
@@ -221,7 +215,7 @@ class ROSdIKInterface(object):
     def setupPyRBDLRobot(self, config_file_name):
 
         # Load robot configuration
-        config = loadYAMLConfig(os.path.join(self.current_dir,config_file_name))
+        config = utils.loadYAMLConfig(os.path.join(self.current_dir,config_file_name))
 
         # Extract data from configuration
         file_name = os.path.join(self.current_dir,config['file_name'])

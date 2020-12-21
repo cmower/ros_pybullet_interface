@@ -3,11 +3,6 @@ import pybullet
 import math
 import numpy as np
 
-
-__all__=[
-    'initPyBullet',
-]
-
 # ------------------------------------------------------
 #
 # Methods
