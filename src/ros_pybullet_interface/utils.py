@@ -1,9 +1,12 @@
+import rospkg
 # ------------------------------------------------------
 #
 # Helpful functions
 # ------------------------------------------------------
 
 import yaml
+
+ROOT_DIR = rospkg.RosPack().get_path('ros_pybullet_interface')
 
 
 def loadYAMLConfig(file_name):

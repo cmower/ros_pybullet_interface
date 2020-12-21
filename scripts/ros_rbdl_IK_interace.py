@@ -188,11 +188,8 @@ class ROSdIKInterface(object):
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
 
-        # get an instance of RosPack with the default search paths
-        rospack = rospkg.RosPack()
-
         # get the path to this catkin ws
-        self.current_dir = rospack.get_path('ros_pybullet_interface')
+        self.current_dir = utils.ROOT_DIR
 
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
