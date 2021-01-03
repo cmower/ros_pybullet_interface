@@ -1,23 +1,12 @@
 #!/usr/bin/env python3
 import os
-import sys
 import rospy
-import rospkg
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
 from keyboard.msg import Key
 import tf_conversions
 
-ROOT_DIR = rospkg.RosPack().get_path('ros_pybullet_interface')
-
-sys.path.append(
-    os.path.join(
-        ROOT_DIR,
-        'include'
-    )
-)
-
-from ros_pybullet_interface_utils import loadYAMLConfig
+from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
 
 FREQ = 20
 DT = 1.0 / float(FREQ)
