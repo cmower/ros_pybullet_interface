@@ -128,6 +128,18 @@ class PyBulletObject:
             baseVisualShapeIndex=self.visual_ID
         )
 
+class PyBulletVisualSphere(PyBulletObject):
+
+    def __init__(self, radius, rgba_color):
+        visual_id = pybullet.createVisualShape(
+            pybullet.GEOM_SPHERE,
+            radius=radius,
+            rgbaColor=rgba_color
+        )
+        self.ID = pybullet.createMultiBody(
+            baseVisualShapeIndex=visual_id
+        )
+
 class PyBulletCollisionObject(PyBulletObject):
 
     def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
