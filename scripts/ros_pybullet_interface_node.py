@@ -45,6 +45,7 @@ class ROSPyBulletInterface:
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
         self.sensor_pubs = {}
         self.tfs = {}
+        self.vislinks_objs = {}
         self.dynamic_collision_objects = []
         self.static_collision_objects = []
 
@@ -60,6 +61,7 @@ class ROSPyBulletInterface:
         collision_object_file_names = rospy.get_param(
             '~collision_object_config_file_names', []
         )
+        self.vislinks = rospy.get_param("~vislinks", [])
 
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
@@ -71,6 +73,9 @@ class ROSPyBulletInterface:
 
         for file_name in collision_object_file_names:
             self.setupPyBulletCollisionObject(file_name)
+
+        for linkid in self.vislinks:
+            self.setupPyBulletVisualLinks(linkid)
 
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
@@ -146,6 +151,14 @@ class ROSPyBulletInterface:
 
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+
+    def setupPyBulletVisualLinks(self, linkid):
+        self.tfs[linkid] = {
+            'received': False, 'position': None, 'orientation': None
+        }
+        self.vislinks_objs[linkid] = pybullet_interface.PyBulletVisualSphere(
+            0.1, [0.0]*4
+        )
 
     def setupPyBulletCollisionObject(self, file_name):
 
@@ -283,6 +296,13 @@ class ROSPyBulletInterface:
         self.robot.commandJointPosition(self.target_joint_position)
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
+        for linkid, o in self.vislinks_objs.items():
+            tf = self.tfs[linkid]
+            if tf['received']:
+                o.setBasePositionAndOrientation(
+                    tf['position'], tf['orientation']
+                )
+                o.visualizeLink(-1)
         pybullet_interface.stepPyBullet()
 
     def spin(self):
