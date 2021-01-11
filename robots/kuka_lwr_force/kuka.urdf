@@ -430,15 +430,32 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 -0.006"/>
             <geometry>
-                <cylinder length="0.015" radius="0.04"/>
+                <!-- <cylinder length="0.015" radius="0.04"/> -->
+                <cylinder length="0.25" radius="0.005"/>
             </geometry>
             <material name="Silver"/>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 -0.006"/>
             <geometry>
-                <cylinder length="0.015" radius="0.04"/>
+                <!-- <cylinder length="0.015" radius="0.04"/> -->
+                <cylinder length="0.25" radius="0.005"/>
             </geometry>
         </collision>
+    </link>
+    <joint name="end_effector_ball" type="fixed">
+        <origin rpy="0 0 0.0" xyz="0 0 0.12"/>
+        <parent link="end_effector_sponge"/>
+        <child link="end_effector_ball"/>
+    </joint>
+    <link name="end_effector_ball">
+    <visual>
+        <origin rpy="0 0 0" xyz="0 0 0.0"/>
+        <geometry>
+            <!-- <cylinder length="0.015" radius="0.04"/> -->
+            <sphere radius="0.015"/>
+        </geometry>
+        <material name="Black"/>
+    </visual>
     </link>
 </robot>

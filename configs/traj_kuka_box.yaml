@@ -1,0 +1,25 @@
+#
+# Trajectory manager for KUKA and a box configuration file
+#
+
+
+robot_trajectory_dimensions: ["translation.x","translation.y"]
+default_robot_motion_axes: ["translation.z","rotation.vec.x","rotation.vec.y","rotation.vec.z"]
+default_robot_motion_axes_values: [0.275, 0.0, 0.0, -1.0]
+
+object_properties: True
+object_trajectory_dimensions: ["translation.x","translation.y", "theta"]
+default_object_motion_dimensions: ["translation.z","rotation.vec.x","rotation.vec.y","rotation.vec.z"]
+default_object_motion_axes_values: [0.075, 0.0, 0.0, 1.0]
+obj_header_frame_id : "ros_pybullet_interface/world"
+obj_child_frame_id : "ros_pybullet_interface/box"
+
+
+horizon_Length: 20
+use_interpolation: True
+interDt: 0.00025
+
+
+# 0.686681210995
+# -0.0409726649523
+# 0.0746768042445
