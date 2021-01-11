@@ -25,7 +25,7 @@
   <node
       name="ros_PyRBDL4dIK_interface"
       pkg="ros_pybullet_interface"
-      type="ros_rbdl_IK_interace.py"
+      type="ros_rbdl_IK_interace_node.py"
       output="screen">
 
     <param
