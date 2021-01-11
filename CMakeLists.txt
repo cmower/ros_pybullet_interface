@@ -23,6 +23,6 @@ catkin_install_python(PROGRAMS
   scripts/teleop_example_node.py
   scripts/test_ros_pybullet_interface.py
   scripts/test_ros_rbdlIK_interface.py
-  scripts/test_ros_interpol_interface.py
+  scripts/test_ros_interpolation_interface.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
