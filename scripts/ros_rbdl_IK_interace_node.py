@@ -26,7 +26,7 @@ CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publi
 CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # publishes end-effector poses on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
-EEBodyPointPosition = np.zeros(3)
+EEBodyPointPosition = np.array([0.0, 0.0, 0.5]) #np.zeros(3)
 
 scale_dOri = 0.1 # this parameter needs to go to a yaml file
 
