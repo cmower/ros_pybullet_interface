@@ -49,14 +49,18 @@ class TrajManager:
 
 
     def getNextWayPt(self):
+        "Get function to access data from the trajectory class"
 
         traj_waypt = self.popFirstTrajElem()
 
-        return self.transTraj2Motion6D(traj_waypt)
+        if traj_waypt is not None:
+            return self.transTraj2Motion6D(traj_waypt)
+        else:
+            return None
+
 
     def transTraj2Motion6D(self, way_pt):
-        """ We need a function that maps dimensions of the Traj to 6D"""
-
+        """A function that maps dimensions of the Traj to 6D"""
 
         # translation
         if self.mot_dim['trans']['translationX'] is not None:
@@ -118,7 +122,7 @@ class TrajManager:
         if self.use_interp:
 
             if self.motionInterpPlan.shape[1] == 0:
-                rospy.logerr("All the trajectory data has been consumerd")
+                rospy.logerr("All the trajectory data has been consumed")
                 return None
 
             nextWaypt = self.motionInterpPlan[:,0]
@@ -243,26 +247,30 @@ class ROSTrajInterface(object):
 
             motion = self.trajManag.getNextWayPt()
 
-            # Pack pose msg
-            msg = TransformStamped()
-            msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = self.header_frame_id
-            msg.child_frame_id = self.msg_child_frame_id
-            msg.transform.translation.x = motion[0]
-            msg.transform.translation.y = motion[1]
-            msg.transform.translation.z = motion[2]
-            msg.transform.rotation.x = motion[3]
-            msg.transform.rotation.y = motion[4]
-            msg.transform.rotation.z = motion[5]
-            msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
+            # if the motion plan is not empty
+            if motion is not None:
 
-            # Publish msg
-            self.tfBroadcaster.sendTransform(msg)
+                # Pack pose msg
+                msg = TransformStamped()
+                msg.header.stamp = rospy.Time.now()
+                msg.header.frame_id = self.header_frame_id
+                msg.child_frame_id = self.msg_child_frame_id
+                msg.transform.translation.x = motion[0]
+                msg.transform.translation.y = motion[1]
+                msg.transform.translation.z = motion[2]
+                msg.transform.rotation.x = motion[3]
+                msg.transform.rotation.y = motion[4]
+                msg.transform.rotation.z = motion[5]
+                msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
 
+                # Publish msg
+                self.tfBroadcaster.sendTransform(msg)
+            else:
+                self.cleanShutdown()
 
     def cleanShutdown(self):
         print('')
-        rospy.loginfo("%s: Sending to safe configuration", self.name)
+        rospy.loginfo("%s: Shutting down interpolation node ", self.name)
         # Shut down write callback
         self.writeCallbackTimer.shutdown()
         rospy.sleep(1.0)
