@@ -23,10 +23,7 @@
     <!-- List collision objects (optional) -->
     <rosparam param="collision_object_config_file_names">
       [
-      'configs/table.yaml',
-      'configs/box.yaml',
-      'configs/box1.yaml',
-      'configs/box2.yaml'
+      'configs/table.yaml'
       ]
     </rosparam>
 
@@ -49,7 +46,7 @@
 
 
   <node
-      name="ros_traj_consum_interpol_interface1"
+      name="ros_traj_consum_interpol_interface"
       pkg="ros_pybullet_interface"
       type="ros_traj_consum_interpol_interface_node.py"
       output="screen">
@@ -58,20 +55,6 @@
     <param
         name="traj_config"
         value="configs/traj_kuka.yaml"
-        type="str"/>
-
-  </node>
-
-  <node
-      name="ros_traj_consum_interpol_interface2"
-      pkg="ros_pybullet_interface"
-      type="ros_traj_consum_interpol_interface_node.py"
-      output="screen">
-
-    <!-- Traj config (required) -->
-    <param
-        name="traj_config"
-        value="configs/traj_box.yaml"
         type="str"/>
 
   </node>
@@ -85,38 +68,5 @@
       args="1.25 1.25 -0.075 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world table"
       />
 
-    <node
-        pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="box1_tf_broadcaster"
-        args="-0.05 0.75 0.07 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box1"
-        />
-
-    <node
-        pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="box2_tf_broadcaster"
-        args="0.4 0.0 -0.06 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
-        />
-
-    <!-- Testing node cartesian poistions (publisher) -->
-    <!-- <node
-        name="test_ros_interpolation_interface"
-        pkg="ros_pybullet_interface"
-        type="test_ros_interpolation_interface.py"
-        output="screen"/> -->
-
-  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
-  <!-- <node
-      name="ros_PyRBDL4dIK_interface"
-      pkg="ros_pybullet_interface"
-      type="ros_rbdl_IK_interace.py">
-
-    <param
-        name="robot_config"
-        value="configs/kuka_teleop.yaml"
-        type="str"/>
-
-  </node> -->
 
 </launch>

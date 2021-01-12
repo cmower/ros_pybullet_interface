@@ -1,0 +1,29 @@
+#
+# Trajectory manager configuration file for the box
+#
+
+motion_dimensions:
+  number: 3
+
+  trans:
+    translationX:
+    translationX_index: 0
+    translationY:
+    translationY_index: 1
+    translationZ: 0.075
+    translationZ_index:
+
+  rotation:
+    rotationTheta: True
+    rotationTheta_index: 2
+    rotationvec: [0.0, 0.0, 1.0]
+    rotationvec_index:
+
+interpolation:
+  horizon_Length: 10
+  use_interpolation: True
+  interDt: 0.001
+
+communication:
+  header_frame_id: 'ros_pybullet_interface/world'
+  msg_child_frame_id: 'ros_pybullet_interface/box'
