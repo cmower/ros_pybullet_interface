@@ -21,9 +21,6 @@ import ros_pybullet_interface.interpolation as interpol
 # ------------------------------------------------------
 
 FREQ = 100 # Resolution of trajectory knots --- sampling frequency
-WORLD_FRAME_ID = 'ros_pybullet_interface/world'
-END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
-
 
 class TrajManager:
 
