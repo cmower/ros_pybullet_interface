@@ -228,10 +228,6 @@ class ROSTrajInterface(object):
         # Setup constants
         self.dt = 1.0/float(FREQ)
 
-        # default values for TF
-        self.header_frame_id = None
-        self.msg_child_frame_id = None
-
         # Name of node
         self.name = rospy.get_name()
         # Initialization message
@@ -302,7 +298,6 @@ class ROSTrajInterface(object):
 
         #  call to update the trajectory data
         self.trajManag.updateTraj(msg_data)
-
 
 
     def decodeROStrajmsg(self, msg):
