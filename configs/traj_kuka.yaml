@@ -4,7 +4,7 @@
 
 motion_dimensions:
   number: 2
-  
+
   trans:
     translationX:
     translationX_index: 0
@@ -21,13 +21,18 @@ motion_dimensions:
 
 
 interpolation:
-  horizon_Length: 20
+  nochange_window_length: 1
   use_interpolation: True
-  interDt: 0.001
+  interDt: 0.0005
 
 communication:
-  header_frame_id: 'ros_pybullet_interface/world'
-  msg_child_frame_id: 'ros_pybullet_interface/end_effector/target'
+  publisher:
+    header_frame_id: 'ros_pybullet_interface/world'
+    msg_child_frame_id: 'ros_pybullet_interface/end_effector/target'
+  listener:
+      topic: 'ros_pybullet_interface/end_effector/traj'
+
+
 
 # 0.686681210995
 # -0.0409726649523

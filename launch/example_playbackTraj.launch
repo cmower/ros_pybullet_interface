@@ -1,5 +1,6 @@
 <launch>
 
+
   <!-- Launch ROS-PyBullet interface -->
   <!-- Launch ROS-PyBullet interface -->
   <node
@@ -99,24 +100,11 @@
         args="0.4 0.0 -0.06 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
         />
 
-    <!-- Testing node cartesian poistions (publisher) -->
-    <!-- <node
-        name="test_ros_interpolation_interface"
-        pkg="ros_pybullet_interface"
-        type="test_ros_interpolation_interface.py"
-        output="screen"/> -->
 
-  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
-  <!-- <node
-      name="ros_PyRBDL4dIK_interface"
-      pkg="ros_pybullet_interface"
-      type="ros_rbdl_IK_interace.py">
-
-    <param
-        name="robot_config"
-        value="configs/kuka_teleop.yaml"
-        type="str"/>
-
-  </node> -->
+      <!-- Testing node trajectory publisher -->
+      <node name="test_ros_interpol_interface"
+          pkg="ros_pybullet_interface"
+          type="test_ros_interpol_interface.py"
+          output="screen"/>
 
 </launch>

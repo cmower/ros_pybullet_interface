@@ -10,6 +10,8 @@ from scipy.spatial.transform import Rotation as R
 
 # ROS message types
 from geometry_msgs.msg import TransformStamped
+from std_msgs.msg import Float64MultiArray
+
 
 import ros_pybullet_interface.utils as utils
 
@@ -27,7 +29,7 @@ class TrajManager:
     def __init__(self, mot_dim, interpol):
 
 
-        self.horizonLength  = interpol['horizon_Length']
+        self.nochange_win_len  = interpol['nochange_window_length']
         self.interFreq = 1.0/interpol['interDt']
         self.use_interp = interpol['use_interpolation']
 
@@ -37,19 +39,12 @@ class TrajManager:
         # information about the fixed and planned dimensions of the motion
         self.mot_dim = mot_dim
 
-        # init struct for trajectory plan received by a planner
-        self.trajPlan = np.zeros((trajPlanDim, 1))
-
-        if self.use_interp:
-            self.dTrajPlan = np.zeros((trajPlanDim, 1))
-            self.time = np.zeros((1, 1))
-
         # init struct for interpolated motion plan
         self.motionInterpPlan = np.array([])
 
 
     def getNextWayPt(self):
-        "Get function to access data from the trajectory class"
+        """ Get function to access data from the trajectory class """
 
         traj_waypt = self.popFirstTrajElem()
 
@@ -114,68 +109,115 @@ class TrajManager:
         """ Extract the 1st element of the motion struct to
         send to the simulation"""
 
-        # nextWaypt = self.trajPlan[:,0]
-        # self.trajPlan = np.delete(self.trajPlan, 0, 1)
-        # self.dTrajPlan = np.delete(self.dTrajPlan, 0, 1)
 
         # if we use interpolation, we use the interpolated one
-        if self.use_interp:
+        # if self.use_interp:
 
-            if self.motionInterpPlan.shape[1] == 0:
-                rospy.logerr("All the trajectory data has been consumed")
-                return None
+        if self.motionInterpPlan.shape[1] == 0:
+            rospy.logerr("All the trajectory data has been consumed")
+            return None
 
-            nextWaypt = self.motionInterpPlan[:,0]
-            self.motionInterpPlan = np.delete(self.motionInterpPlan, 0, 1)
-
+        nextWaypt = self.motionInterpPlan[:,0]
+        self.motionInterpPlan = np.delete(self.motionInterpPlan, 0, 1)
+        self.timeInterpPlan = np.delete(self.timeInterpPlan, 0)
 
         return nextWaypt
 
 
-    def updateTraj(self):
-        # read from file at the moment
-        with open('/home/theo/software/OC/Hybrid_MPC/testData1.npy', 'rb') as f:
-            data = np.load(f)
+    def updateTraj(self, new_traj):
+        """ Implemented for receiding horizon and MPC loops
+            Needs to be extensively tested, when a receiding horizon or MPC
+            motion planner is available                    """
 
-        # update the trajectory plan#
-        # self.trajPlan = np.hstack((self.trajPlan, np.vstack( (data[0:3,:], data[6:8,:]))))
-        # self.dTrajPlan = np.hstack((self.dTrajPlan, np.vstack((data[3:6,:], data[8:10,:]))))
-        # self.time = np.hstack((self.time, 0.0001 + data[10,:].reshape(1,data[10,:].shape[0])))
+        # from which knot and on of the new traj, do we what to use?
+        # ATTENTION: This should be become a parameter, when receiding horizon/MPC can be tested
+        index_of_1st_knot = 1
 
-        if self.horizonLength==20:
-            self.trajPlan = np.hstack((self.trajPlan,  data[6:8,:]))
-            self.dTrajPlan = np.hstack((self.dTrajPlan, data[8:10,:]))
-            self.time = np.hstack((self.time, 0.0001 + data[10,:].reshape(1,data[10,:].shape[0])))
+        # # time is always the first row
+        timeVec = new_traj[0,:]
 
-        if self.horizonLength==10:
-            self.trajPlan = np.hstack((self.trajPlan,  data[0:3,:]))
-            self.dTrajPlan = np.hstack((self.dTrajPlan, data[3:6,:]))
-            self.time = np.hstack((self.time, 0.0001 + data[10,:].reshape(1,data[10,:].shape[0])))
+        # get the index where to new trajectory data should be inserted
+        insertIndex = self.findInsertIndex(timeVec, index_of_1st_knot)
 
+        # create new time vector
+        timevector = np.append(self.timeInterpPlan[:insertIndex], self.timeInterpPlan[insertIndex] + timeVec[index_of_1st_knot:].reshape(1,timeVec[index_of_1st_knot:].shape[0]))
+        timevector = timevector.reshape(1,timevector.shape[0])
 
+        numRows, _ = new_traj.shape
+        midRow = int((numRows-1)/2)+1
+        # first half rows denote position
+        trajPlan = np.hstack((self.motionInterpPlan[:,:insertIndex],  new_traj[1:midRow,index_of_1st_knot:]))
+        # second half rows denote velocity
+        dtrajPlan_noaction_window = np.diff(self.motionInterpPlan[:,:insertIndex+1])
+        dtrajPlan = np.hstack((dtrajPlan_noaction_window,  new_traj[midRow:,index_of_1st_knot:]))
+
+        # interpolate
         if self.use_interp:
-            self.motionInterpPlan = self.computeInterpTraj()
+            self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan )
+        else:
+            self.timeInterpPlan = timevector
+            self.motionInterpPlan = trajPlan
 
-        # throw first away
-        self.popFirstTrajElem()
-        # print(self.motionInterpPlan[:,0:2])
-        # assa
+    def findInsertIndex(self, time_vector, index_1knot):
 
-    def computeInterpTraj(self):
-        """ Compute the interpolated trajectory from the planning traj"""
+        # find where along the time axis should the data be added
+        insertionIndex = np.where(self.timeInterpPlan > time_vector[index_1knot])
+        #  if first knot of new traj is after the duration of the current trajectory
+        if insertionIndex[0].size == 0:
+            insertionIndex = -1
+        else:
+            #  if first knot of new traj is within the duration of the current trajectory
+            insertionIndex = insertionIndex[0][0]
+            if insertionIndex < self.nochange_win_len:
+                #  if first knot of new traj is within the nochange_window of the current trajectory
+                rospy.logerr("The first new knot of the trajectory is timed to be within the nochange_window region! It will be overriden.")
+                insertionIndex = self.nochange_win_len
 
+        return insertionIndex
+
+
+    def setInitTraj(self, new_traj):
+        """ More comments are needed """
+
+        # # time is always the first row
+        timeVec = new_traj[0,:]
+        timevector = timeVec.reshape(1,timeVec.shape[0])
+
+        numRows, _ = new_traj.shape
+        midRow = int((numRows-1)/2)+1
+        # first half rows denote position
+        trajPlan = new_traj[1:midRow,:]
+
+        # second half rows denote velocity
+        dtrajPlan = new_traj[midRow:,:]
+
+        # interpolate
+        if self.use_interp:
+            self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan )
+        else:
+            self.timeInterpPlan = timevector
+            self.motionInterpPlan = trajPlan
+
+    def computeInterpTraj(self, time_vector, traj_plan, dtraj_plan):
+        """ Compute the interpolated trajectory from the planning traj
+
+            ATTENTION: if the angular motion is provide in 3D, it should be quaternions
+            to used slerp... Implementation pending....
+                                                                             """
         tempMotionInterpPlan = np.empty((0))
-        trajDim = self.trajPlan.shape[0]
+        trajDim = traj_plan.shape[0]
 
+        # for each dimension of the motion compute the interpolated trajectory
         for i in range(trajDim):
-            _, interSeq_I = interpol.interpolateCubicHermiteSplineSourceCode(self.time[0,:], self.trajPlan[i,:], self.dTrajPlan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
+            # interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSplineSourceCode(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
+            interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
             tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
 
         # reshape to have a dimension per row
         col_len = interSeq_I.shape[0]
         tempMotionInterpPlan = tempMotionInterpPlan.reshape(trajDim, col_len)
 
-        return tempMotionInterpPlan
+        return interSeqTime, tempMotionInterpPlan
 
 
 
@@ -185,10 +227,6 @@ class ROSTrajInterface(object):
 
         # Setup constants
         self.dt = 1.0/float(FREQ)
-
-        # default values for TF
-        self.header_frame_id = None
-        self.msg_child_frame_id = None
 
         # Name of node
         self.name = rospy.get_name()
@@ -204,7 +242,21 @@ class ROSTrajInterface(object):
         #  TrajManager
         self.setupTrajManager(traj_config_file_name)
 
+        # Establish connection with planning node
+        rospy.loginfo("%s: Waiting for "+self.current_traj_topic +" topic", self.name)
+        msgTraj = rospy.wait_for_message(self.current_traj_topic, Float64MultiArray)
+
+        # single update of trajectory
+        # To be used for play-back motion plans
+        self.readInitialTrajFromROS(msgTraj)
+
+        # Subscribe target trajectory callback
+        # repetitive update of trajectory
+        # To be used for receiding horizon and/or MPC motion plans
+        # rospy.Subscriber(self.current_traj_topic, Float64MultiArray, self.readCurrentTrajUpdateFromROS)
+
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
+
         rospy.sleep(1.0)
 
 
@@ -219,54 +271,72 @@ class ROSTrajInterface(object):
         # Extract data from configuration
         interpol = config['interpolation']
 
-        # set info about TF
-        self.header_frame_id = config['communication']['header_frame_id']
-        self.msg_child_frame_id = config['communication']['msg_child_frame_id']
+        # set info about TF publisher
+        self.msg_header_frame_id = config['communication']['publisher']['header_frame_id']
+        self.msg_child_frame_id = config['communication']['publisher']['msg_child_frame_id']
 
-        # Establish connection with planning node
-        # rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", self.name)
-        # msgRobotState = rospy.wait_for_message(CURRENT_JOINT_STATE_TOPIC, JointState)
-        # self.startListening2Trajectories(msgRobotState)
+        # set info for listener
+        self.current_traj_topic = config['communication']['listener']['topic']
 
         # Create trajectory manager instance
         self.trajManag = TrajManager(mot_dim, interpol)
 
-        #  temp call to load trajectory data
-        self.trajManag.updateTraj()
+
+    def readInitialTrajFromROS(self, msg):
+        # listener, that receives the initial trajectory
+        # decode msg
+        msg_data = self.decodeROStrajmsg(msg)
+
+        #  call to initial setup of trajectory data
+        self.trajManag.setInitTraj(msg_data)
 
 
-    def startListening2Trajectories(self):
-        # Subscribe target trajectory callback
-        # write a listener, that receives the new trajectories and update
-        # the structure
-        # call self.trajManag.updateTraj()
-        pass
+    def readCurrentTrajUpdateFromROS(self, msg):
+        # listener, that receives the new trajectories and update the structure
+        # decode msg
+        msg_data = self.decodeROStrajmsg(msg)
 
+        #  call to update the trajectory data
+        self.trajManag.updateTraj(msg_data)
+
+
+    def decodeROStrajmsg(self, msg):
+        """ From Float64MultiArray type msg to numpy 2D array"""
+
+        if msg.layout.dim[0].label  == "rows":
+            rows = msg.layout.dim[0].size
+        if msg.layout.dim[1].label  == "columns":
+            columns = msg.layout.dim[1].size
+
+        data = np.array(msg.data).reshape(rows, columns)
+
+        return data
 
     def publishdNextWayPtToROS(self, event):
+        """ Publish 6D information for the respective rigid body """
 
-            motion = self.trajManag.getNextWayPt()
+        motion = self.trajManag.getNextWayPt()
 
-            # if the motion plan is not empty
-            if motion is not None:
+        # if the motion plan is not empty
+        if motion is not None:
 
-                # Pack pose msg
-                msg = TransformStamped()
-                msg.header.stamp = rospy.Time.now()
-                msg.header.frame_id = self.header_frame_id
-                msg.child_frame_id = self.msg_child_frame_id
-                msg.transform.translation.x = motion[0]
-                msg.transform.translation.y = motion[1]
-                msg.transform.translation.z = motion[2]
-                msg.transform.rotation.x = motion[3]
-                msg.transform.rotation.y = motion[4]
-                msg.transform.rotation.z = motion[5]
-                msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
+            # Pack pose msg
+            msg = TransformStamped()
+            msg.header.stamp = rospy.Time.now()
+            msg.header.frame_id = self.msg_header_frame_id
+            msg.child_frame_id = self.msg_child_frame_id
+            msg.transform.translation.x = motion[0]
+            msg.transform.translation.y = motion[1]
+            msg.transform.translation.z = motion[2]
+            msg.transform.rotation.x = motion[3]
+            msg.transform.rotation.y = motion[4]
+            msg.transform.rotation.z = motion[5]
+            msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
 
-                # Publish msg
-                self.tfBroadcaster.sendTransform(msg)
-            else:
-                self.cleanShutdown()
+            # Publish msg
+            self.tfBroadcaster.sendTransform(msg)
+        else:
+            self.cleanShutdown()
 
     def cleanShutdown(self):
         print('')
