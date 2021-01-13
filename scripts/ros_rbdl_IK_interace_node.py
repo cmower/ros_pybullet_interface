@@ -228,7 +228,6 @@ class ROSdIKInterface(object):
 
         # set robot to the curent configuration obtained from pybullet env
         init_joint_position = list(msgRobotState.position)
-        self.startListening2JointState(msgRobotState)
 
         # Create pybullet robot instance
         self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position)
@@ -256,16 +255,6 @@ class ROSdIKInterface(object):
             return
         self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
         self.target_EE_orientation = np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w])
-
-    def startListening2JointState(self, msg):
-        # Setup ros subscriber
-        rospy.Subscriber(CURRENT_JOINT_STATE_TOPIC, JointState, self.readCurrentJointStateFromROS)
-
-    def readCurrentJointStateFromROS(self, msg):
-        """ PENDING - not used at the moment"""
-        # this can be modified to be used as closed loop
-        self.current_joint_position = msg.position
-        # print(self.robotIK.robot.getJointConfig() - np.asarray(msg.position))
 
     def updateRBDL(self, event):
         self.robotIK.FullDiffIKstep(self.target_EE_position, self.target_EE_orientation)
