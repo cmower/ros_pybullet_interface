@@ -156,7 +156,10 @@ class ROSPyBulletInterface:
         self.tfs[linkid] = {
             'received': False, 'position': None, 'orientation': None
         }
-        self.vislinks_objs[linkid] = pybullet_interface.PyBulletVisualSphere(
+
+        # Create visual object, note that this is an invisible sphere but we
+        # visualize the three axes using this as a dummy object
+        self.visframes_objs[linkid] = pybullet_interface.PyBulletVisualSphere(
             0.1, [0.0]*4
         )
 
