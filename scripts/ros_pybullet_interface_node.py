@@ -293,19 +293,22 @@ class ROSPyBulletInterface:
             # Broadcast tf
             self.tfBroadcaster.sendTransform(msg)
 
-    def updatePyBullet(self, event):
-        if not pybullet_interface.isPyBulletConnected():
-            raise RuntimeError(f"{self.name}: PyBullet disconnected")
-        self.robot.commandJointPosition(self.target_joint_position)
-        self.readROSTfs()
-        self.setPyBulletCollisionObjectPositionAndOrientation()
-        for linkid, o in self.vislinks_objs.items():
+    def visualizeLinks(self):
+        for linkid, o in self.visframes_objs.items():
             tf = self.tfs[linkid]
             if tf['received']:
                 o.setBasePositionAndOrientation(
                     tf['position'], tf['orientation']
                 )
                 o.visualizeLink(-1)
+
+    def updatePyBullet(self, event):
+        if not pybullet_interface.isPyBulletConnected():
+            raise RuntimeError(f"{self.name}: PyBullet disconnected")
+        self.robot.commandJointPosition(self.target_joint_position)
+        self.readROSTfs()
+        self.setPyBulletCollisionObjectPositionAndOrientation()
+        self.visualizeLinks()
         pybullet_interface.stepPyBullet()
 
     def spin(self):
