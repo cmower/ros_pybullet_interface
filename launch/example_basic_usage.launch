@@ -29,7 +29,7 @@
     </rosparam>
 
     <!-- List visual links (optional) -->
-    <rosparam param="vislinks">
+    <rosparam param="visframes">
       [
       'whiteboard/child'
       ]
