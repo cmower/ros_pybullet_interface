@@ -16,7 +16,7 @@ from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
 # Constants
 # ------------------------------------------------------
 
-FREQ = 100  # PyBullet sampling frequency
+FREQ = 50  # PyBullet sampling frequency
 DT = 1.0/float(FREQ)
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'  # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publishes joint states on this topic
