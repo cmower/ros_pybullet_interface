@@ -32,6 +32,15 @@ def closePyBullet():
     if pybullet.isConnected():
         pybullet.disconnect()
 
+def asQuaternion(orientation):
+    """Ensure orientation is a quaternion."""
+    if len(orientation) == 3:
+        orientation = tf_conversions.transformations.quaternion_from_euler(
+            orientation[0],
+            orientation[1],
+            orientation[2]
+        )
+    return orientation
 # ------------------------------------------------------
 #
 # Classes
@@ -44,15 +53,12 @@ class PyBulletObject:
         we expect a quaternion.'''
 
         # Ensure orientation is a quaternion
-        if len(orientation) == 3:
-            orientation = tf_conversions.transformations.quaternion_from_euler(
-                np.deg2rad(orientation[0]),
-                np.deg2rad(orientation[1]),
-                np.deg2rad(orientation[2])
-            )
+        orientation = asQuaternion(orientation)
 
         # Reset base position/orientation
-        pybullet.resetBasePositionAndOrientation(self.ID, position, orientation)
+        pybullet.resetBasePositionAndOrientation(
+            self.ID, position, orientation
+        )
 
     def visualizeLink(self, link_index, scale=1.0):
         pybullet.addUserDebugLine(
