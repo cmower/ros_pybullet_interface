@@ -45,7 +45,6 @@ class ROSPyBulletInterface:
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
         self.sensor_pubs = {}
         self.tfs = {}
-        self.visframes_objs = {}
         self.dynamic_collision_objects = []
         self.static_collision_objects = []
 
@@ -156,12 +155,6 @@ class ROSPyBulletInterface:
         self.tfs[linkid] = {
             'received': False, 'position': None, 'orientation': None
         }
-
-        # Create visual object, note that this is an invisible sphere but we
-        # visualize the three axes using this as a dummy object
-        self.visframes_objs[linkid] = pybullet_interface.PyBulletVisualSphere(
-            0.1, [0.0]*4
-        )
 
     def setupPyBulletCollisionObject(self, file_name):
 
@@ -294,13 +287,12 @@ class ROSPyBulletInterface:
             self.tfBroadcaster.sendTransform(msg)
 
     def visualizeLinks(self):
-        for linkid, o in self.visframes_objs.items():
+        for linkid in self.visframes:
             tf = self.tfs[linkid]
             if tf['received']:
-                o.setBasePositionAndOrientation(
+                pybullet_interface.visualizeFrame(
                     tf['position'], tf['orientation']
                 )
-                o.visualizeLink(-1)
 
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
