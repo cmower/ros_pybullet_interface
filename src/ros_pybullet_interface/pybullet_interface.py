@@ -40,6 +40,9 @@ def closePyBullet():
     if pybullet.isConnected():
         pybullet.disconnect()
 
+def toRadians(orientation):
+    return np.deg2rad(orientation)
+
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
     if len(orientation) == 3:

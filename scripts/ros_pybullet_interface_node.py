@@ -103,7 +103,7 @@ class ROSPyBulletInterface:
         )
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
-            config['base_orient_eulerXYZ']
+            pybullet_interface.toRadians(config['base_orient_eulerXYZ'])
         )
         self.robot.setJointPositions(config['init_position'])
 
@@ -193,7 +193,7 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                config['link_state']['orientation_eulerXYZ']
+                pybullet_interface.toRadians(config['link_state']['orientation_eulerXYZ'])
             )
             self.static_collision_objects.append({
                 'object': obj,
