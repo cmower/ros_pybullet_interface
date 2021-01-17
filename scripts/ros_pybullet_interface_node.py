@@ -290,7 +290,7 @@ class ROSPyBulletInterface:
         for linkid in self.visframes:
             tf = self.tfs[linkid]
             if tf['received']:
-                pybullet_interface.visualizeFrame(
+                pybullet_interface.visualizeFrameInWorld(
                     tf['position'], tf['orientation']
                 )
 

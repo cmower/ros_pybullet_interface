@@ -50,7 +50,7 @@ def asQuaternion(orientation):
         )
     return orientation
 
-def visualizeFrame(position, orientation, scale=1.0):
+def visualizeFrameInWorld(position, orientation, scale=1.0):
     """Visualize frame, assumes position/orientation defined wrt world."""
     p = np.asarray(position, dtype=float)
     R = scale * tf_conversions.transformations.quaternion_matrix(
