@@ -28,6 +28,13 @@
       ]
     </rosparam>
 
+    <!-- List visual links (optional) -->
+    <rosparam param="visframes">
+      [
+      'whiteboard/child'
+      ]
+    </rosparam>
+
   </node>
 
   <!-- Testing node (publisher) -->
@@ -43,5 +50,8 @@
       type="static_transform_publisher"
       name="whiteboard_tf_broadcaster"
       args="0.1 0.2 0.3 0 0 0.6283185307179586 ros_pybullet_interface/world whiteboard"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="whiteboard_image_tf_broadcaster"
+      args="0.4 0.2 0 0 0 0 whiteboard whiteboard/child"/>
 
 </launch>

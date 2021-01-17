@@ -60,6 +60,7 @@ class ROSPyBulletInterface:
         collision_object_file_names = rospy.get_param(
             '~collision_object_config_file_names', []
         )
+        self.visframes = rospy.get_param("~visframes", [])
 
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
@@ -71,6 +72,9 @@ class ROSPyBulletInterface:
 
         for file_name in collision_object_file_names:
             self.setupPyBulletCollisionObject(file_name)
+
+        for linkid in self.visframes:
+            self.setupPyBulletVisualLinks(linkid)
 
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
@@ -99,7 +103,7 @@ class ROSPyBulletInterface:
         )
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
-            config['base_orient_eulerXYZ']
+            pybullet_interface.toRadians(config['base_orient_eulerXYZ'])
         )
         self.robot.setJointPositions(config['init_position'])
 
@@ -147,6 +151,11 @@ class ROSPyBulletInterface:
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
 
+    def setupPyBulletVisualLinks(self, linkid):
+        self.tfs[linkid] = {
+            'received': False, 'position': None, 'orientation': None
+        }
+
     def setupPyBulletCollisionObject(self, file_name):
 
         # Load config
@@ -184,7 +193,7 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                config['link_state']['orientation_eulerXYZ']
+                pybullet_interface.toRadians(config['link_state']['orientation_eulerXYZ'])
             )
             self.static_collision_objects.append({
                 'object': obj,
@@ -277,12 +286,21 @@ class ROSPyBulletInterface:
             # Broadcast tf
             self.tfBroadcaster.sendTransform(msg)
 
+    def visualizeLinks(self):
+        for linkid in self.visframes:
+            tf = self.tfs[linkid]
+            if tf['received']:
+                pybullet_interface.visualizeFrameInWorld(
+                    tf['position'], tf['orientation']
+                )
+
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
             raise RuntimeError(f"{self.name}: PyBullet disconnected")
         self.robot.commandJointPosition(self.target_joint_position)
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
+        self.visualizeLinks()
         pybullet_interface.stepPyBullet()
 
     def spin(self):

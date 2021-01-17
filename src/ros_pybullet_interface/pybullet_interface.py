@@ -3,6 +3,14 @@ import pybullet
 import math
 import numpy as np
 
+
+# ------------------------------------------------------
+#
+# Constants
+# ------------------------------------------------------
+
+VISUAL_FRAME_LINE_WIDTH = 2
+
 # ------------------------------------------------------
 #
 # Methods
@@ -32,6 +40,35 @@ def closePyBullet():
     if pybullet.isConnected():
         pybullet.disconnect()
 
+def toRadians(orientation):
+    return np.deg2rad(orientation)
+
+def asQuaternion(orientation):
+    """Ensure orientation is a quaternion."""
+    if len(orientation) == 3:
+        orientation = tf_conversions.transformations.quaternion_from_euler(
+            orientation[0],
+            orientation[1],
+            orientation[2]
+        )
+    return orientation
+
+def visualizeFrameInWorld(position, orientation, scale=1.0):
+    """Visualize frame, assumes position/orientation defined wrt world."""
+    p = np.asarray(position, dtype=float)
+    R = scale * tf_conversions.transformations.quaternion_matrix(
+        np.asarray(asQuaternion(orientation), dtype=float)
+    )
+    pybullet.addUserDebugLine(
+        p, p+R[:3, 0], [1, 0, 0], lineWidth=VISUAL_FRAME_LINE_WIDTH
+    )
+    pybullet.addUserDebugLine(
+        p, p+R[:3, 1], [0, 1, 0], lineWidth=VISUAL_FRAME_LINE_WIDTH
+    )
+    pybullet.addUserDebugLine(
+        p, p+R[:3, 2], [0, 0, 1], lineWidth=VISUAL_FRAME_LINE_WIDTH
+    )
+
 # ------------------------------------------------------
 #
 # Classes
@@ -44,15 +81,12 @@ class PyBulletObject:
         we expect a quaternion.'''
 
         # Ensure orientation is a quaternion
-        if len(orientation) == 3:
-            orientation = tf_conversions.transformations.quaternion_from_euler(
-                np.deg2rad(orientation[0]),
-                np.deg2rad(orientation[1]),
-                np.deg2rad(orientation[2])
-            )
+        orientation = asQuaternion(orientation)
 
         # Reset base position/orientation
-        pybullet.resetBasePositionAndOrientation(self.ID, position, orientation)
+        pybullet.resetBasePositionAndOrientation(
+            self.ID, position, orientation
+        )
 
     def visualizeLink(self, link_index, scale=1.0):
         pybullet.addUserDebugLine(
@@ -126,6 +160,18 @@ class PyBulletObject:
             baseMass=base_mass,
             baseCollisionShapeIndex=self.collision_ID,
             baseVisualShapeIndex=self.visual_ID
+        )
+
+class PyBulletVisualSphere(PyBulletObject):
+
+    def __init__(self, radius, rgba_color):
+        visual_id = pybullet.createVisualShape(
+            pybullet.GEOM_SPHERE,
+            radius=radius,
+            rgbaColor=rgba_color
+        )
+        self.ID = pybullet.createMultiBody(
+            baseVisualShapeIndex=visual_id
         )
 
 class PyBulletCollisionObject(PyBulletObject):
