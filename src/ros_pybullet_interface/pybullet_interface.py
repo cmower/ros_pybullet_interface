@@ -3,6 +3,14 @@ import pybullet
 import math
 import numpy as np
 
+
+# ------------------------------------------------------
+#
+# Constants
+# ------------------------------------------------------
+
+VISUAL_FRAME_LINE_WIDTH = 2
+
 # ------------------------------------------------------
 #
 # Methods
@@ -41,6 +49,23 @@ def asQuaternion(orientation):
             orientation[2]
         )
     return orientation
+
+def visualizeFrame(position, orientation, scale=1.0):
+    """Visualize frame, assumes position/orientation defined wrt world."""
+    p = np.asarray(position, dtype=float)
+    R = scale * tf_conversions.transformations.quaternion_matrix(
+        np.asarray(asQuaternion(orientation), dtype=float)
+    )
+    pybullet.addUserDebugLine(
+        p, p+R[:3, 0], [1, 0, 0], lineWidth=VISUAL_FRAME_LINE_WIDTH
+    )
+    pybullet.addUserDebugLine(
+        p, p+R[:3, 1], [0, 1, 0], lineWidth=VISUAL_FRAME_LINE_WIDTH
+    )
+    pybullet.addUserDebugLine(
+        p, p+R[:3, 2], [0, 0, 1], lineWidth=VISUAL_FRAME_LINE_WIDTH
+    )
+
 # ------------------------------------------------------
 #
 # Classes
