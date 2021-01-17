@@ -1,0 +1,39 @@
+#
+# Trajectory manager for KUKA and a box configuration file
+#
+
+motion_dimensions:
+  number: 2
+
+  trans:
+    translationX:
+    translationX_index: 0
+    translationY:
+    translationY_index: 1
+    translationZ: 0.275
+    translationZ_index:
+
+  rotation:
+    rotationTheta: False
+    rotationTheta_index:
+    rotationvec: [3.14159265, 0.0, 0.0]
+    rotationvec_index:
+
+
+interpolation:
+  nochange_window_length: 1
+  use_interpolation: True
+  interDt: 0.0005
+
+communication:
+  publisher:
+    header_frame_id: 'ros_pybullet_interface/world'
+    msg_child_frame_id: 'ros_pybullet_interface/end_effector/target'
+  listener:
+      topic: 'ros_pybullet_interface/end_effector/traj'
+
+
+
+# 0.686681210995
+# -0.0409726649523
+# 0.0746768042445
