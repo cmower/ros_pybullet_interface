@@ -78,12 +78,12 @@ class TrajManager:
 
         # rotation
         if self.mot_dim['rotation']['rotationTheta'] == True:
-            rot_mat = utils.rotation_matrix_from_axis_angle(np.array(self.mot_dim['rotation']['rotationvec']), way_pt[self.mot_dim['rotation']['rotationTheta_index']])
+            rot_mat = utils.rotation_matrix_from_axis_angle(np.deg2rad(np.array(self.mot_dim['rotation']['rotationvec'])), way_pt[self.mot_dim['rotation']['rotationTheta_index']])
             Ori_Rot = R.from_matrix(rot_mat)
 
         else:
             if self.mot_dim['rotation']['rotationvec'] is not None:
-                Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec']))
+                Ori_Rot = R.from_rotvec(np.deg2rad(np.array(self.mot_dim['rotation']['rotationvec'])))
             else:
                 idx = self.mot_dim['rotation']['rotationvec_index']
                 Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
