@@ -16,7 +16,7 @@ motion_dimensions:
   rotation:
     rotationTheta: False
     rotationTheta_index:
-    rotationvec: [3.14159265, 0.0, 0.0]
+    rotationvec: [180.0, 0.0, 0.0]
     rotationvec_index:
 
 
