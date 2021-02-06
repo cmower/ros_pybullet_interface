@@ -8,7 +8,7 @@ use_fixed_base: True
 base_position: [0.0, 0.0, 0.0]
 base_orient_eulerXYZ: [0.0, 0.0, 0.0]
 # init_position: [0.0, 0.5, 0.3, -0.5, 0.2, 0.8, 0.0]
-init_position: [0.0, 0.4, 0.0, 1.5, 0.0, -1, 0.0]
+init_position: [0., 22.91831181, 0. , 85.94366927, 0. , -57.29577951, 0.]
 
 sensors:
 
