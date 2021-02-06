@@ -205,6 +205,9 @@ class ROSdIKInterface(object):
         curOri = R.from_matrix(self.robotIK.robot.getCurEEOri())
         self.target_EE_orientation = curOri.as_quat()
 
+        # print(self.robotIK.robot.getCurEEPos())
+        # riq = R.from_matrix(self.robotIK.robot.getCurEEOri())
+        # print(riq.as_rotvec())
 
     def setupPyRBDLRobot(self, config_file_name):
 
@@ -217,6 +220,7 @@ class ROSdIKInterface(object):
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
         base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+        init_joint_position = config['init_position']
 
         # Establish connection with Robot in PyBullet environment
         rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", self.name)

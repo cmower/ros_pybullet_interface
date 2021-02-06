@@ -105,11 +105,10 @@ class ROSPyBulletInterface:
             config['base_position'],
             pybullet_interface.toRadians(config['base_orient_eulerXYZ'])
         )
-        qinit = pybullet_interface.toRadians(config['init_position'])
-        self.robot.setJointPositions(qinit)
+        self.robot.setJointPositions(config['init_position'])
 
         # Specify target joint position
-        self.target_joint_position = qinit
+        self.target_joint_position = config['init_position']
 
         # Setup ros publishers
         self.joint_state_pub = rospy.Publisher(
