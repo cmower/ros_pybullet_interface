@@ -77,18 +77,18 @@ class TrajManager:
         pos = np.array([x, y, z])
 
         # rotation
+        # specify manually axis and take angle from the planner  --- used for rotation around fixed axis
         if self.mot_dim['rotation']['rotationTheta'] == True:
-            rot_mat = utils.rotation_matrix_from_axis_angle(np.deg2rad(np.array(self.mot_dim['rotation']['rotationvec'])), way_pt[self.mot_dim['rotation']['rotationTheta_index']])
-            Ori_Rot = R.from_matrix(rot_mat)
-
+            Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec'])*way_pt[self.mot_dim['rotation']['rotationTheta_index']])
         else:
+            # specify manually axis and angle --- used for fixed orientation
             if self.mot_dim['rotation']['rotationvec'] is not None:
-                Ori_Rot = R.from_rotvec(np.deg2rad(np.array(self.mot_dim['rotation']['rotationvec'])))
+                Ori_Rot = R.from_rotvec(np.deg2rad(self.mot_dim['rotation']['rotationangle'])*np.array(self.mot_dim['rotation']['rotationvec']))
             else:
+                # take quaternion directly from the planner
                 idx = self.mot_dim['rotation']['rotationvec_index']
                 Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
 
-        # eeOri_Rot_rob = R.from_quat(np.array([1.0, 0.0, 0.0,  -0.0]))
         Ori = Ori_Rot.as_quat()
 
         return np.hstack((pos, Ori))
