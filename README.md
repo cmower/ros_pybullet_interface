@@ -146,3 +146,8 @@ sudo apt install libfreetype6-dev libsdl2-ttf-dev libsdl2-ttf-2.0-0 -y;
 1. `cd /path/to/catkin_ws/src`
 1. `git clone git@github.com:lrse/ros-keyboard.git`
 1. `catkin build`
+
+# Known issues
+
+* Link visualization significantly slows performance.
+* Python2/3 and ROS Medlodic/Noetic compatibility issue.
