@@ -73,6 +73,9 @@ class ROSPyBulletInterface:
         for file_name in collision_object_file_names:
             self.setupPyBulletCollisionObject(file_name)
 
+        if len(self.visframes) > 0:
+            rospy.logwarn('Link visualization has been turned off')
+
         for linkid in self.visframes:
             self.setupPyBulletVisualLinks(linkid)
 
