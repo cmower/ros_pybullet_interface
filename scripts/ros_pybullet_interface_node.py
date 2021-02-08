@@ -301,7 +301,7 @@ class ROSPyBulletInterface:
         self.robot.commandJointPosition(self.target_joint_position)
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
-        self.visualizeLinks()
+        # self.visualizeLinks()
         pybullet_interface.stepPyBullet()
 
     def spin(self):
