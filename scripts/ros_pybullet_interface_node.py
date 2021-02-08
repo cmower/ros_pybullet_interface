@@ -74,7 +74,7 @@ class ROSPyBulletInterface:
             self.setupPyBulletCollisionObject(file_name)
 
         if len(self.visframes) > 0:
-            rospy.logwarn('Link visualization has been turned off')
+            rospy.logwarn('Link visualization can lead to significantly slower performance.')
 
         for linkid in self.visframes:
             self.setupPyBulletVisualLinks(linkid)
@@ -304,7 +304,7 @@ class ROSPyBulletInterface:
         self.robot.commandJointPosition(self.target_joint_position)
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
-        # self.visualizeLinks()
+        self.visualizeLinks()
         pybullet_interface.stepPyBullet()
 
     def spin(self):
