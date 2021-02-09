@@ -8,6 +8,12 @@
       clear_params="true"
       output="screen">
 
+      <!-- Pybullet simulation config (required) -->
+      <param
+          name="pybullet_sim_infloop"
+          value="true"
+          type="bool"/>
+
     <!-- Robot config (required) -->
     <param
         name="robot_config"

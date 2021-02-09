@@ -7,6 +7,12 @@
       clear_params="true"
       type="ros_pybullet_interface_node.py">
 
+    <!-- Pybullet simulation config (required) -->
+    <param
+        name="pybullet_sim_infloop"
+        value="true"
+        type="bool"/>
+
     <!-- Robot config (required) -->
     <param
         name="robot_config"

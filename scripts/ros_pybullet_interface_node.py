@@ -82,6 +82,12 @@ class ROSPyBulletInterface:
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
+        if rospy.get_param('~pybullet_sim_infloop'):
+            pybullet_interface.runPyBullet()
+            self.sim_step_flag = False
+        else:
+            self.sim_step_flag = True
+
     def setupPyBulletCamera(self, file_name):
 
         # Load camera config
@@ -154,6 +160,7 @@ class ROSPyBulletInterface:
 
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+
 
     def setupPyBulletVisualLinks(self, linkid):
         self.tfs[linkid] = {
@@ -305,7 +312,10 @@ class ROSPyBulletInterface:
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
         self.visualizeLinks()
-        pybullet_interface.stepPyBullet()
+        # run simulation step by step
+        if self.sim_step_flag:
+            print("step")
+            pybullet_interface.stepPyBullet()
 
     def spin(self):
         try:
