@@ -30,6 +30,12 @@
         value="0"
         type="int"/>
 
+    <!-- Pybullet simulation config (required) -->
+    <param
+        name="pybullet_sim_infloop"
+        value="true"
+        type="bool"/>
+    
     <!-- Robot config (required) -->
     <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
