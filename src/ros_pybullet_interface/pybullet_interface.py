@@ -33,6 +33,12 @@ def setupPyBulletCamera(distance, yaw, pitch, target_position):
 def stepPyBullet():
     pybullet.stepSimulation()
 
+def runPyBullet():
+    pybullet.setRealTimeSimulation(1)
+
+def stopPyBullet():
+    pybullet.setRealTimeSimulation(0)
+
 def isPyBulletConnected():
     return pybullet.isConnected()
 
