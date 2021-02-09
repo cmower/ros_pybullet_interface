@@ -128,6 +128,13 @@ class TestIK:
 
         # Publish msg
         self.tfBroadcaster.sendTransform(msg)
+
+        msg.header.stamp = rospy.Time.now()
+        msg.child_frame_id = 'ros_pybullet_interface/sphere'
+
+        # Publish msg
+        self.tfBroadcaster.sendTransform(msg)
+
         self.updateTrajIndex()
 
 
