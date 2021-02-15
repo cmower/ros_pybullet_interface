@@ -84,9 +84,15 @@ class ROSPyBulletInterface:
 
         if rospy.get_param('~pybullet_sim_infloop'):
             pybullet_interface.runPyBullet()
-            self.sim_step_flag = False
+            self.step = self._null
         else:
-            self.sim_step_flag = True
+            self.step = self._step
+
+    def _null(self):
+        pass
+
+    def _step(self):
+        pybullet_interface.stepPyBullet()
 
     def setupPyBulletCamera(self, file_name):
 
@@ -312,10 +318,9 @@ class ROSPyBulletInterface:
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
         self.visualizeLinks()
-        # run simulation step by step
-        if self.sim_step_flag:
-            print("step")
-            pybullet_interface.stepPyBullet()
+        # run simulation step by step or do nothing
+        # (as bullet can run the simulation steps automatically from within)
+        self.step()
 
     def spin(self):
         try:
