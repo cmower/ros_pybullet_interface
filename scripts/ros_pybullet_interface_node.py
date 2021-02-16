@@ -48,8 +48,8 @@ class ROSPyBulletInterface:
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
         self.sensor_pubs = {}
         self.tfs = {}
-        self.dynamic_collision_objects = []
-        self.static_collision_objects = []
+        self.dynamic_collisionvisual_objects = []
+        self.static_collisionvisual_objects = []
 
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
@@ -60,9 +60,10 @@ class ROSPyBulletInterface:
         # Get ros parameters
         robot_config_file_name = rospy.get_param('~robot_config')
         camera_config_file_name = rospy.get_param('~camera_config')
-        collision_object_file_names = rospy.get_param(
-            '~collision_object_config_file_names', []
-        )
+        collision_object_file_names = rospy.get_param('~collision_object_config_file_names', [])
+        visual_object_file_names = rospy.get_param('~visual_object_config_file_names', [])
+        object_file_names = rospy.get_param('~object_config_file_names', [])
+
         self.visframes = rospy.get_param("~visframes", [])
 
         # Setup PyBullet, note publishers/subscribers are also setup internally
@@ -75,6 +76,12 @@ class ROSPyBulletInterface:
 
         for file_name in collision_object_file_names:
             self.setupPyBulletCollisionObject(file_name)
+
+        for file_name in visual_object_file_names:
+            self.setupPyBulletVisualObject(file_name)
+
+        for file_name in object_file_names:
+            self.setupPyBulletObject(file_name)
 
         if len(self.visframes) > 0:
             rospy.logwarn('Link visualization can lead to significantly slower performance.')
@@ -199,7 +206,7 @@ class ROSPyBulletInterface:
             config['linear_damping'],
             config['angular_damping'],
             config['contact_stiffness'],
-            config['contact_damping'],
+            config['contact_damping']
         )
 
         if 'tf_frame_id' in config['link_state']:
@@ -207,7 +214,39 @@ class ROSPyBulletInterface:
             self.tfs[tf_frame_id] = {
                 'received': False, 'position': None, 'orientation': None
             }
-            self.dynamic_collision_objects.append({
+            self.dynamic_collisionvisual_objects.append({
+                'object': obj,
+                'tf_frame_id': tf_frame_id,
+            })
+        else:
+            obj.setBasePositionAndOrientation(
+                config['link_state']['position'],
+                pybullet_interface.toRadians(config['link_state']['orientation_eulerXYZ'])
+            )
+            self.static_collisionvisual_objects.append({
+                'object': obj,
+                'position': config['link_state']['position'],
+                'orientation': config['link_state']['orientation_eulerXYZ']
+            })
+
+    def setupPyBulletVisualObject(self, file_name):
+
+        # Load config
+        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+
+        # Setup visual object
+        obj = pybullet_interface.PyBulletVisualObject(
+            os.path.join(self.current_dir, config['file_name']),
+            config['mesh_scale'],
+            config['rgba_color'],
+        )
+
+        if 'tf_frame_id' in config['link_state']:
+            tf_frame_id = config['link_state']['tf_frame_id']
+            self.tfs[tf_frame_id] = {
+                'received': False, 'position': None, 'orientation': None
+            }
+            self.dynamic_collisionvisual_objects.append({
                 'object': obj,
                 'tf_frame_id': tf_frame_id,
             })
@@ -216,14 +255,45 @@ class ROSPyBulletInterface:
                 config['link_state']['position'],
                 np.deg2rad(config['link_state']['orientation_eulerXYZ'])
             )
-            self.static_collision_objects.append({
+            self.static_collisionvisual_objects.append({
                 'object': obj,
                 'position': config['link_state']['position'],
                 'orientation': config['link_state']['orientation_eulerXYZ']
             })
 
-    def setPyBulletCollisionObjectPositionAndOrientation(self):
-        for obj in self.dynamic_collision_objects:
+    def setupPyBulletObject(self, file_name):
+
+            # Load config
+            config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+
+            # Setup visual object
+            obj = pybullet_interface.PyBulletObject(
+                os.path.join(self.current_dir, config['file_name']),
+                config['mesh_scale'],
+                config['rgba_color'],
+                config['base_mass'],
+            )
+
+            obj.changeDynamics(
+                -1, # which is the link index
+                config['lateral_friction'],
+                config['spinning_friction'],
+                config['rolling_friction'],
+                config['restitution'],
+                config['linear_damping'],
+                config['angular_damping'],
+                config['contact_stiffness'],
+                config['contact_damping'],
+            )
+
+            obj.setBasePositionAndOrientation(
+                config['link_state']['position'],
+                config['link_state']['orientation_eulerXYZ'],
+            )
+
+
+    def setPyBulletCollisionVisualObjectPositionAndOrientation(self):
+        for obj in self.dynamic_collisionvisual_objects:
             tf = self.tfs[obj['tf_frame_id']]
             if not tf['received']: continue
             obj['object'].setBasePositionAndOrientation(
@@ -320,7 +390,7 @@ class ROSPyBulletInterface:
             raise RuntimeError(f"{self.name}: PyBullet disconnected")
         self.robot.commandJointPosition(self.target_joint_position)
         self.readROSTfs()
-        self.setPyBulletCollisionObjectPositionAndOrientation()
+        self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
