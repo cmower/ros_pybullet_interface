@@ -46,6 +46,10 @@ def closePyBullet():
     if pybullet.isConnected():
         pybullet.disconnect()
 
+def updateTimeStep(dt):
+    pybullet.setTimeStep(dt)
+
+
 def toRadians(orientation):
     return np.deg2rad(orientation)
 
