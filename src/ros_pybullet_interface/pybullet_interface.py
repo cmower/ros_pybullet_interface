@@ -114,6 +114,8 @@ class PyBulletObject:
         '''Note: if len(orientation) is 3 then it is treated as euler angles, otherwise
         we expect a quaternion.'''
 
+        orientation = np.deg2rad(np.array(orientation))
+
         # Ensure orientation is a quaternion
         orientation = asQuaternion(orientation)
 
