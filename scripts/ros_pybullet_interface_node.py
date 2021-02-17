@@ -84,7 +84,7 @@ class ROSPyBulletInterface:
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
-        if rospy.get_param('~pybullet_sim_infloop'):
+        if rospy.get_param('~pybullet_sim_self_loop'):
             pybullet_interface.updateTimeStep(PYBULLET_DT)
             pybullet_interface.runPyBullet()
             self.step = self._null
