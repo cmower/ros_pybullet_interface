@@ -20,7 +20,7 @@
                      Useful for debugging, but not realistic
                      (specially, if control loop freqency is < 250 Hz)-->
     <param
-        name="pybullet_sim_infloop"
+        name="pybullet_sim_self_loop"
         value="true"
         type="bool"/>
 

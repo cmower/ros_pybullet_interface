@@ -107,21 +107,21 @@ class PyRBDLRobot:
 
 class PyRBDL4dIK:
 
-    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0, IK_info):
+    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0, ik_info):
         self.robot = PyRBDLRobot(file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0)
         self.dt = time_step
 
         # task indexes to switch from full 6D to only position or orienation
-        self.fIndx = IK_info['fIndx']
-        self.lIndx = IK_info['lIndx']
+        self.f_indx = ik_info['f_indx']
+        self.l_indx = ik_info['l_indx']
 
         # scaling parameter between orientation and position
-        self.scale_dOri = IK_info['scale_dOri']
+        self.scale_pos_orient = ik_info['scale_pos_orient']
 
         # parameters of the nullspace motion
-        self.alpha_null = np.array(IK_info['alpha_null'])
-        self.h_delta = np.deg2rad(np.array(IK_info['h_delta']))
-        self.h_norm = np.deg2rad(np.array(IK_info['h_norm']))
+        self.alpha_null = np.array(ik_info['alpha_null'])
+        self.h_delta = np.deg2rad(np.array(ik_info['h_delta']))
+        self.h_norm = np.deg2rad(np.array(ik_info['h_norm']))
 
 
     def FullDiffIKstep(self, globalTargetPos3D, globalTargetOri3D):
@@ -155,7 +155,7 @@ class PyRBDL4dIK:
         dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
 
         # get delta orientation as a vector + also scale it
-        doriVec = dori.as_rotvec() * self.scale_dOri
+        doriVec = dori.as_rotvec() * self.scale_pos_orient
         # print(np.linalg.norm(doriVec))
 
         # position and orientation (in euler angles) error
@@ -178,10 +178,10 @@ class PyRBDL4dIK:
         Jpinv = np.linalg.pinv(J)
 
         # select joints and dimensions
-        J_arm = J[self.fIndx:self.lIndx,6:self.robot.numJoints]
-        Jpinv_arm = Jpinv[6:self.robot.numJoints,self.fIndx:self.lIndx]
+        J_arm = J[self.f_indx:self.l_indx,6:self.robot.numJoints]
+        Jpinv_arm = Jpinv[6:self.robot.numJoints,self.f_indx:self.l_indx]
         # Compute differential kinematics
-        dq = Jpinv_arm.dot(delta[self.fIndx:self.lIndx])
+        dq = Jpinv_arm.dot(delta[self.f_indx:self.l_indx])
 
         _, c = J_arm.shape
         # retrieve current configuration
@@ -238,7 +238,7 @@ class ROSdIKInterface(object):
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
         base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-        IK_info = config['IK']
+        ik_info = config['IK']
 
         # Establish connection with Robot in PyBullet environment
         rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", self.name)
@@ -248,7 +248,7 @@ class ROSdIKInterface(object):
         init_joint_position = list(msgRobotState.position)
 
         # Create pybullet robot instance
-        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position,IK_info)
+        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position, ik_info)
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(
