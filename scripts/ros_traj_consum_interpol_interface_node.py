@@ -87,7 +87,8 @@ class TrajManager:
             else:
                 # take quaternion directly from the planner
                 idx = self.mot_dim['rotation']['rotationvec_index']
-                Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
+                # Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
+                Ori_Rot = R.from_euler('zyx', np.array(way_pt[idx[0]:idx[1]]))
 
         Ori = Ori_Rot.as_quat()
 
@@ -210,7 +211,8 @@ class TrajManager:
         # for each dimension of the motion compute the interpolated trajectory
         for i in range(trajDim):
             # interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSplineSourceCode(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
-            interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
+            # interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
+            interSeqTime, interSeq_I = interpol.interpolatePolyfit(time_vector[0,:],  traj_plan[i,:], polyOrder = 3, sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
             tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
 
         # reshape to have a dimension per row
