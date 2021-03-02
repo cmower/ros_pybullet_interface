@@ -21,6 +21,23 @@ class TestInterpolation:
 
         # Name of node
         self.name = rospy.get_name()
+        # self.loadPushdata()
+        self.loadFreeMotionData()
+
+    def loadFreeMotionData(self):
+        # read from file at the moment
+        path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data.npy')
+        with open(path2file, 'rb') as f:
+            data = np.load(f)
+
+        print(data)
+        exit
+        self.trajObjPlan = data
+        self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
+
+        # time.sleep(2.0) # wait for initialisation to complete
+
+    def loadPushData(self):
 
         # read from file at the moment
         path2file = os.path.join(ROOT_DIR,'data/example_1KUKA_Pushing_BoxonTable.npy')
@@ -87,7 +104,7 @@ if __name__=='__main__':
     TestInterpolation = TestInterpolation()
     rospy.loginfo("%s: node started.", TestInterpolation.name)
 
-    TestInterpolation.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishRobotTrajectory)
+    # TestInterpolation.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishRobotTrajectory)
     TestInterpolation.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishObjTrajectory)
 
 
