@@ -7,6 +7,7 @@ import os
 import tf2_ros
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
 
 # ROS message types
 from geometry_msgs.msg import TransformStamped
@@ -77,18 +78,20 @@ class TrajManager:
         pos = np.array([x, y, z])
 
         # rotation
+        # specify manually axis and angle --- used for fixed orientation
+        if self.mot_dim['rotation']['rotation_repr'] == 'None':
+            Ori_Rot = R.from_rotvec(np.deg2rad(self.mot_dim['rotation']['rotationangle'])*np.array(self.mot_dim['rotation']['rotationvec']))
         # specify manually axis and take angle from the planner  --- used for rotation around fixed axis
-        if self.mot_dim['rotation']['rotationTheta'] == True:
+        elif self.mot_dim['rotation']['rotation_repr'] == 'Theta':
             Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec'])*way_pt[self.mot_dim['rotation']['rotationTheta_index']])
-        else:
-            # specify manually axis and angle --- used for fixed orientation
-            if self.mot_dim['rotation']['rotationvec'] is not None:
-                Ori_Rot = R.from_rotvec(np.deg2rad(self.mot_dim['rotation']['rotationangle'])*np.array(self.mot_dim['rotation']['rotationvec']))
-            else:
-                # take quaternion directly from the planner
-                idx = self.mot_dim['rotation']['rotationvec_index']
-                # Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
-                Ori_Rot = R.from_euler('zyx', np.array(way_pt[idx[0]:idx[1]]))
+        elif self.mot_dim['rotation']['rotation_repr'] == 'Euler':
+            # take euler angles directly from the planner
+            idx = self.mot_dim['rotation']['rotationvec_index']
+            Ori_Rot = R.from_euler('zyx', np.array(way_pt[idx[0]:idx[1]]))
+        elif self.mot_dim['rotation']['rotation_repr'] == 'Quat':
+            # take quaternion directly from the planner
+            idx = self.mot_dim['rotation']['rotationvec_index']
+            Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
 
         Ori = Ori_Rot.as_quat()
 
@@ -207,17 +210,60 @@ class TrajManager:
                                                                              """
         tempMotionInterpPlan = np.empty((0))
         trajDim = traj_plan.shape[0]
+        row_len = 0
 
-        # for each dimension of the motion compute the interpolated trajectory
-        for i in range(trajDim):
-            # interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSplineSourceCode(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
-            # interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
-            interSeqTime, interSeq_I = interpol.interpolatePolyfit(time_vector[0,:],  traj_plan[i,:], polyOrder = 3, sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
-            tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+        rot_repr = self.mot_dim['rotation']['rotation_repr']
+        if rot_repr == 'None' or rot_repr == 'Theta':
+            # for each dimension of the motion compute the interpolated trajectory
+            for i in range(trajDim):
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="DimVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+
+            row_len = trajDim
+        else:
+            # for each translational dimension of the motion compute the interpolated trajectory
+            # using position and derivatives
+            if self.mot_dim['trans']['translationX'] is None:
+                i = self.mot_dim['trans']['translationX_index']
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="XVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 1
+
+            if self.mot_dim['trans']['translationY'] is None:
+                i = self.mot_dim['trans']['translationY_index']
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="YVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 1
+
+            if self.mot_dim['trans']['translationZ'] is None:
+                i = self.mot_dim['trans']['translationZ_index']
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="ZVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 1
+
+            # for each rotational dimension of the motion compute the interpolated trajectory
+            # using only the value of the Euler angles and neglect angular velocity
+            if rot_repr == 'Euler':
+                rot_idx = self.mot_dim['rotation']['rotationvec_index']
+                for i in range(rot_idx[0],rot_idx[1]):
+                    interSeqTime, interSeq_I = interpol.interpolatePolyfit(time_vector[0,:],  traj_plan[i,:], polyOrder = 3, sampleFreq=self.interFreq, plotFlag=False, plotTitle="EulerVsTime")
+                    tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 3
+
+            # for each rotational dimension of the motion compute the interpolated trajectory
+            # using slerp for quaternions
+            elif rot_repr == 'Quat':
+                # we need to do slerp
+                rot_idx = self.mot_dim['rotation']['rotationvec_index']
+                interSeqTime, interSeq_I = interpol.interpolateLinearlyQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]-1:rot_idx[1],:], sampleFreq=self.interFreq)
+                for i in range(interSeq_I.shape[1]):
+                    tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I[:,i], axis=0)
+                row_len += 4
+
 
         # reshape to have a dimension per row
         col_len = interSeq_I.shape[0]
-        tempMotionInterpPlan = tempMotionInterpPlan.reshape(trajDim, col_len)
+        tempMotionInterpPlan = tempMotionInterpPlan.reshape(row_len, col_len)
 
         return interSeqTime, tempMotionInterpPlan
 
