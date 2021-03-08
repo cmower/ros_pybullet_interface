@@ -21,21 +21,38 @@ class TestInterpolation:
 
         # Name of node
         self.name = rospy.get_name()
-        # self.loadPushdata()
-        self.loadFreeMotionData()
 
-    def loadFreeMotionData(self):
-        # read from file at the moment
-        path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data.npy')
-        with open(path2file, 'rb') as f:
-            data = np.load(f)
+        # Initialize data stream
+        self.trajObjPlan = np.empty(0)
+        self.trajRobotPlan = np.empty(0)
 
-        print(data)
-        exit
-        self.trajObjPlan = data
+        # Get ros parameters
+        only_obj = rospy.get_param('~only_object')
+
+        # select appropriate data loading function
+        if only_obj:
+            rot_repr = rospy.get_param('~rotation_repr')
+            self.loadFreeMotionData(rot_repr)
+        else:
+            self.loadPushData()
+
+        # start punlishers
+        self.new_Robottraj_publisher = rospy.Publisher(NEW_TRAJ_ROBOT_TOPIC, Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
 
-        # time.sleep(2.0) # wait for initialisation to complete
+        time.sleep(2.0) # wait for initialisation to complete
+
+
+
+    def loadFreeMotionData(self, rotation_repr):
+        # read from file at the moment
+        if rotation_repr == 'Euler':
+            path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data.npy')
+        elif rotation_repr == 'Quat':
+            path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data_Quat.npy')
+        with open(path2file, 'rb') as f:
+            self.trajObjPlan = np.load(f)
+
 
     def loadPushData(self):
 
@@ -147,7 +164,7 @@ if __name__=='__main__':
     TestInterpolation = TestInterpolation()
     rospy.loginfo("%s: node started.", TestInterpolation.name)
 
-    # TestInterpolation.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishRobotTrajectory)
+    TestInterpolation.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishRobotTrajectory)
     TestInterpolation.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishObjTrajectory)
 
 
