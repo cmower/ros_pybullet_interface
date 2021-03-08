@@ -1,0 +1,35 @@
+#
+# Trajectory manager configuration file for the box
+#
+
+motion_dimensions:
+  number: 6
+
+  trans:
+    translationX:
+    translationX_index: 0
+    translationY:
+    translationY_index: 1
+    translationZ:
+    translationZ_index: 2
+
+  rotation:
+    rotation_repr: 'Quat'
+    rotationTheta_index:
+    rotationvec:
+    rotationangle:
+    rotationvec_index: [3,7]
+
+
+interpolation:
+  nochange_window_length: 1
+  use_interpolation: True
+  interDt: 0.0005
+
+communication:
+  publisher:
+    header_frame_id: 'ros_pybullet_interface/world'
+    msg_child_frame_id: 'ros_pybullet_interface/box'
+
+  listener:
+      topic: 'ros_pybullet_interface/object/traj'
