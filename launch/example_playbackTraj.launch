@@ -137,6 +137,14 @@
       <node name="test_ros_interpol_interface"
           pkg="ros_pybullet_interface"
           type="test_ros_interpol_interface.py"
-          output="screen"/>
+          output="screen">
+
+          <param
+              name="only_object"
+              value="false"
+              type="bool"/>
+
+        </node>
+
 
 </launch>

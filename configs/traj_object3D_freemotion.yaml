@@ -14,11 +14,12 @@ motion_dimensions:
     translationZ_index: 2
 
   rotation:
-    rotationTheta: False
+    rotation_repr: 'Euler'
     rotationTheta_index:
     rotationvec:
-    rotationangle: 
+    rotationangle:
     rotationvec_index: [3,6]
+
 
 interpolation:
   nochange_window_length: 1
