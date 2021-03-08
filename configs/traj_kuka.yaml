@@ -14,7 +14,7 @@ motion_dimensions:
     translationZ_index:
 
   rotation:
-    rotationTheta: False
+    rotation_repr: 'None'
     rotationTheta_index:
     rotationvec: [1.0, 0.0, 0.0]  # unit vector
     rotationangle: 180.0

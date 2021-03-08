@@ -2,7 +2,6 @@
 
 
   <!-- Launch ROS-PyBullet interface -->
-  <!-- Launch ROS-PyBullet interface -->
   <node
       name="ros_pybullet_interface"
       pkg="ros_pybullet_interface"
@@ -39,28 +38,20 @@
         type="str"/>
 
 
-    <!-- List collision objects (optional) -->
-    <rosparam param="collision_object_config_file_names">
-      [
-      'configs/table.yaml',
-      ]
-    </rosparam>
-
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
       'configs/box.yaml',
-      'configs/box1.yaml',
       'configs/box2.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
-    <rosparam param="object_config_file_names">
+    <!-- <rosparam param="object_config_file_names">
       [
       'configs/box3.yaml',
       ]
-    </rosparam>
+    </rosparam> -->
 
 
   </node>
@@ -93,29 +84,16 @@
         value="configs/traj_object3D_freemotion.yaml"
         type="str"/>
 
+
   </node>
 
 
-
-  <node
-      pkg="tf2_ros"
-      type="static_transform_publisher"
-      name="table_tf_broadcaster"
-      args="1.25 1.25 -0.075 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world table"
-      />
-
-    <node
-        pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="box1_tf_broadcaster"
-        args="-0.05 0.75 0.07 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box1"
-        />
 
     <node
         pkg="tf2_ros"
         type="static_transform_publisher"
         name="box2_tf_broadcaster"
-        args="0.4 0.0 -0.06 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
+        args="-0.05 0.75 0.07 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
         />
 
 
@@ -123,6 +101,19 @@
       <node name="test_ros_interpol_interface"
           pkg="ros_pybullet_interface"
           type="test_ros_interpol_interface.py"
-          output="screen"/>
+          output="screen">
+
+          <param
+              name="only_object"
+              value="true"
+              type="bool"/>
+
+          <param
+              name="rotation_repr"
+              value="Euler"
+              type="str"/>
+
+        </node>
+
 
 </launch>
