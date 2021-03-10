@@ -35,7 +35,7 @@ class TrajManager:
         self.use_interp = interpol['use_interpolation']
 
         # number of dimentions of the trajectory plan
-        trajPlanDim = mot_dim["number"]
+        # trajPlanDim = mot_dim["number"]
 
         # information about the fixed and planned dimensions of the motion
         self.mot_dim = mot_dim
@@ -69,7 +69,6 @@ class TrajManager:
         else:
             y = way_pt[self.mot_dim['trans']['translationY_index']]
 
-
         if self.mot_dim['trans']['translationZ'] is not None:
             z = self.mot_dim['trans']['translationZ']
         else:
@@ -83,7 +82,7 @@ class TrajManager:
             Ori_Rot = R.from_rotvec(np.deg2rad(self.mot_dim['rotation']['rotationangle'])*np.array(self.mot_dim['rotation']['rotationvec']))
         # specify manually axis and take angle from the planner  --- used for rotation around fixed axis
         elif self.mot_dim['rotation']['rotation_repr'] == 'Theta':
-            Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec'])*way_pt[self.mot_dim['rotation']['rotationTheta_index']])
+            Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec'])*way_pt[self.mot_dim['rotation']['rotationvec_index'][0]])
         elif self.mot_dim['rotation']['rotation_repr'] == 'Euler':
             # take euler angles directly from the planner
             idx = self.mot_dim['rotation']['rotationvec_index']
@@ -148,7 +147,8 @@ class TrajManager:
         timevector = timevector.reshape(1,timevector.shape[0])
 
         numRows, _ = new_traj.shape
-        midRow = int((numRows-1)/2)+1
+        midRow = self.mot_dim['number'] + 1
+
         # first half rows denote position
         trajPlan = np.hstack((self.motionInterpPlan[:,:insertIndex],  new_traj[1:midRow,index_of_1st_knot:]))
         # second half rows denote velocity
@@ -188,7 +188,8 @@ class TrajManager:
         timevector = timeVec.reshape(1,timeVec.shape[0])
 
         numRows, _ = new_traj.shape
-        midRow = int((numRows-1)/2)+1
+        midRow = self.mot_dim['number'] + 1
+
         # first half rows denote position
         trajPlan = new_traj[1:midRow,:]
 
@@ -255,7 +256,7 @@ class TrajManager:
             elif rot_repr == 'Quat':
                 # we need to do slerp
                 rot_idx = self.mot_dim['rotation']['rotationvec_index']
-                interSeqTime, interSeq_I = interpol.interpolateLinearlyQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]-1:rot_idx[1],:], sampleFreq=self.interFreq)
+                interSeqTime, interSeq_I = interpol.interpolateLinearlyQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]:rot_idx[1],:], sampleFreq=self.interFreq)
                 for i in range(interSeq_I.shape[1]):
                     tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I[:,i], axis=0)
                 row_len += 4
