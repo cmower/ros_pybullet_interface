@@ -15,10 +15,9 @@ motion_dimensions:
 
   rotation:
     rotation_repr: 'None'
-    rotationTheta_index:
     rotationvec: [1.0, 0.0, 0.0]  # unit vector
     rotationangle: 180.0
-    rotationvec_index:
+    rotationvec_index: []
 
 
 interpolation:
