@@ -15,7 +15,6 @@ motion_dimensions:
 
   rotation:
     rotation_repr: 'Euler'
-    rotationTheta_index:
     rotationvec:
     rotationangle:
     rotationvec_index: [3,6]
