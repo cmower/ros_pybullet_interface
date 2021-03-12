@@ -1,5 +1,7 @@
 # ros_pybullet_interface
 
+Note, this package only supports Python3 + ROS Noetic or later. There are custom solutions - see wiki.
+
 # Contributing
 
 When contributing changes to the repository please follow these steps.
