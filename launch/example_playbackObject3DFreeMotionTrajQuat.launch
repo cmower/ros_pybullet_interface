@@ -98,9 +98,9 @@
 
 
       <!-- Testing node trajectory publisher -->
-      <node name="test_ros_interpol_interface"
+      <node name="test_ros_HybridTO_interpol_interface"
           pkg="ros_pybullet_interface"
-          type="test_ros_interpol_interface.py"
+          type="test_ros_HybridTO_interpol_interface.py"
           output="screen">
           <!--type="test_ros_interpol_interface.py"-->
           <param
