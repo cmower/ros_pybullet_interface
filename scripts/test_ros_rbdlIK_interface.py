@@ -87,7 +87,7 @@ class TestIK:
         eeOri_traj_Rot = R.from_rotvec(eeOri_traj)
         self.eeOri_traj = eeOri_traj_Rot.as_quat()
 
-        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         time.sleep(2.0) # wait for initialisation to complete
 
 
@@ -127,13 +127,13 @@ class TestIK:
         msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
 
         # Publish msg
-        self.tfBroadcaster.sendTransform(msg)
+        self.tf_broadcaster.sendTransform(msg)
 
         msg.header.stamp = rospy.Time.now()
         msg.child_frame_id = 'ros_pybullet_interface/sphere'
 
         # Publish msg
-        self.tfBroadcaster.sendTransform(msg)
+        self.tf_broadcaster.sendTransform(msg)
 
         self.updateTrajIndex()
 
