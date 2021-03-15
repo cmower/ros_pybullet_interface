@@ -102,12 +102,7 @@
           pkg="ros_pybullet_interface"
           type="test_ros_HybridTO_interpol_interface.py"
           output="screen">
-          <!--type="test_ros_interpol_interface.py"-->
-          <param
-              name="only_object"
-              value="true"
-              type="bool"/>
-
+          
           <param
               name="rotation_repr"
               value="Quat"
