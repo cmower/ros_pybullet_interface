@@ -42,10 +42,10 @@ class ROSPyBulletInterface:
         self.name = rospy.get_name()
 
         # Setup
-        self.dur = rospy.Duration(ROS_DT)
-        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
-        self.tfBuffer = tf2_ros.Buffer()
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
+        self.dur = rospy.Duration(DT)
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.sensor_pubs = {}
         self.tfs = {}
         self.dynamic_collisionvisual_objects = []
@@ -303,7 +303,7 @@ class ROSPyBulletInterface:
     def readROSTfs(self):
         for tf_frame_id in self.tfs.keys():
             try:
-                tf = self.tfBuffer.lookup_transform(
+                tf = self.tf_buffer.lookup_transform(
                     WORLD_FRAME_ID, tf_frame_id, rospy.Time()
                 )
             except (tf2_ros.LookupException,
@@ -375,7 +375,7 @@ class ROSPyBulletInterface:
             msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
 
             # Broadcast tf
-            self.tfBroadcaster.sendTransform(msg)
+            self.tf_broadcaster.sendTransform(msg)
 
     def visualizeLinks(self):
         for linkid in self.visframes:
