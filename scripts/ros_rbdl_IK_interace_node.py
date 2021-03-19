@@ -28,7 +28,6 @@ WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
 EEBodyPointPosition = np.array([0.0, 0.0, 0.5]) #np.zeros(3)
 
-scale_dOri = 0.1 # this parameter needs to go to a yaml file
 
 class PyRBDLRobot:
 
@@ -108,18 +107,31 @@ class PyRBDLRobot:
 
 class PyRBDL4dIK:
 
-    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
+    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0, IK_info):
         self.robot = PyRBDLRobot(file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0)
         self.dt = time_step
 
-    def FullDiffIKstep(self, globalTargetPos3D, globalTargetOri3D):
-        delta = self.ComputeDelta(globalTargetPos3D, globalTargetOri3D)
-        JG = self.ComputeGlobalJacobian()
-        self.FullDiffIK(JG, delta)
+        # task indexes to switch from full 6D to only position or orienation
+        self.fIndx = IK_info['fIndx']
+        self.lIndx = IK_info['lIndx']
+
+        # scaling parameter between orientation and position
+        self.scale_dOri = IK_info['scale_dOri']
+
+        # parameters of the nullspace motion
+        self.alpha_null = np.array(IK_info['alpha_null'])
+        self.h_delta = np.deg2rad(np.array(IK_info['h_delta']))
+        self.h_norm = np.deg2rad(np.array(IK_info['h_norm']))
+
+
+    def fullDiffIKStep(self, globalTargetPos3D, globalTargetOri3D):
+        delta = self.computeDelta(globalTargetPos3D, globalTargetOri3D)
+        JG = self.computeGlobalJacobian()
+        self.fullDiffIK(JG, delta)
 
     """ --------------- Functions made for self use -------------------------"""
 
-    def ComputeDelta(self, globalTargetPos3D, globalTargetOri3D):
+    def computeDelta(self, globalTargetPos3D, globalTargetOri3D):
         # retrieve global position of the end-effector
         global_eePos = self.robot.getCurEEPos()
         # position error
@@ -143,7 +155,7 @@ class PyRBDL4dIK:
         dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
 
         # get delta orientation as a vector + also scale it
-        doriVec = dori.as_rotvec() * scale_dOri
+        doriVec = dori.as_rotvec() * self.scale_dOri
         # print(np.linalg.norm(doriVec))
 
         # position and orientation (in euler angles) error
@@ -154,23 +166,32 @@ class PyRBDL4dIK:
 
         return delta
 
-    def ComputeGlobalJacobian(self):
+    def computeGlobalJacobian(self):
          # Compute Jacobian
         JG = np.zeros([6, self.robot.numJoints])
         rbdl.CalcPointJacobian6D(self.robot.rbdlModel, self.robot.q, self.robot.rbdlEndEffectorID, self.robot.rbdlEEBodyPointPosition, JG, update_kinematics=True)
         return JG
 
-    def FullDiffIK(self, J, delta):
+    def fullDiffIK(self, J, delta):
+
          # Compute Jacobian pseudo-inverse
         Jpinv = np.linalg.pinv(J)
-        Jpinv_pos = Jpinv[6:self.robot.numJoints,:] # select joints and dimensions
-        # Compute differential kinematics
-        dq = Jpinv_pos.dot(delta)
 
+        # select joints and dimensions
+        J_arm = J[self.fIndx:self.lIndx,6:self.robot.numJoints]
+        Jpinv_arm = Jpinv[6:self.robot.numJoints,self.fIndx:self.lIndx]
+        # Compute differential kinematics
+        dq = Jpinv_arm.dot(delta[self.fIndx:self.lIndx])
+
+        _, c = J_arm.shape
         # retrieve current configuration
         qprev = self.robot.getJointConfig()
+
+        # compute null-space component
+        dq_nullspace_motion = (np.eye(c)-Jpinv_arm @ J_arm) @ ((self.h_delta-qprev)*(1/self.h_norm**2))
+
         # compute new configuration
-        qnext = qprev + dq #dot(self.dt)#.flatten()
+        qnext = qprev + dq + self.alpha_null*dq_nullspace_motion
         #  update configuration
         self.robot.updateJointConfig(qnext)
 
@@ -217,6 +238,7 @@ class ROSdIKInterface(object):
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
         base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+        IK_info = config['IK']
 
         # Establish connection with Robot in PyBullet environment
         rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", self.name)
@@ -226,7 +248,7 @@ class ROSdIKInterface(object):
         init_joint_position = list(msgRobotState.position)
 
         # Create pybullet robot instance
-        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position)
+        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position,IK_info)
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(
@@ -253,7 +275,7 @@ class ROSdIKInterface(object):
         self.target_EE_orientation = np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w])
 
     def updateRBDL(self, event):
-        self.robotIK.FullDiffIKstep(self.target_EE_position, self.target_EE_orientation)
+        self.robotIK.fullDiffIKStep(self.target_EE_position, self.target_EE_orientation)
 
     def cleanShutdown(self):
         print('')

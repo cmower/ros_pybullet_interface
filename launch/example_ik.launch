@@ -20,6 +20,14 @@
         value="configs/camera.yaml"
         type="str"/>
 
+    <!-- List collision objects (optional) -->
+    <rosparam param="collision_object_config_file_names">
+      [
+      'configs/sphere.yaml',
+      ]
+    </rosparam>
+
+
   </node>
 
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
@@ -41,6 +49,8 @@
       name="test_ros_rbdlIK_interface"
       pkg="ros_pybullet_interface"
       type="test_ros_rbdlIK_interface.py"
-      output="screen"/>
+      output="screen">
+
+    </node>
 
 </launch>

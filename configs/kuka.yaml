@@ -32,3 +32,19 @@ sensors:
 
   joint_force_torque_sensor__end_effector:
     joint_index: 8
+
+
+IK:
+  # 0-3 orienation, 3-6 position, 0-6 both orienation and position
+  # first index in IK
+  fIndx : 3
+  # last index in IK
+  lIndx : 6
+
+  # scaling parameter between orientation and position
+  scale_dOri : 0.1
+
+  # parameters of the nullspace motion
+  alpha_null : [0., 0., -0., -0., 0., 0.01, 0.] # activation per joint
+  h_delta : [0., 0., -0., -0., 0., 90., 0.]     # nominal configuration, aimed via nullspace motion
+  h_norm : [340., 240., 340., 240., 340., 240., 350.]  # normalization of the error for each joint (IIWA specific)
