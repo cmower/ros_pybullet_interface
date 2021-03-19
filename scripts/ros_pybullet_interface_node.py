@@ -25,6 +25,23 @@ TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'  # listen
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 
+
+# ------------------------------------------------------
+#
+# Helper functions
+# ------------------------------------------------------
+
+def packTransformStamped(tf_child_id, tf_frame_id, p, q):
+    tf = TransformStamped()
+    tf.header.stamp = rospy.Time.now()
+    tf.header.frame_id = tf_frame_id
+    tf.child_frame_id = tf_child_id
+    for i, dim in enumerate(['x', 'y', 'z']):
+        setattr(tf.transform.translation, dim, p[i])
+        setattr(tf.transform.rotation, dim, q[i])
+    tf.transform.rotation.w = q[3]
+    return tf
+
 # ------------------------------------------------------
 #
 # ROS/PyBullet interface
