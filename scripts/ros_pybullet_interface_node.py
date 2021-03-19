@@ -396,26 +396,14 @@ class ROSPyBulletInterface:
 
     def publishPyBulletLinkStatesToROS(self, event):
         for state in self.robot.getLinkStates():
-
-            label = state['label']
-            position = state['position']
-            orientation = state['orientation']
-
-            # Pack pose msg
-            msg = TransformStamped()
-            msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = WORLD_FRAME_ID
-            msg.child_frame_id = 'ros_pybullet_interface/robot/%s' % label
-            msg.transform.translation.x = position[0]
-            msg.transform.translation.y = position[1]
-            msg.transform.translation.z = position[2]
-            msg.transform.rotation.x = orientation[0]
-            msg.transform.rotation.y = orientation[1]
-            msg.transform.rotation.z = orientation[2]
-            msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
-
-            # Broadcast tf
-            self.tf_broadcaster.sendTransform(msg)
+            self.tf_broadcaster.sendTransform(
+                packTransformStamped(
+                    WORLD_FRAME_ID,
+                    'ros_pybullet_interface/robot/%s' % state['label'],
+                    state['position'],
+                    state['orientation']
+                )
+            )
 
     def visualizeLinks(self):
         for linkid in self.visframes:
