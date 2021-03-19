@@ -420,6 +420,8 @@ class ROSPyBulletInterface:
         self.readROSTfs()
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
+        self.publishStaticTransformsToROS()
+
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
         self.step()
