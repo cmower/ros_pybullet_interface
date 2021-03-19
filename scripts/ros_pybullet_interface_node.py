@@ -31,7 +31,7 @@ WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 # Helper functions
 # ------------------------------------------------------
 
-def packTransformStamped(tf_child_id, tf_frame_id, p, q):
+def packTransformStamped(tf_frame_id, tf_child_id, p, q):
     tf = TransformStamped()
     tf.header.stamp = rospy.Time.now()
     tf.header.frame_id = tf_frame_id
