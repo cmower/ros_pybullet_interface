@@ -275,8 +275,19 @@ class ROSPyBulletInterface:
             self.static_collisionvisual_objects.append({
                 'object': obj,
                 'position': config['link_state']['position'],
-                'orientation': config['link_state']['orientation_eulerXYZ']
-            })
+                'orientation': config['link_state']['orientation_eulerXYZ'],
+            }}
+            if 'pub_tf' in config['link_state']:
+                static_col_obj['pub_tf'] = config['link_state']['pub_tf']
+            else:
+                static_col_obj['pub_tf'] = False
+
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + len(self.static_collision_objects)
+            static_col_obj['name'] = name
+            self.static_collision_objects.append(static_col_obj)
 
     def setupPyBulletObject(self, file_name):
 
@@ -370,6 +381,18 @@ class ROSPyBulletInterface:
             if reading['type'] == 'joint_force_torque':
                 msg = self.packJointForceTorqueROSMsg(reading['reading'])
                 self.sensor_pubs[reading['label']].publish(msg)
+
+    def publishStaticTransformsToROS(self):
+        for static_obj in self.static_collision_objects:
+            if static_obj['pub_tf']:
+                self.tf_broadcaster.sendTransform(
+                    packTransformStamped(
+                        WORLD_FRAME_ID,
+                        'ros_pybullet_interface/'+static_obj['name'],
+                        static_obj['position'],
+                        static_obj['orientation']
+                    )
+                )
 
     def publishPyBulletLinkStatesToROS(self, event):
         for state in self.robot.getLinkStates():
