@@ -2,7 +2,7 @@
 import os
 import sys
 
-import numpy
+import numpy as np
 import rospy
 import tf2_ros
 from sensor_msgs.msg import JointState
@@ -122,9 +122,9 @@ class ROSPyBulletInterface:
         )
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
-            numpy.deg2rad(config['base_orient_eulerXYZ'])
+            np.deg2rad(config['base_orient_eulerXYZ'])
         )
-        qinit = numpy.deg2rad(config['init_position'])
+        qinit = np.deg2rad(config['init_position'])
         self.robot.setJointPositions(qinit)
 
         # Specify target joint position
@@ -214,7 +214,7 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                numpy.deg2rad(config['link_state']['orientation_eulerXYZ'])
+                np.deg2rad(config['link_state']['orientation_eulerXYZ'])
             )
             self.static_collision_objects.append({
                 'object': obj,
