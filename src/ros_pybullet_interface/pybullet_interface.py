@@ -49,10 +49,6 @@ def closePyBullet():
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
 
-
-def toRadians(orientation):
-    return np.deg2rad(orientation)
-
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
     if len(orientation) == 3:
