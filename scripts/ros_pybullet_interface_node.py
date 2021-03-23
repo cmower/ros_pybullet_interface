@@ -221,7 +221,7 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                pybullet_interface.toRadians(config['link_state']['orientation_eulerXYZ'])
+                np.deg2rad(config['link_state']['orientation_eulerXYZ'])
             )
             self.static_collisionvisual_objects.append({
                 'object': obj,
