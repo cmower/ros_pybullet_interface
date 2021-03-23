@@ -16,11 +16,12 @@ VISUAL_FRAME_LINE_WIDTH = 2
 # Methods
 # ------------------------------------------------------
 
-def initPyBullet(time_step):
+def initPyBullet(time_step, gravity=[0, 0, -9.81]):
     pybullet.connect(pybullet.GUI)
     pybullet.resetSimulation()
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.setTimeStep(time_step)
+    pybullet.setGravity(gravity[0],gravity[1],gravity[2])
 
 def setupPyBulletCamera(distance, yaw, pitch, target_position):
     pybullet.resetDebugVisualizerCamera(
@@ -82,6 +83,11 @@ def visualizeFrameInWorld(position, orientation, scale=1.0):
 
 class PyBulletObject:
 
+    def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
+        self.loadMeshVisual(file_name, mesh_scale, rgba_color)
+        self.loadMeshCollision(file_name, mesh_scale)
+        self.createMultiBody(base_mass)
+
     def setBasePositionAndOrientation(self, position, orientation):
         '''Note: if len(orientation) is 3 then it is treated as euler angles, otherwise
         we expect a quaternion.'''
@@ -140,7 +146,7 @@ class PyBulletObject:
             linearDamping=linear_damping,
             angularDamping=angular_damping,
             contactStiffness=contact_stiffness,
-            contactDamping=contact_damping
+            contactDamping=contact_damping,
         )
 
     def loadURDF(self, file_name):
@@ -161,12 +167,27 @@ class PyBulletObject:
             meshScale=mesh_scale
         )
 
-    def createMultiBody(self, base_mass):
+    def createCollisionMultiBody(self, base_mass):
         self.ID = pybullet.createMultiBody(
             baseMass=base_mass,
             baseCollisionShapeIndex=self.collision_ID,
             baseVisualShapeIndex=self.visual_ID
         )
+
+    def createVisualMultiBody(self):
+        self.ID = pybullet.createMultiBody(
+            baseMass=0,
+            baseVisualShapeIndex=self.visual_ID
+        )
+
+    def createMultiBody(self, base_mass):
+        self.ID = pybullet.createMultiBody(
+            baseMass=base_mass,
+            baseInertialFramePosition=[0, 0, 0],
+            baseCollisionShapeIndex=self.collision_ID,
+            baseVisualShapeIndex=self.visual_ID
+        )
+
 
 class PyBulletVisualSphere(PyBulletObject):
 
@@ -185,7 +206,19 @@ class PyBulletCollisionObject(PyBulletObject):
     def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
         self.loadMeshVisual(file_name, mesh_scale, rgba_color)
         self.loadMeshCollision(file_name, mesh_scale)
-        self.createMultiBody(base_mass)
+        self.createCollisionMultiBody(base_mass)
+
+    def getPosition(self):
+        return pybullet.getLinkState(self.ID, -1, computeForwardKinematics=1)[4]
+
+    def getOrientation(self):
+        return pybullet.getLinkState(self.ID, -1, computeForwardKinematics=1)[5]
+
+class PyBulletVisualObject(PyBulletObject):
+
+    def __init__(self, file_name, mesh_scale, rgba_color):
+        self.loadMeshVisual(file_name, mesh_scale, rgba_color)
+        self.createVisualMultiBody()
 
     def getPosition(self):
         return pybullet.getLinkState(self.ID, -1, computeForwardKinematics=1)[4]

@@ -2,7 +2,7 @@ file_name: 'objects/box.obj'
 
 # Basic parameters
 mesh_scale: [0.125, 0.125, 0.075]
-rgba_color: [0.3, 0.3, 0.3, 1.0]
+rgba_color: [0.3, 0.3, 0.3, 0.5]
 base_mass: 0.0
 
 # Dynamic parameters
