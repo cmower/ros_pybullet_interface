@@ -16,12 +16,12 @@ VISUAL_FRAME_LINE_WIDTH = 2
 # Methods
 # ------------------------------------------------------
 
-def initPyBullet(time_step):
+def initPyBullet(time_step, gravity=[0, 0, -9.81]):
     pybullet.connect(pybullet.GUI)
     pybullet.resetSimulation()
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.setTimeStep(time_step)
-    pybullet.setGravity(0,0,-9.8)
+    pybullet.setGravity(gravity[0],gravity[1],gravity[2])
 
 def setupPyBulletCamera(distance, yaw, pitch, target_position):
     pybullet.resetDebugVisualizerCamera(
