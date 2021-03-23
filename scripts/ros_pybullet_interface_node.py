@@ -59,7 +59,7 @@ class ROSPyBulletInterface:
         self.name = rospy.get_name()
 
         # Setup
-        self.dur = rospy.Duration(DT)
+        self.dur = rospy.Duration(ROS_DT)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
@@ -67,6 +67,7 @@ class ROSPyBulletInterface:
         self.tfs = {}
         self.dynamic_collisionvisual_objects = []
         self.static_collisionvisual_objects = []
+        self.static_collision_objects = []
 
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
@@ -276,7 +277,7 @@ class ROSPyBulletInterface:
                 'object': obj,
                 'position': config['link_state']['position'],
                 'orientation': config['link_state']['orientation_eulerXYZ'],
-            }}
+            })
             if 'pub_tf' in config['link_state']:
                 static_col_obj['pub_tf'] = config['link_state']['pub_tf']
             else:
