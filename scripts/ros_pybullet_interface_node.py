@@ -16,8 +16,10 @@ from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
 # Constants
 # ------------------------------------------------------
 
-FREQ = 100  # PyBullet sampling frequency
-DT = 1.0/float(FREQ)
+ROS_FREQ = 100       # ROS loop sampling frequency
+ROS_DT = 1.0/float(ROS_FREQ)
+PYBULLET_FREQ = ROS_FREQ #256 # PyBullet simulation loop sampling frequency
+PYBULLET_DT = 1.0/float(PYBULLET_FREQ)
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'  # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
@@ -39,7 +41,7 @@ class ROSPyBulletInterface:
         self.name = rospy.get_name()
 
         # Setup
-        self.dur = rospy.Duration(DT)
+        self.dur = rospy.Duration(ROS_DT)
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
@@ -66,7 +68,7 @@ class ROSPyBulletInterface:
         # to these setup functions
 
         # Initialise pybullet
-        pybullet_interface.initPyBullet(DT)
+        pybullet_interface.initPyBullet(ROS_DT)
         self.setupPyBulletCamera(camera_config_file_name)
         self.setupPyBulletRobot(robot_config_file_name)
 
@@ -81,6 +83,19 @@ class ROSPyBulletInterface:
 
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
+
+        if rospy.get_param('~pybullet_sim_self_loop'):
+            pybullet_interface.updateTimeStep(PYBULLET_DT)
+            pybullet_interface.runPyBullet()
+            self.step = self._null
+        else:
+            self.step = self._step
+
+    def _null(self, *args, **kwargs):
+        pass
+
+    def _step(self):
+        pybullet_interface.stepPyBullet()
 
     def setupPyBulletCamera(self, file_name):
 
@@ -154,6 +169,7 @@ class ROSPyBulletInterface:
 
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+
 
     def setupPyBulletVisualLinks(self, linkid):
         self.tfs[linkid] = {
@@ -305,7 +321,9 @@ class ROSPyBulletInterface:
         self.readROSTfs()
         self.setPyBulletCollisionObjectPositionAndOrientation()
         self.visualizeLinks()
-        pybullet_interface.stepPyBullet()
+        # run simulation step by step or do nothing
+        # (as bullet can run the simulation steps automatically from within)
+        self.step()
 
     def spin(self):
         try:

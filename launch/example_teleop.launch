@@ -7,6 +7,22 @@
       clear_params="true"
       type="ros_pybullet_interface_node.py">
 
+    <!-- Pybullet simulation config (required) -->
+    <!-- Flag to indicate how bullet simulation step is
+         synced with ROS control loop.
+         Options:
+              true:  pybullet executes all simulation steps in a fixed frequency
+                     This can be used to simulate real world
+                     ( use simulation freqency > 250 Hz)
+              false: pybullet executes every simulation step when commanded by ROS node
+                     This can be used to execute one simulation step after one control/interface step
+                     Useful for debugging, but not realistic
+                     (specially, if control loop freqency is < 250 Hz)-->
+    <param
+        name="pybullet_sim_self_loop"
+        value="true"
+        type="bool"/>
+
     <!-- Robot config (required) -->
     <param
         name="robot_config"
