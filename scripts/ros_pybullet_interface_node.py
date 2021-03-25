@@ -68,6 +68,7 @@ class ROSPyBulletInterface:
         self.dynamic_collisionvisual_objects = []
         self.static_collisionvisual_objects = []
         self.static_collision_objects = []
+        self.objects = []
 
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
@@ -286,7 +287,7 @@ class ROSPyBulletInterface:
             if 'name' in config:
                 name = config['name']
             else:
-                name = 'obj' + len(self.static_collision_objects)
+                name = 'obj' + str(len(self.static_collision_objects))
             static_col_obj['name'] = name
             self.static_collision_objects.append(static_col_obj)
 
@@ -319,6 +320,18 @@ class ROSPyBulletInterface:
                 config['link_state']['position'],
                 config['link_state']['orientation_eulerXYZ'],
             )
+
+            # book-keeping object names and ids
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + str(len(self.objects))
+
+            self.objects.append({
+                'object_id': obj.getObjectID(),
+                'object_name': name
+            })
+            self.i = 0
 
 
     def setPyBulletCollisionVisualObjectPositionAndOrientation(self):
@@ -414,6 +427,21 @@ class ROSPyBulletInterface:
                     tf['position'], tf['orientation']
                 )
 
+    def setObjState(self, obj_name, pos=None, quat=None, lin_vel=None, ang_vel=None):
+
+        obj_id = None
+        for obj in self.objects:
+            if obj['object_name']==obj_name:
+                obj_id = obj['object_id']
+
+        if obj_id==None:
+            rospy.logwarn(f"{obj_name} was not found...")
+            return
+
+        pybullet_interface.setObjectPosOrient(obj['object_id'], pos, quat)
+        pybullet_interface.setObjectVelLinAng(obj['object_id'], lin_vel,ang_vel)
+
+
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
             raise RuntimeError(f"{self.name}: PyBullet disconnected")
@@ -422,6 +450,18 @@ class ROSPyBulletInterface:
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
         self.publishStaticTransformsToROS()
+
+        if self.i == 1000:
+            for obj in self.objects:
+                print("Set new position for ID of ",  obj['object_name'], " is ", obj['object_id'])
+                self.setObjState(obj['object_name'], pos=[-1,0,0.1], quat=[0,0,0,1])
+
+        if self.i == 2000:
+            for obj in self.objects:
+                print("Set new velocity for ID of ",  obj['object_name'], " is ", obj['object_id'])
+                self.setObjState(obj['object_name'], lin_vel=[0.8,0,0], ang_vel=[0,0,0])
+
+        self.i += 1
 
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
