@@ -10,7 +10,7 @@ from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 from ros_pybullet_interface import pybullet_interface
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
-
+from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 
 # ------------------------------------------------------
 #
@@ -110,6 +110,9 @@ class ROSPyBulletInterface:
 
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
+
+        # set the server for changing object state
+        self.setObjectStateServer()
 
         if rospy.get_param('~pybullet_sim_self_loop'):
             pybullet_interface.updateTimeStep(PYBULLET_DT)
@@ -441,6 +444,21 @@ class ROSPyBulletInterface:
         pybullet_interface.setObjectPosOrient(obj['object_id'], pos, quat)
         pybullet_interface.setObjectVelLinAng(obj['object_id'], lin_vel,ang_vel)
 
+    def set_object_state(self, req):
+        print("Returning object position and orientation: \n", req.pos)
+        print("Returning object linear and angular velocity: \n", req.vel)
+        for obj in self.objects:
+            print("Set new position for ID of ", obj['object_name'], " is ", obj['object_id'])
+            self.setObjState(obj['object_name'], pos=req.pos[0:3], quat=req.pos[3:7])
+            self.setObjState(obj['object_name'], lin_vel=req.vel[0:3], ang_vel=req.vel[3:6])
+
+        return setObjectStateResponse("set the state of the object successfully")
+
+    def setObjectStateServer(self):
+
+        s = rospy.Service('set_object_state', setObjectState, self.set_object_state)
+        print("Ready to set the state of the object.")
+        # rospy.spin()
 
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
@@ -450,18 +468,6 @@ class ROSPyBulletInterface:
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
         self.publishStaticTransformsToROS()
-
-        if self.i == 1000:
-            for obj in self.objects:
-                print("Set new position for ID of ",  obj['object_name'], " is ", obj['object_id'])
-                self.setObjState(obj['object_name'], pos=[-1,0,0.1], quat=[0,0,0,1])
-
-        if self.i == 2000:
-            for obj in self.objects:
-                print("Set new velocity for ID of ",  obj['object_name'], " is ", obj['object_id'])
-                self.setObjState(obj['object_name'], lin_vel=[0.8,0,0], ang_vel=[0,0,0])
-
-        self.i += 1
 
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
