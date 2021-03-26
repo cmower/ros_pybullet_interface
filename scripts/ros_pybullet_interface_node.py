@@ -334,7 +334,6 @@ class ROSPyBulletInterface:
                 'object_id': obj.getObjectID(),
                 'object_name': name
             })
-            self.i = 0
 
 
     def setPyBulletCollisionVisualObjectPositionAndOrientation(self):
@@ -443,15 +442,16 @@ class ROSPyBulletInterface:
 
         pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
         pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
-        print("Returning object position and orientation: \n", req.pos, req.quat)
-        print("Returning object linear and angular velocity: \n", req.lin_vel, req.ang_vel)
-        return setObjectStateResponse("set the state of the object successfully")
+        rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
+        rospy.loginfo(f"Returning objectlinear and angular velocity: {req.lin_vel}, {req.ang_vel}")
+
+        return setObjectStateResponse("True: Set the state of the object successfully")
 
 
     def setObjectStateServer(self):
 
         s = rospy.Service('set_object_state', setObjectState, self.setObjState)
-        print("Ready to set the state of the object.")
+        rospy.loginfo("Server is ready to set the state of the object.")
 
 
     def updatePyBullet(self, event):
