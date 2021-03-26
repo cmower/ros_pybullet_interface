@@ -421,6 +421,18 @@ class ROSPyBulletInterface:
                 )
             )
 
+    def publishObjectStateTransToROS(self):
+        for obj in self.objects:
+            pos, orient = pybullet_interface.getObjectPosOrient(obj['object_id'])
+            self.tf_broadcaster.sendTransform(
+                    packTransformStamped(
+                        WORLD_FRAME_ID,
+                        'ros_pybullet_interface/'+obj['object_name'],
+                        pos,
+                        orient
+                    )
+                )
+
     def visualizeLinks(self):
         for linkid in self.visframes:
             tf = self.tfs[linkid]
@@ -462,6 +474,7 @@ class ROSPyBulletInterface:
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
         self.publishStaticTransformsToROS()
+        self.publishObjectStateTransToROS()
 
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)

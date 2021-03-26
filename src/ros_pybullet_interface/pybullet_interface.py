@@ -68,6 +68,9 @@ def setObjectVelLinAng(obj_id, lin_vel3D, ang_vel3D):
     if ang_vel3D!=None:
         pybullet.resetBaseVelocity(obj_id, angularVelocity=ang_vel3D)
 
+def getObjectPosOrient(obj_id):
+    return pybullet.getBasePositionAndOrientation(obj_id)
+
 
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
