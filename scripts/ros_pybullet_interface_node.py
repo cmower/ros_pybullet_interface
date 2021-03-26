@@ -443,7 +443,7 @@ class ROSPyBulletInterface:
         pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
         pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
         rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
-        rospy.loginfo(f"Returning objectlinear and angular velocity: {req.lin_vel}, {req.ang_vel}")
+        rospy.loginfo(f"Returning object linear and angular velocity: {req.lin_vel}, {req.ang_vel}")
 
         return setObjectStateResponse("True: Set the state of the object successfully")
 
