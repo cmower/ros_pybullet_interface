@@ -50,6 +50,28 @@ def closePyBullet():
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
 
+def setObjectPosOrient(obj_id, pos3D=None, quat=None):
+
+    if pos3D!=None:
+        p3D, orient4D = pybullet.getBasePositionAndOrientation(obj_id)
+        pybullet.resetBasePositionAndOrientation(obj_id, pos3D, orient4D)
+
+    if quat!=None:
+        p3D, orient4D = pybullet.getBasePositionAndOrientation(obj_id)
+        pybullet.resetBasePositionAndOrientation(obj_id, p3D, quat)
+
+def setObjectVelLinAng(obj_id, lin_vel3D, ang_vel3D):
+
+    if lin_vel3D!=None:
+        pybullet.resetBaseVelocity(obj_id, linearVelocity=lin_vel3D)
+
+    if ang_vel3D!=None:
+        pybullet.resetBaseVelocity(obj_id, angularVelocity=ang_vel3D)
+
+def getObjectPosOrient(obj_id):
+    return pybullet.getBasePositionAndOrientation(obj_id)
+
+
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
     if len(orientation) == 3:
@@ -187,6 +209,9 @@ class PyBulletObject:
             baseCollisionShapeIndex=self.collision_ID,
             baseVisualShapeIndex=self.visual_ID
         )
+
+    def getObjectID(self):
+        return self.ID
 
 
 class PyBulletVisualSphere(PyBulletObject):

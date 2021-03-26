@@ -10,7 +10,7 @@ from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 from ros_pybullet_interface import pybullet_interface
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
-
+from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 
 # ------------------------------------------------------
 #
@@ -68,6 +68,7 @@ class ROSPyBulletInterface:
         self.dynamic_collisionvisual_objects = []
         self.static_collisionvisual_objects = []
         self.static_collision_objects = []
+        self.objects = []
 
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
@@ -109,6 +110,9 @@ class ROSPyBulletInterface:
 
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
+
+        # set the server for changing object state
+        self.setObjectStateServer()
 
         if rospy.get_param('~pybullet_sim_self_loop'):
             pybullet_interface.updateTimeStep(PYBULLET_DT)
@@ -286,7 +290,7 @@ class ROSPyBulletInterface:
             if 'name' in config:
                 name = config['name']
             else:
-                name = 'obj' + len(self.static_collision_objects)
+                name = 'obj' + str(len(self.static_collision_objects))
             static_col_obj['name'] = name
             self.static_collision_objects.append(static_col_obj)
 
@@ -319,6 +323,17 @@ class ROSPyBulletInterface:
                 config['link_state']['position'],
                 config['link_state']['orientation_eulerXYZ'],
             )
+
+            # book-keeping object names and ids
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + str(len(self.objects))
+
+            self.objects.append({
+                'object_id': obj.getObjectID(),
+                'object_name': name
+            })
 
 
     def setPyBulletCollisionVisualObjectPositionAndOrientation(self):
@@ -406,6 +421,18 @@ class ROSPyBulletInterface:
                 )
             )
 
+    def publishObjectStateTransToROS(self):
+        for obj in self.objects:
+            pos, orient = pybullet_interface.getObjectPosOrient(obj['object_id'])
+            self.tf_broadcaster.sendTransform(
+                    packTransformStamped(
+                        WORLD_FRAME_ID,
+                        'ros_pybullet_interface/'+obj['object_name'],
+                        pos,
+                        orient
+                    )
+                )
+
     def visualizeLinks(self):
         for linkid in self.visframes:
             tf = self.tfs[linkid]
@@ -413,6 +440,31 @@ class ROSPyBulletInterface:
                 pybullet_interface.visualizeFrameInWorld(
                     tf['position'], tf['orientation']
                 )
+
+    def setObjState(self, req):
+
+        obj_id = None
+        for obj in self.objects:
+            if obj['object_name']==req.obj_name:
+                obj_id = obj['object_id']
+
+        if obj_id==None:
+            rospy.logwarn(f"{obj_name} was not found...")
+            return
+
+        pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
+        pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
+        rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
+        rospy.loginfo(f"Returning object linear and angular velocity: {req.lin_vel}, {req.ang_vel}")
+
+        return setObjectStateResponse("True: Set the state of the object successfully")
+
+
+    def setObjectStateServer(self):
+
+        s = rospy.Service('set_object_state', setObjectState, self.setObjState)
+        rospy.loginfo("Server is ready to set the state of the object.")
+
 
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
@@ -422,6 +474,7 @@ class ROSPyBulletInterface:
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
         self.publishStaticTransformsToROS()
+        self.publishObjectStateTransToROS()
 
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
