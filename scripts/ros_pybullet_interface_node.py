@@ -430,35 +430,29 @@ class ROSPyBulletInterface:
                     tf['position'], tf['orientation']
                 )
 
-    def setObjState(self, obj_name, pos=None, quat=None, lin_vel=None, ang_vel=None):
+    def setObjState(self, req):
 
         obj_id = None
         for obj in self.objects:
-            if obj['object_name']==obj_name:
+            if obj['object_name']==req.obj_name:
                 obj_id = obj['object_id']
 
         if obj_id==None:
             rospy.logwarn(f"{obj_name} was not found...")
             return
 
-        pybullet_interface.setObjectPosOrient(obj['object_id'], pos, quat)
-        pybullet_interface.setObjectVelLinAng(obj['object_id'], lin_vel,ang_vel)
-
-    def set_object_state(self, req):
-        print("Returning object position and orientation: \n", req.pos)
-        print("Returning object linear and angular velocity: \n", req.vel)
-        for obj in self.objects:
-            print("Set new position for ID of ", obj['object_name'], " is ", obj['object_id'])
-            self.setObjState(obj['object_name'], pos=req.pos[0:3], quat=req.pos[3:7])
-            self.setObjState(obj['object_name'], lin_vel=req.vel[0:3], ang_vel=req.vel[3:6])
-
+        pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
+        pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
+        print("Returning object position and orientation: \n", req.pos, req.quat)
+        print("Returning object linear and angular velocity: \n", req.lin_vel, req.ang_vel)
         return setObjectStateResponse("set the state of the object successfully")
+
 
     def setObjectStateServer(self):
 
-        s = rospy.Service('set_object_state', setObjectState, self.set_object_state)
+        s = rospy.Service('set_object_state', setObjectState, self.setObjState)
         print("Ready to set the state of the object.")
-        # rospy.spin()
+
 
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
