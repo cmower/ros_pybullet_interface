@@ -106,11 +106,16 @@ def visualizeFrameInWorld(position, orientation, scale=1.0):
 
 class PyBulletObject:
 
-    def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
-        file_name = replacePackage(file_name)
-        self.loadMeshVisual(file_name, mesh_scale, rgba_color)
-        self.loadMeshCollision(file_name, mesh_scale)
-        self.createMultiBody(base_mass)
+    def __init__(self, file_name, mesh_scale, rgba_color, base_mass, loadURDF=None):
+
+        if loadURDF==None:
+            file_name = replacePackage(file_name)
+            self.loadMeshVisual(file_name, mesh_scale, rgba_color)
+            self.loadMeshCollision(file_name, mesh_scale)
+            self.createMultiBody(base_mass)
+        else:
+            self.loadURDF(loadURDF, FixedBase=False)
+
 
     def setBasePositionAndOrientation(self, position, orientation):
         '''Note: if len(orientation) is 3 then it is treated as euler angles, otherwise
@@ -161,7 +166,8 @@ class PyBulletObject:
                        linear_damping,
                        angular_damping,
                        contact_stiffness,
-                       contact_damping):
+                       contact_damping,
+                       localInertiaDiagonal):
         pybullet.changeDynamics(
             bodyUniqueId=self.ID,
             linkIndex=link_index,
@@ -173,11 +179,12 @@ class PyBulletObject:
             angularDamping=angular_damping,
             contactStiffness=contact_stiffness,
             contactDamping=contact_damping,
+            localInertiaDiagonal=localInertiaDiagonal,
         )
 
     def loadURDF(self, file_name):
         file_name = replacePackage(file_name)
-        self.ID = pybullet.loadURDF(file_name, useFixedBase=True) # only support fixed base robots
+        self.ID = pybullet.loadURDF(file_name, useFixedBase=FixedBase) # only support fixed base robots
 
     def loadMeshVisual(self, file_name, mesh_scale, rgba_color):
         file_name = replacePackage(file_name)
