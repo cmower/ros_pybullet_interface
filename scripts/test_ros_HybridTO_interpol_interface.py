@@ -4,6 +4,7 @@ import os
 import math
 import time
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 import rospy
 
@@ -11,13 +12,9 @@ from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import MultiArrayDimension
 from ros_pybullet_interface.utils import ROOT_DIR
 
-# --- library for Hybrid TO
-from sys import path
-path.insert(0,"/home/lei/research/trajectory_optimization/Hybrid_MPC")
 
 # --- import external library
-from py_pack import np, os, yaml
-from py_pack import R
+from py_pack import yaml
 
 # --- import Hybrid Trajectory Optimization class
 from py_pack import hybrid_tosrb
@@ -26,7 +23,7 @@ NEW_TRAJ_ROBOT_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes en
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 
 
-class TestInterpolation:
+class PlanInterpWithTO:
 
     def __init__(self):
 
@@ -36,10 +33,6 @@ class TestInterpolation:
         # Initialize data stream
         self.trajObjPlan = np.empty(0)
         self.trajRobotPlan = np.empty(0)
-
-        # Get ros parameters
-        only_obj = rospy.get_param('~only_object')
-
 
         # start punlishers
         self.new_Robottraj_publisher = rospy.Publisher(NEW_TRAJ_ROBOT_TOPIC, Float64MultiArray, queue_size=1)
@@ -94,62 +87,75 @@ class TestInterpolation:
         return msg
 
 
+    def buildTO(self):
+
+        #  create instance of the Hybrid optimisation class
+        self.HybOpt3D = hybrid_tosrb.HybridTOClass3D()
+
+        # build the problem
+        self.HybProb = self.HybOpt3D.buildProblem()
+
+    def solveTO(self):
+
+        # get initial guess
+        xInit = self.HybOpt3D.buildInitialGuess()
+
+
+        ''' ATTENTION: replace the following with parameter from ROS as:
+            # Get ros parameters
+            only_obj = rospy.get_param('~only_object')
+        '''
+        path2extrPck = os.environ['PATH2HYBRIDMPC']
+        paramFile = os.path.join(path2extrPck,"py_pack/config/parameters.yml")
+        with open(paramFile, 'r') as ymlfile:
+            params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
+
+        ori_representation = params['TOproblem']['ori_representation']
+
+        # get bounds of variables and constraints
+        if ori_representation == "euler":
+            # euler representation initialization #
+            initObjPos = np.array([-1.5, 0, 0, 0, 0, 0])
+            finObjPos = np.array([-1.5, 0, 0, 0, 0, 0])
+            maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000])
+        elif ori_representation == "quaternion":
+            # quaternion representation initialization #
+            initObjPos = np.array([-1.5, 0, 0, 0, 0, 0, 1])
+            finObjPos = np.array([-1.5, 0, 0, 0, 0, 0, 1])
+            maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000])
+
+        initObjVel = np.array([1, 0, 0, -1, 0, 0])
+        finObjVel = np.array([0, 0, 0, 0, 0, 0])
+        maxObjVel = np.array([10, 10, 10, 10, 10, 10])
+
+        lbx, ubx, lbg, ubg, cf, gf = self.HybOpt3D.buildBounds(initObjPos, finObjPos, maxObjPos, 0.0,
+                                                          initObjVel, finObjVel, maxObjVel, 0.0)
+
+        # solve problem
+        solFlag, xSolution = self.HybOpt3D.solveProblem(self.HybProb, xInit, lbx, ubx, lbg, ubg, cf, gf)
+
+        # decode solution
+        if (solFlag):
+            timeArray, posArray, velArray, forceArray = self.HybOpt3D.decodeSol(xSolution, animateFlag=False)
+
+        self.trajObjPlan = np.vstack((np.vstack((timeArray, posArray)), velArray))
+
+
 if __name__=='__main__':
-
-    # --- run the Hybrid trajectory optimization --- #
-    paramFile = "/home/lei/research/trajectory_optimization/Hybrid_MPC/py_pack/config/parameters.yml"
-    path2dirOffile = os.path.dirname(os.path.abspath(__file__))
-    with open(paramFile, 'r') as ymlfile:
-        params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
-
-    ori_representation = params['TOproblem']['ori_representation']
-
-    #  create instance of the Hybrid optimisation class
-    HybOpt3D = hybrid_tosrb.HybridTOClass3D()
-
-    # build the problem
-    HybProb = HybOpt3D.buildProblem()
-
-    # get initial guess
-    xInit = HybOpt3D.buildInitialGuess()
-
-    # get bounds of variables and constraints
-    if ori_representation == "euler":
-        # euler representation initialization #
-        initObjPos = np.array([-1.5, 0, 0, 0, 0, 0])
-        finObjPos = np.array([-1.5, 0, 0, 0, 0, 0])
-        maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000])
-    elif ori_representation == "quaternion":
-        # quaternion representation initialization #
-        initObjPos = np.array([-1.5, 0, 0, 0, 0, 0, 1])
-        finObjPos = np.array([-1.5, 0, 0, 0, 0, 0, 1])
-        maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000])
-
-    initObjVel = np.array([1, 0, 0, -1, 0, 0])
-    finObjVel = np.array([0, 0, 0, 0, 0, 0])
-    maxObjVel = np.array([10, 10, 10, 10, 10, 10])
-
-    lbx, ubx, lbg, ubg, cf, gf = HybOpt3D.buildBounds(initObjPos, finObjPos, maxObjPos, 0.0,
-                                                      initObjVel, finObjVel, maxObjVel, 0.0)
-
-    # solve problem
-    solFlag, xSolution = HybOpt3D.solveProblem(HybProb, xInit, lbx, ubx, lbg, ubg, cf, gf)
-
-    # decode solution
-    if (solFlag):
-        timeArray, posArray, velArray, forceArray = HybOpt3D.decodeSol(xSolution, animateFlag=False)
-
 
     # --- setup the ros interface --- #
     rospy.init_node('test_ros_HybridTO_interpol_interface', anonymous=True)
     freq = 10
-    TestInterpolation = TestInterpolation()
-    TestInterpolation.trajObjPlan = np.vstack((np.vstack((timeArray, posArray)), velArray))
+    PlanInterpWithTO = PlanInterpWithTO()
+    rospy.loginfo("%s: node started.", PlanInterpWithTO.name)
 
-    rospy.loginfo("%s: node started.", TestInterpolation.name)
+    # build the TO problem
+    PlanInterpWithTO.buildTO()
+    # solve the TO problem
+    PlanInterpWithTO.solveTO()
 
-    TestInterpolation.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishRobotTrajectory)
-    TestInterpolation.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), TestInterpolation.publishObjTrajectory)
+    PlanInterpWithTO.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishRobotTrajectory)
+    PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
 
     rospy.spin()

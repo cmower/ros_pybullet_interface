@@ -6,9 +6,21 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf2
   tf2_ros
+  std_msgs
+  message_generation
   )
 
 catkin_python_setup()
+
+add_service_files(
+  FILES
+  setObjectState.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 catkin_package()
 
@@ -24,5 +36,6 @@ catkin_install_python(PROGRAMS
   scripts/test_ros_pybullet_interface.py
   scripts/test_ros_rbdlIK_interface.py
   scripts/test_ros_interpol_interface.py
+  scripts/set_object_state_client.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )

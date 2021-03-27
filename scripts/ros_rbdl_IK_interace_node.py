@@ -124,14 +124,14 @@ class PyRBDL4dIK:
         self.h_norm = np.deg2rad(np.array(ik_info['h_norm']))
 
 
-    def FullDiffIKstep(self, globalTargetPos3D, globalTargetOri3D):
-        delta = self.ComputeDelta(globalTargetPos3D, globalTargetOri3D)
-        JG = self.ComputeGlobalJacobian()
-        self.FullDiffIK(JG, delta)
+    def fullDiffIKStep(self, globalTargetPos3D, globalTargetOri3D):
+        delta = self.computeDelta(globalTargetPos3D, globalTargetOri3D)
+        JG = self.computeGlobalJacobian()
+        self.fullDiffIK(JG, delta)
 
     """ --------------- Functions made for self use -------------------------"""
 
-    def ComputeDelta(self, globalTargetPos3D, globalTargetOri3D):
+    def computeDelta(self, globalTargetPos3D, globalTargetOri3D):
         # retrieve global position of the end-effector
         global_eePos = self.robot.getCurEEPos()
         # position error
@@ -166,13 +166,13 @@ class PyRBDL4dIK:
 
         return delta
 
-    def ComputeGlobalJacobian(self):
+    def computeGlobalJacobian(self):
          # Compute Jacobian
         JG = np.zeros([6, self.robot.numJoints])
         rbdl.CalcPointJacobian6D(self.robot.rbdlModel, self.robot.q, self.robot.rbdlEndEffectorID, self.robot.rbdlEEBodyPointPosition, JG, update_kinematics=True)
         return JG
 
-    def FullDiffIK(self, J, delta):
+    def fullDiffIK(self, J, delta):
 
          # Compute Jacobian pseudo-inverse
         Jpinv = np.linalg.pinv(J)
@@ -188,7 +188,7 @@ class PyRBDL4dIK:
         qprev = self.robot.getJointConfig()
 
         # compute null-space component
-        dq_nullspace_motion = (np.eye(c)-Jpinv_arm.dot(J_arm)).dot((self.h_delta-qprev)*(1/self.h_norm**2))
+        dq_nullspace_motion = (np.eye(c)-Jpinv_arm @ J_arm) @ ((self.h_delta-qprev)*(1/self.h_norm**2))
 
         # compute new configuration
         qnext = qprev + dq + self.alpha_null*dq_nullspace_motion
@@ -275,7 +275,7 @@ class ROSdIKInterface(object):
         self.target_EE_orientation = np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w])
 
     def updateRBDL(self, event):
-        self.robotIK.FullDiffIKstep(self.target_EE_position, self.target_EE_orientation)
+        self.robotIK.fullDiffIKStep(self.target_EE_position, self.target_EE_orientation)
 
     def cleanShutdown(self):
         print('')

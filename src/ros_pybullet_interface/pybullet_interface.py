@@ -16,12 +16,12 @@ VISUAL_FRAME_LINE_WIDTH = 2
 # Methods
 # ------------------------------------------------------
 
-def initPyBullet(time_step):
+def initPyBullet(time_step, gravity=[0, 0, -9.81]):
     pybullet.connect(pybullet.GUI)
     pybullet.resetSimulation()
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.setTimeStep(time_step)
-    pybullet.setGravity(0,0,-9.8)
+    pybullet.setGravity(gravity[0],gravity[1],gravity[2])
 
 def setupPyBulletCamera(distance, yaw, pitch, target_position):
     pybullet.resetDebugVisualizerCamera(
@@ -50,9 +50,27 @@ def closePyBullet():
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
 
+def setObjectPosOrient(obj_id, pos3D=None, quat=None):
 
-def toRadians(orientation):
-    return np.deg2rad(orientation)
+    if pos3D!=None:
+        p3D, orient4D = pybullet.getBasePositionAndOrientation(obj_id)
+        pybullet.resetBasePositionAndOrientation(obj_id, pos3D, orient4D)
+
+    if quat!=None:
+        p3D, orient4D = pybullet.getBasePositionAndOrientation(obj_id)
+        pybullet.resetBasePositionAndOrientation(obj_id, p3D, quat)
+
+def setObjectVelLinAng(obj_id, lin_vel3D, ang_vel3D):
+
+    if lin_vel3D!=None:
+        pybullet.resetBaseVelocity(obj_id, linearVelocity=lin_vel3D)
+
+    if ang_vel3D!=None:
+        pybullet.resetBaseVelocity(obj_id, angularVelocity=ang_vel3D)
+
+def getObjectPosOrient(obj_id):
+    return pybullet.getBasePositionAndOrientation(obj_id)
+
 
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
@@ -193,6 +211,9 @@ class PyBulletObject:
             baseCollisionShapeIndex=self.collision_ID,
             baseVisualShapeIndex=self.visual_ID
         )
+
+    def getObjectID(self):
+        return self.ID
 
 
 class PyBulletVisualSphere(PyBulletObject):

@@ -2,6 +2,7 @@
 import os
 import sys
 
+import numpy as np
 import rospy
 import tf2_ros
 from sensor_msgs.msg import JointState
@@ -9,7 +10,7 @@ from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 from ros_pybullet_interface import pybullet_interface
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
-
+from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 
 # ------------------------------------------------------
 #
@@ -23,6 +24,23 @@ PYBULLET_DT = 1.0/float(PYBULLET_FREQ)
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'  # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
+
+
+# ------------------------------------------------------
+#
+# Helper functions
+# ------------------------------------------------------
+
+def packTransformStamped(tf_frame_id, tf_child_id, p, q):
+    tf = TransformStamped()
+    tf.header.stamp = rospy.Time.now()
+    tf.header.frame_id = tf_frame_id
+    tf.child_frame_id = tf_child_id
+    for i, dim in enumerate(['x', 'y', 'z']):
+        setattr(tf.transform.translation, dim, p[i])
+        setattr(tf.transform.rotation, dim, q[i])
+    tf.transform.rotation.w = q[3]
+    return tf
 
 # ------------------------------------------------------
 #
@@ -42,13 +60,15 @@ class ROSPyBulletInterface:
 
         # Setup
         self.dur = rospy.Duration(ROS_DT)
-        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
-        self.tfBuffer = tf2_ros.Buffer()
-        self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
+        self.tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.sensor_pubs = {}
         self.tfs = {}
         self.dynamic_collisionvisual_objects = []
         self.static_collisionvisual_objects = []
+        self.static_collision_objects = []
+        self.objects = []
 
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
@@ -91,6 +111,9 @@ class ROSPyBulletInterface:
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
+        # set the server for changing object state
+        self.setObjectStateServer()
+
         if rospy.get_param('~pybullet_sim_self_loop'):
             pybullet_interface.updateTimeStep(PYBULLET_DT)
             pybullet_interface.runPyBullet()
@@ -128,9 +151,9 @@ class ROSPyBulletInterface:
         )
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
-            pybullet_interface.toRadians(config['base_orient_eulerXYZ'])
+            np.deg2rad(config['base_orient_eulerXYZ'])
         )
-        qinit = pybullet_interface.toRadians(config['init_position'])
+        qinit = np.deg2rad(config['init_position'])
         self.robot.setJointPositions(qinit)
 
         # Specify target joint position
@@ -220,7 +243,7 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                pybullet_interface.toRadians(config['link_state']['orientation_eulerXYZ'])
+                np.deg2rad(config['link_state']['orientation_eulerXYZ'])
             )
             self.static_collisionvisual_objects.append({
                 'object': obj,
@@ -252,13 +275,24 @@ class ROSPyBulletInterface:
         else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                pybullet_interface.toRadians(config['link_state']['orientation_eulerXYZ'])
+                np.deg2rad(config['link_state']['orientation_eulerXYZ'])
             )
             self.static_collisionvisual_objects.append({
                 'object': obj,
                 'position': config['link_state']['position'],
-                'orientation': config['link_state']['orientation_eulerXYZ']
+                'orientation': config['link_state']['orientation_eulerXYZ'],
             })
+            if 'pub_tf' in config['link_state']:
+                static_col_obj['pub_tf'] = config['link_state']['pub_tf']
+            else:
+                static_col_obj['pub_tf'] = False
+
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + str(len(self.static_collision_objects))
+            static_col_obj['name'] = name
+            self.static_collision_objects.append(static_col_obj)
 
     def setupPyBulletObject(self, file_name):
 
@@ -290,6 +324,17 @@ class ROSPyBulletInterface:
                 config['link_state']['orientation_eulerXYZ'],
             )
 
+            # book-keeping object names and ids
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + str(len(self.objects))
+
+            self.objects.append({
+                'object_id': obj.getObjectID(),
+                'object_name': name
+            })
+
 
     def setPyBulletCollisionVisualObjectPositionAndOrientation(self):
         for obj in self.dynamic_collisionvisual_objects:
@@ -302,7 +347,7 @@ class ROSPyBulletInterface:
     def readROSTfs(self):
         for tf_frame_id in self.tfs.keys():
             try:
-                tf = self.tfBuffer.lookup_transform(
+                tf = self.tf_buffer.lookup_transform(
                     WORLD_FRAME_ID, tf_frame_id, rospy.Time()
                 )
             except (tf2_ros.LookupException,
@@ -353,28 +398,40 @@ class ROSPyBulletInterface:
                 msg = self.packJointForceTorqueROSMsg(reading['reading'])
                 self.sensor_pubs[reading['label']].publish(msg)
 
+    def publishStaticTransformsToROS(self):
+        for static_obj in self.static_collision_objects:
+            if static_obj['pub_tf']:
+                self.tf_broadcaster.sendTransform(
+                    packTransformStamped(
+                        WORLD_FRAME_ID,
+                        'ros_pybullet_interface/'+static_obj['name'],
+                        static_obj['position'],
+                        static_obj['orientation']
+                    )
+                )
+
     def publishPyBulletLinkStatesToROS(self, event):
         for state in self.robot.getLinkStates():
+            self.tf_broadcaster.sendTransform(
+                packTransformStamped(
+                    WORLD_FRAME_ID,
+                    'ros_pybullet_interface/robot/%s' % state['label'],
+                    state['position'],
+                    state['orientation']
+                )
+            )
 
-            label = state['label']
-            position = state['position']
-            orientation = state['orientation']
-
-            # Pack pose msg
-            msg = TransformStamped()
-            msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = WORLD_FRAME_ID
-            msg.child_frame_id = 'ros_pybullet_interface/robot/%s' % label
-            msg.transform.translation.x = position[0]
-            msg.transform.translation.y = position[1]
-            msg.transform.translation.z = position[2]
-            msg.transform.rotation.x = orientation[0]
-            msg.transform.rotation.y = orientation[1]
-            msg.transform.rotation.z = orientation[2]
-            msg.transform.rotation.w = orientation[3] # NOTE: the ordering here may be wrong
-
-            # Broadcast tf
-            self.tfBroadcaster.sendTransform(msg)
+    def publishObjectStateTransToROS(self):
+        for obj in self.objects:
+            pos, orient = pybullet_interface.getObjectPosOrient(obj['object_id'])
+            self.tf_broadcaster.sendTransform(
+                    packTransformStamped(
+                        WORLD_FRAME_ID,
+                        'ros_pybullet_interface/'+obj['object_name'],
+                        pos,
+                        orient
+                    )
+                )
 
     def visualizeLinks(self):
         for linkid in self.visframes:
@@ -384,6 +441,31 @@ class ROSPyBulletInterface:
                     tf['position'], tf['orientation']
                 )
 
+    def setObjState(self, req):
+
+        obj_id = None
+        for obj in self.objects:
+            if obj['object_name']==req.obj_name:
+                obj_id = obj['object_id']
+
+        if obj_id==None:
+            rospy.logwarn(f"{obj_name} was not found...")
+            return
+
+        pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
+        pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
+        rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
+        rospy.loginfo(f"Returning object linear and angular velocity: {req.lin_vel}, {req.ang_vel}")
+
+        return setObjectStateResponse("True: Set the state of the object successfully")
+
+
+    def setObjectStateServer(self):
+
+        s = rospy.Service('set_object_state', setObjectState, self.setObjState)
+        rospy.loginfo("Server is ready to set the state of the object.")
+
+
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
             raise RuntimeError(f"{self.name}: PyBullet disconnected")
@@ -391,6 +473,9 @@ class ROSPyBulletInterface:
         self.readROSTfs()
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
+        self.publishStaticTransformsToROS()
+        self.publishObjectStateTransToROS()
+
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
         self.step()
