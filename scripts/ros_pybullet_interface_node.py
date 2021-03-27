@@ -91,11 +91,15 @@ class ROSPyBulletInterface:
 
         self.visframes = rospy.get_param("~visframes", [])
 
+        if rospy.has_param('~Z_gravity'):
+            grav = [0., 0., rospy.get_param('~Z_gravity')]
+        else:
+            grav = [0., 0., 0.]
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
 
         # Initialise pybullet
-        pybullet_interface.initPyBullet(ROS_DT)
+        pybullet_interface.initPyBullet(ROS_DT, gravity = grav)
         self.setupPyBulletCamera(camera_config_file_name)
 
         for file_name in robot_file_names:
