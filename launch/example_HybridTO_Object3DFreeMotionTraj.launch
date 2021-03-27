@@ -22,8 +22,13 @@
                      (specially, if control loop freqency is < 250 Hz)-->
     <param
         name="pybullet_sim_self_loop"
-        value="true"
+        value="False"
         type="bool"/>
+
+    <param
+        name="Z_gravity"
+        value="-9.81"
+        type="double"/>
 
     <!-- Robot config (required) -->
     <param
@@ -41,35 +46,19 @@
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-      'configs/box.yaml',
-      'configs/box2.yaml',
+      'configs/target_obj_visual.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
-    <!-- <rosparam param="object_config_file_names">
+    <rosparam param="object_config_file_names">
       [
-      'configs/box3.yaml',
+      'configs/target_obj.yaml',
       ]
-    </rosparam> -->
+    </rosparam>
 
 
   </node>
-
-
-<!--    &lt;!&ndash; PyRBDL4dIK Environmet node (receiver - publisher) &ndash;&gt;-->
-<!--    <node-->
-<!--        name="ros_PyRBDL4dIK_interface"-->
-<!--        pkg="ros_pybullet_interface"-->
-<!--        type="ros_rbdl_IK_interace_node.py"-->
-<!--        output="screen">-->
-
-<!--      <param-->
-<!--          name="robot_config"-->
-<!--          value="configs/kuka_push.yaml"-->
-<!--          type="str"/>-->
-
-<!--    </node>-->
 
 
   <node
@@ -88,27 +77,18 @@
   </node>
 
 
+  <!-- Testing node trajectory publisher -->
+  <node name="test_ros_HybridTO_interpol_interface"
+      pkg="ros_pybullet_interface"
+      type="test_ros_HybridTO_interpol_interface.py"
+      output="screen">
 
-    <node
-        pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="box2_tf_broadcaster"
-        args="-0.05 0.75 0.07 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
-        />
+      <param
+          name="rotation_repr"
+          value="Quat"
+          type="str"/>
 
-
-      <!-- Testing node trajectory publisher -->
-      <node name="test_ros_HybridTO_interpol_interface"
-          pkg="ros_pybullet_interface"
-          type="test_ros_HybridTO_interpol_interface.py"
-          output="screen">
-          
-          <param
-              name="rotation_repr"
-              value="Quat"
-              type="str"/>
-
-        </node>
+    </node>
 
 
 </launch>
