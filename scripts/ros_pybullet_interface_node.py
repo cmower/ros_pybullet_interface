@@ -219,17 +219,18 @@ class ROSPyBulletInterface:
             config['base_mass'],
         )
 
-        obj.changeDynamics(
-            -1,
-            config['lateral_friction'],
-            config['spinning_friction'],
-            config['rolling_friction'],
-            config['restitution'],
-            config['linear_damping'],
-            config['angular_damping'],
-            config['contact_stiffness'],
-            config['contact_damping']
-        )
+        # obj.changeDynamics(
+        #     -1,
+        #     config['lateral_friction'],
+        #     config['spinning_friction'],
+        #     config['rolling_friction'],
+        #     config['restitution'],
+        #     config['linear_damping'],
+        #     config['angular_damping'],
+        #     config['contact_stiffness'],
+        #     config['contact_damping'],
+        #     config['localInertiaDiagonal']
+        # )
 
         if 'tf_frame_id' in config['link_state']:
             tf_frame_id = config['link_state']['tf_frame_id']
@@ -299,13 +300,20 @@ class ROSPyBulletInterface:
             # Load config
             config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
 
-            # Setup visual object
-            obj = pybullet_interface.PyBulletObject(
-                os.path.join(self.current_dir, config['file_name']),
-                config['mesh_scale'],
-                config['rgba_color'],
-                config['base_mass'],
-            )
+            if 'urdf' in config:
+                obj= pybullet_interface.PyBulletObject(os.path.join(self.current_dir, config['file_name']),
+                    config['mesh_scale'],
+                    config['rgba_color'],
+                    config['base_mass'],
+                    loadURDF=os.path.join(self.current_dir, config['urdf']))
+            else:
+                # Setup visual object
+                obj = pybullet_interface.PyBulletObject(
+                    os.path.join(self.current_dir, config['file_name']),
+                    config['mesh_scale'],
+                    config['rgba_color'],
+                    config['base_mass'],
+                )
 
             obj.changeDynamics(
                 -1, # which is the link index
@@ -317,6 +325,7 @@ class ROSPyBulletInterface:
                 config['angular_damping'],
                 config['contact_stiffness'],
                 config['contact_damping'],
+                config['localInertiaDiagonal']
             )
 
             obj.setBasePositionAndOrientation(

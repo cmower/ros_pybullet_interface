@@ -59,6 +59,7 @@
     <rosparam param="object_config_file_names">
       [
       'configs/box3.yaml',
+      'configs/target_obj.yaml',
       ]
     </rosparam>
 
