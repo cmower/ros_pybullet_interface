@@ -1,4 +1,4 @@
-file_name: 'objects/whiteboard.obj'
+file_name: '{ros_pybullet_interface}/objects/whiteboard.obj'
 
 # Basic parameters
 mesh_scale: [5.0, 7.0, 4.0]

@@ -1,4 +1,4 @@
-file_name: 'objects/sphere.obj'
+file_name: '{ros_pybullet_interface}/objects/sphere.obj'
 
 # Basic parameters
 mesh_scale: [0.01, 0.01, 0.01]

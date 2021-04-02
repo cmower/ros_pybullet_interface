@@ -2,7 +2,7 @@
 # PyBullet KUKA configuration file
 #
 
-file_name: "robots/kuka_lwr_force/kuka.urdf"
+file_name: "{exotica_examples}/resources/robots/lwr_simplified.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
 base_position: [0.0, 0.0, 0.0]

@@ -26,13 +26,13 @@
     <!-- Robot config (required) -->
     <param
         name="robot_config"
-        value="configs/kuka_teleop.yaml"
+        value="{ros_pybullet_interface}/configs/kuka_teleop.yaml"
         type="str"/>
 
     <!-- Camera config (required) -->
     <param
         name="camera_config"
-        value="configs/camera.yaml"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
         type="str"/>
 
   </node>
@@ -45,7 +45,7 @@
 
     <param
         name="robot_config"
-        value="configs/kuka_teleop.yaml"
+        value="{ros_pybullet_interface}/configs/kuka_teleop.yaml"
         type="str"/>
 
   </node>

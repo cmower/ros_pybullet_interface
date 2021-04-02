@@ -130,7 +130,7 @@ class ROSPyBulletInterface:
     def setupPyBulletCamera(self, file_name):
 
         # Load camera config
-        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+        config = loadYAMLConfig(file_name)
 
         # Extract data from configuration
         pybullet_interface.setupPyBulletCamera(
@@ -143,12 +143,10 @@ class ROSPyBulletInterface:
     def setupPyBulletRobot(self, file_name):
 
         # Load robot configuration
-        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+        config = loadYAMLConfig(file_name)
 
         # Setup robot
-        self.robot = pybullet_interface.PyBulletRobot(
-            os.path.join(self.current_dir, config['file_name'])
-        )
+        self.robot = pybullet_interface.PyBulletRobot(config['file_name'])
         self.robot.setBasePositionAndOrientation(
             config['base_position'],
             np.deg2rad(config['base_orient_eulerXYZ'])
@@ -209,11 +207,11 @@ class ROSPyBulletInterface:
     def setupPyBulletCollisionObject(self, file_name):
 
         # Load config
-        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+        config = loadYAMLConfig(file_name)
 
         # Setup collision object
         obj = pybullet_interface.PyBulletCollisionObject(
-            os.path.join(self.current_dir, config['file_name']),
+            config['file_name'],
             config['mesh_scale'],
             config['rgba_color'],
             config['base_mass'],
@@ -254,11 +252,11 @@ class ROSPyBulletInterface:
     def setupPyBulletVisualObject(self, file_name):
 
         # Load config
-        config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+        config = loadYAMLConfig(file_name)
 
         # Setup visual object
         obj = pybullet_interface.PyBulletVisualObject(
-            os.path.join(self.current_dir, config['file_name']),
+            config['file_name'],
             config['mesh_scale'],
             config['rgba_color'],
         )
@@ -297,11 +295,11 @@ class ROSPyBulletInterface:
     def setupPyBulletObject(self, file_name):
 
             # Load config
-            config = loadYAMLConfig(os.path.join(self.current_dir, file_name))
+            config = loadYAMLConfig(file_name)
 
             # Setup visual object
             obj = pybullet_interface.PyBulletObject(
-                os.path.join(self.current_dir, config['file_name']),
+                config['file_name'],
                 config['mesh_scale'],
                 config['rgba_color'],
                 config['base_mass'],

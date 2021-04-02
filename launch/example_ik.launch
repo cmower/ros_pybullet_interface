@@ -27,19 +27,19 @@
     <!-- Robot config (required) -->
     <param
         name="robot_config"
-        value="configs/kuka.yaml"
+        value="{ros_pybullet_interface}/configs/kuka.yaml"
         type="str"/>
 
     <!-- Camera config (required) -->
     <param
         name="camera_config"
-        value="configs/camera.yaml"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
         type="str"/>
 
     <!-- List collision objects (optional) -->
     <rosparam param="collision_object_config_file_names">
       [
-      'configs/sphere.yaml',
+      '{ros_pybullet_interface}/configs/sphere.yaml',
       ]
     </rosparam>
 
@@ -55,7 +55,7 @@
 
     <param
         name="robot_config"
-        value="configs/kuka.yaml"
+        value="{ros_pybullet_interface}/configs/kuka.yaml"
         type="str"/>
 
   </node>

@@ -29,36 +29,36 @@
     <!-- Robot config (required) -->
     <param
         name="robot_config"
-        value="configs/kuka_push.yaml"
+        value="{ros_pybullet_interface}/configs/kuka_push.yaml"
         type="str"/>
 
     <!-- Camera config (required) -->
     <param
         name="camera_config"
-        value="configs/camera.yaml"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
         type="str"/>
 
 
     <!-- List collision objects (optional) -->
     <rosparam param="collision_object_config_file_names">
       [
-      'configs/table.yaml',
+      '{ros_pybullet_interface}/configs/table.yaml',
       ]
     </rosparam>
 
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-      'configs/box.yaml',
-      'configs/box1.yaml',
-      'configs/box2.yaml',
+      '{ros_pybullet_interface}/configs/box.yaml',
+      '{ros_pybullet_interface}/configs/box1.yaml',
+      '{ros_pybullet_interface}/configs/box2.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
     <rosparam param="object_config_file_names">
       [
-      'configs/box3.yaml',
+      '{ros_pybullet_interface}/configs/box3.yaml',
       ]
     </rosparam>
 
@@ -75,7 +75,7 @@
 
       <param
           name="robot_config"
-          value="configs/kuka_push.yaml"
+          value="{ros_pybullet_interface}/configs/kuka_push.yaml"
           type="str"/>
 
     </node>
@@ -90,7 +90,7 @@
     <!-- Traj config (required) -->
     <param
         name="traj_config"
-        value="configs/traj_kuka.yaml"
+        value="{ros_pybullet_interface}/configs/traj_kuka.yaml"
         type="str"/>
 
   </node>
@@ -104,7 +104,7 @@
     <!-- Traj config (required) -->
     <param
         name="traj_config"
-        value="configs/traj_box.yaml"
+        value="{ros_pybullet_interface}/configs/traj_box.yaml"
         type="str"/>
 
   </node>
