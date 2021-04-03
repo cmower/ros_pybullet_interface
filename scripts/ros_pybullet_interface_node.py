@@ -108,9 +108,6 @@ class ROSPyBulletInterface:
         for linkid in self.visframes:
             self.setupPyBulletVisualLinks(linkid)
 
-        # Main pybullet update
-        self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
-
         # set the server for changing object state
         self.setObjectStateServer()
 
@@ -120,6 +117,9 @@ class ROSPyBulletInterface:
             self.step = self._null
         else:
             self.step = self._step
+
+        # Main pybullet update
+        self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
     def _null(self, *args, **kwargs):
         pass
