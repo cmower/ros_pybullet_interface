@@ -509,6 +509,11 @@ class ROSPyBulletInterface:
             rospy.logwarn(f"{obj_name} was not found... in setObjState()")
             return
 
+        stringPybullet = pybullet_interface.getPybulletObject_hack()
+        stringPybullet.changeDynamics(obj_id, -1, angularDamping = 0, rollingFriction = 0, spinningFriction = 0,
+                                      localInertiaDiagonal = [1.0, 1.0, 2.0])
+        print("object dynamics:", stringPybullet.getDynamicsInfo(obj_id, -1))
+
         pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
         pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
         rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
