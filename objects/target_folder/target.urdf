@@ -2,9 +2,9 @@
 <robot name="target.urdf">
   <link name="baseLink">
     <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-       <mass value="1.0"/>
-       <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0"/>
+       <mass value="2.0"/>
+       <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0"/>
     </inertial>
 
     <visual>
