@@ -40,7 +40,7 @@ class TestInterpolation:
         self.new_Robottraj_publisher = rospy.Publisher(NEW_TRAJ_ROBOT_TOPIC, Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
 
-        time.sleep(2.0) # wait for initialisation to complete
+        # time.sleep(2.0) # wait for initialisation to complete
 
 
 
