@@ -22,12 +22,12 @@
                      (specially, if control loop freqency is < 250 Hz)-->
     <param
         name="pybullet_sim_self_loop"
-        value="False"
+        value="True"
         type="bool"/>
 
     <param
         name="Z_gravity"
-        value="-9.81"
+        value="0"
         type="double"/>
 
     <!-- Robot config (required) -->
@@ -73,7 +73,6 @@
         value="configs/traj_object3D_freemotion_Quat.yaml"
         type="str"/>
 
-
   </node>
 
 
@@ -83,12 +82,21 @@
       type="test_ros_HybridTO_interpol_interface.py"
       output="screen">
 
-      <param
-          name="rotation_repr"
-          value="Quat"
-          type="str"/>
+<!--      <param-->
+<!--          name="rotation_repr"-->
+<!--          value="Quat"-->
+<!--          type="str"/>-->
 
-    </node>
+  </node>
+
+
+
+
+
+
+
+
+
 
 
 </launch>
