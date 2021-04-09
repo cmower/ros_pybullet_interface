@@ -11,6 +11,7 @@ import rospy
 from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import MultiArrayDimension
 from ros_pybullet_interface.utils import ROOT_DIR
+import set_object_state_client
 
 
 # --- import external library
@@ -115,16 +116,16 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([-1.5, 0, 0, 0, 0, 0])
-            finObjPos = np.array([-1.5, 0, 0, 0, 0, 0])
+            initObjPos = np.array([0, -0.5, 0, 0, 0, 0])
+            finObjPos = np.array([-1.0, 0, 0, 0, 0, 0])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
-            initObjPos = np.array([-1.5, 0, 0, 0, 0, 0, 1])
-            finObjPos = np.array([-1.5, 0, 0, 0, 0, 0, 1])
+            initObjPos = np.array([0, -0.6, 0.3, 0, 0, 0, 1])
+            finObjPos = np.array([-1.0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000])
 
-        initObjVel = np.array([1, 0, 0, -1, 0, 0])
+        initObjVel = np.array([0.1, 0.0, 0.0, 0.1, 0.1, 0.1])
         finObjVel = np.array([0, 0, 0, 0, 0, 0])
         maxObjVel = np.array([10, 10, 10, 10, 10, 10])
 
@@ -140,22 +141,28 @@ class PlanInterpWithTO:
 
         self.trajObjPlan = np.vstack((np.vstack((timeArray, posArray)), velArray))
 
+        return solFlag
+
 
 if __name__=='__main__':
 
     # --- setup the ros interface --- #
     rospy.init_node('test_ros_HybridTO_interpol_interface', anonymous=True)
-    freq = 10
+    freq = 100
     PlanInterpWithTO = PlanInterpWithTO()
     rospy.loginfo("%s: node started.", PlanInterpWithTO.name)
 
     # build the TO problem
     PlanInterpWithTO.buildTO()
     # solve the TO problem
-    PlanInterpWithTO.solveTO()
+    solFlag = PlanInterpWithTO.solveTO()
 
-    PlanInterpWithTO.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishRobotTrajectory)
+    rospy.sleep(7)
+    # PlanInterpWithTO.writeCallbackTimerRobot = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishRobotTrajectory)
     PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
+    if solFlag == True:
+        print("problem solved!")
+        set_object_state_client.main()
 
     rospy.spin()
