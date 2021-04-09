@@ -112,9 +112,6 @@ class ROSPyBulletInterface:
         for linkid in self.visframes:
             self.setupPyBulletVisualLinks(linkid)
 
-        # Main pybullet update
-        self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
-
         # set the server for changing object state
         self.setObjectStateServer()
 
@@ -124,6 +121,10 @@ class ROSPyBulletInterface:
             self.step = self._null
         else:
             self.step = self._step
+
+        # rospy.sleep(1.0)
+        # Main pybullet update
+        self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
     def _null(self, *args, **kwargs):
         pass
@@ -464,6 +465,11 @@ class ROSPyBulletInterface:
         if obj_id==None:
             rospy.logwarn(f"{obj_name} was not found...")
             return
+
+        stringPybullet = pybullet_interface.getPybulletObject_hack()
+        stringPybullet.changeDynamics(obj_id, -1, angularDamping = 0, rollingFriction = 0, spinningFriction = 0,
+                                      localInertiaDiagonal = [1.0, 1.0, 2.0])
+        print("object dynamics:", stringPybullet.getDynamicsInfo(obj_id, -1))
 
         pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
         pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
