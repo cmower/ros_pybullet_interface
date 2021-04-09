@@ -23,12 +23,12 @@ motion_dimensions:
 interpolation:
   nochange_window_length: 1
   use_interpolation: True
-  interDt: 0.0005
+  interDt: 0.01
 
 communication:
   publisher:
     header_frame_id: 'ros_pybullet_interface/world'
-    msg_child_frame_id: 'ros_pybullet_interface/box'
+    msg_child_frame_id: 'ros_pybullet_interface/target_visual'
 
   listener:
       topic: 'ros_pybullet_interface/object/traj'
