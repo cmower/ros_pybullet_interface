@@ -306,7 +306,7 @@ class ROSTrajInterface(object):
 
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
 
-        rospy.sleep(3.0)
+        # rospy.sleep(3.0)
 
 
     def setupTrajManager(self, config_file_name):
