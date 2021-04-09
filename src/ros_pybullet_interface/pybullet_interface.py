@@ -51,6 +51,9 @@ def closePyBullet():
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
 
+def getPybulletObject_hack():
+    return pybullet
+
 def setObjectPosOrient(obj_id, pos3D=None, quat=None):
 
     if pos3D!=None:
