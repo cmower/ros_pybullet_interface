@@ -1,4 +1,4 @@
-file_name: 'objects/surface.obj'
+file_name: '{ros_pybullet_interface}/objects/surface.obj'
 
 # Basic parameters
 mesh_scale: [0.0015,0.0015,0.0015]

@@ -1,12 +1,23 @@
+import re
 import rospkg
 import yaml
 import numpy as np
 import math
 
-ROOT_DIR = rospkg.RosPack().get_path('ros_pybullet_interface')
+rp = rospkg.RosPack()
+ROOT_DIR = rp.get_path('ros_pybullet_interface')
 
+def replacePackage(path):
+    matches = re.findall(r'{.+?}', path)
+    if len(matches) > 0:
+        match = matches[0]
+        package = match[1:-1]
+        root = rp.get_path(package)
+        path = path.replace(match, root)
+    return path
 
 def loadYAMLConfig(file_name):
+    file_name = replacePackage(file_name)
     with open(file_name, 'r') as configfile:
          config = yaml.load(configfile, Loader=yaml.FullLoader)
     return config

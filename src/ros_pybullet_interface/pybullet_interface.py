@@ -2,6 +2,7 @@ import tf_conversions
 import pybullet
 import math
 import numpy as np
+from .utils import replacePackage
 
 
 # ------------------------------------------------------
@@ -106,6 +107,7 @@ def visualizeFrameInWorld(position, orientation, scale=1.0):
 class PyBulletObject:
 
     def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
+        file_name = replacePackage(file_name)
         self.loadMeshVisual(file_name, mesh_scale, rgba_color)
         self.loadMeshCollision(file_name, mesh_scale)
         self.createMultiBody(base_mass)
@@ -172,9 +174,11 @@ class PyBulletObject:
         )
 
     def loadURDF(self, file_name):
+        file_name = replacePackage(file_name)
         self.ID = pybullet.loadURDF(file_name, useFixedBase=True) # only support fixed base robots
 
     def loadMeshVisual(self, file_name, mesh_scale, rgba_color):
+        file_name = replacePackage(file_name)
         self.visual_ID = pybullet.createVisualShape(
             pybullet.GEOM_MESH,
             fileName=file_name,
@@ -183,6 +187,7 @@ class PyBulletObject:
         )
 
     def loadMeshCollision(self, file_name, mesh_scale):
+        file_name = replacePackage(file_name)
         self.collision_ID = pybullet.createCollisionShape(
             pybullet.GEOM_MESH,
             fileName=file_name,
@@ -229,6 +234,7 @@ class PyBulletVisualSphere(PyBulletObject):
 class PyBulletCollisionObject(PyBulletObject):
 
     def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
+        file_name = replacePackage(file_name)
         self.loadMeshVisual(file_name, mesh_scale, rgba_color)
         self.loadMeshCollision(file_name, mesh_scale)
         self.createCollisionMultiBody(base_mass)
@@ -242,6 +248,7 @@ class PyBulletCollisionObject(PyBulletObject):
 class PyBulletVisualObject(PyBulletObject):
 
     def __init__(self, file_name, mesh_scale, rgba_color):
+        file_name = replacePackage(file_name)
         self.loadMeshVisual(file_name, mesh_scale, rgba_color)
         self.createVisualMultiBody()
 

@@ -263,7 +263,7 @@ class ROSTrajInterface(object):
     def setupTrajManager(self, config_file_name):
 
         # Load robot configuration
-        config = utils.loadYAMLConfig(os.path.join(self.current_dir,config_file_name))
+        config = utils.loadYAMLConfig(config_file_name)
 
         # Extract data from configuration
         mot_dim = config['motion_dimensions']

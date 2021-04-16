@@ -1,4 +1,4 @@
-file_name: 'objects/box.obj'
+file_name: '{ros_pybullet_interface}/objects/box.obj'
 
 name: 'catch_box'
 

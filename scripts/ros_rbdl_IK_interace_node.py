@@ -34,6 +34,7 @@ class PyRBDLRobot:
     def __init__(self, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
 
         # Load Robot rbdl model
+        file_name = utils.replacePackage(file_name)
         self.rbdlModel = rbdl.loadModel(file_name.encode('utf-8'), verbose = False, floating_base = True)
 
         # Get end-effector body for rbdl
@@ -213,7 +214,7 @@ class ROSdIKInterface(object):
         self.current_dir = utils.ROOT_DIR
 
         # Get ros parameters
-        robot_config_file_name = rospy.get_param('~robot_config')
+        robot_config_file_name = utils.replacePackage(rospy.get_param('~robot_config'))
 
         #  PyRBDLRobot
         self.setupPyRBDLRobot(robot_config_file_name)
@@ -230,10 +231,10 @@ class ROSdIKInterface(object):
     def setupPyRBDLRobot(self, config_file_name):
 
         # Load robot configuration
-        config = utils.loadYAMLConfig(os.path.join(self.current_dir,config_file_name))
+        config = utils.loadYAMLConfig(config_file_name)
 
         # Extract data from configuration
-        file_name = os.path.join(self.current_dir,config['file_name'])
+        file_name = config['file_name']
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
