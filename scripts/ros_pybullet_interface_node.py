@@ -335,7 +335,7 @@ class ROSPyBulletInterface:
             # Load config
             config = loadYAMLConfig(file_name)
 
-            if 'urdf' in config:
+            if 'urdf' in config.keys():
                 obj= pybullet_interface.PyBulletObject(os.path.join(self.current_dir, config['file_name']),
                     config['mesh_scale'],
                     config['rgba_color'],

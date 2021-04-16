@@ -117,7 +117,7 @@ class PyBulletObject:
             self.loadMeshCollision(file_name, mesh_scale)
             self.createMultiBody(base_mass)
         else:
-            self.loadURDF(loadURDF, FixedBase=False)
+            self.loadURDF(loadURDF, fixed_base=False)
 
 
     def setBasePositionAndOrientation(self, position, orientation):
@@ -185,9 +185,9 @@ class PyBulletObject:
             localInertiaDiagonal=localInertiaDiagonal,
         )
 
-    def loadURDF(self, file_name):
+    def loadURDF(self, file_name, fixed_base=True):
         file_name = replacePackage(file_name)
-        self.ID = pybullet.loadURDF(file_name, useFixedBase=FixedBase) # only support fixed base robots
+        self.ID = pybullet.loadURDF(file_name, useFixedBase=fixed_base) # only support fixed base robots
 
     def loadMeshVisual(self, file_name, mesh_scale, rgba_color):
         file_name = replacePackage(file_name)
