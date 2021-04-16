@@ -1,25 +1,23 @@
 
-urdf: 'objects/target_folder/target.urdf'
-
-file_name: ''
+file_name: 'objects/target.obj'
 
 name: 'target'
 
 # Basic parameters
-mesh_scale: 
-rgba_color:
-base_mass:
+mesh_scale: [0.1, 0.1, 0.1]
+rgba_color: [0.5, 0.2, 0.3, 1.]
+base_mass: 2.0
 
 # Dynamic parameters
 lateral_friction: 0.005
-spinning_friction: 0.00
+spinning_friction: 0.0
 rolling_friction: 0.0
 restitution: 0.1
-linear_damping: 0.04
-angular_damping: 0.04
+linear_damping: 0.0
+angular_damping: 0.0
 contact_stiffness: 2000.0
 contact_damping: 10.7
-localInertiaDiagonal: [0.0125, 0.0125, 0.075]
+localInertiaDiagonal: [1.0, 1.0, 1.0]
 
 link_state:
 

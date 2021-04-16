@@ -1,12 +1,14 @@
 
-file_name: 'objects/target.obj'
+urdf: 'objects/target_folder/target.urdf'
 
-name: 'target_visual'
+file_name: ''
+
+name: 'target'
 
 # Basic parameters
-mesh_scale: [0.1, 0.1, 0.1]
-rgba_color: [0.5, 0.5, 0.5, 0.5]
-base_mass: 0
+mesh_scale: 
+rgba_color:
+base_mass:
 
 # Dynamic parameters
 lateral_friction: 0.005
@@ -17,7 +19,7 @@ linear_damping: 0.04
 angular_damping: 0.04
 contact_stiffness: 2000.0
 contact_damping: 10.7
-localInertiaDiagonal: [0., 0., 0.]
+localInertiaDiagonal: [0.0125, 0.0125, 0.075]
 
 link_state:
 
@@ -36,6 +38,6 @@ link_state:
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
   #
-  position: [0., -0.6, 0.3]
+  position: [0, -0.6, 0.3]
   orientation_eulerXYZ: [0.0, 0.0, 0.0]
-  tf_frame_id: "ros_pybullet_interface/target_visual"
+  # tf_frame_id: "ros_pybullet_interface/box"
