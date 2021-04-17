@@ -1,5 +1,5 @@
 
-file_name: 'objects/target.obj'
+file_name: '{ros_pybullet_interface}/objects/target.obj'
 
 name: 'target_visual'
 

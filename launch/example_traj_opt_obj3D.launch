@@ -33,27 +33,27 @@
     <!-- Robot config (required) -->
     <param
         name="robot_config"
-        value="configs/kuka_push.yaml"
+        value="{ros_pybullet_interface}/configs/kuka.yaml"
         type="str"/>
 
     <!-- Camera config (required) -->
     <param
         name="camera_config"
-        value="configs/camera.yaml"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
         type="str"/>
 
 
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-      'configs/target_obj_visual.yaml',
+      '{ros_pybullet_interface}/configs/target_obj_visual.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
     <rosparam param="object_config_file_names">
       [
-      'configs/target_obj.yaml',
+      '{ros_pybullet_interface}/configs/target_obj.yaml',
       ]
     </rosparam>
 
@@ -70,7 +70,7 @@
     <!-- Traj config (required) -->
     <param
         name="traj_config"
-        value="configs/traj_object3D_freemotion_Quat.yaml"
+        value="{ros_pybullet_interface}/configs/traj_object3D_freemotion_Quat.yaml"
         type="str"/>
 
   </node>

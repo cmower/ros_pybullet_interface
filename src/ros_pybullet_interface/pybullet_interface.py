@@ -51,7 +51,13 @@ def closePyBullet():
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
 
+
 def getPybulletObject_hack():
+    """
+    This function should be used only for prototyping reasons
+    and just for temporary convenience.
+    It is called hack! to remember that cannot be used in release code!
+    """
     return pybullet
 
 def setObjectPosOrient(obj_id, pos3D=None, quat=None):
@@ -74,6 +80,9 @@ def setObjectVelLinAng(obj_id, lin_vel3D, ang_vel3D):
 
 def getObjectPosOrient(obj_id):
     return pybullet.getBasePositionAndOrientation(obj_id)
+
+def getObjectDynamicsInfo(obj_id):
+    return pybullet.getDynamicsInfo(obj_id, -1)
 
 
 def asQuaternion(orientation):
@@ -117,7 +126,8 @@ class PyBulletObject:
             self.loadMeshCollision(file_name, mesh_scale)
             self.createMultiBody(base_mass)
         else:
-            self.loadURDF(loadURDF, fixed_base=False)
+            file_name = replacePackage(loadURDF)
+            self.loadURDF(file_name, fixed_base=False)
 
 
     def setBasePositionAndOrientation(self, position, orientation):

@@ -337,11 +337,12 @@ class ROSPyBulletInterface:
             config = loadYAMLConfig(file_name)
 
             if 'urdf' in config.keys():
-                obj= pybullet_interface.PyBulletObject(os.path.join(self.current_dir, config['file_name']),
+                obj= pybullet_interface.PyBulletObject(
+                    config['file_name'],
                     config['mesh_scale'],
                     config['rgba_color'],
                     config['base_mass'],
-                    loadURDF=os.path.join(self.current_dir, config['urdf']))
+                    loadURDF=config['urdf'])
             else:
                 # Setup visual object
                 obj = pybullet_interface.PyBulletObject(
@@ -536,15 +537,11 @@ class ROSPyBulletInterface:
             rospy.logwarn(f"{obj_name} was not found... in setObjState()")
             return
 
-        stringPybullet = pybullet_interface.getPybulletObject_hack()
-        stringPybullet.changeDynamics(obj_id, -1, angularDamping = 0, rollingFriction = 0, spinningFriction = 0,
-                                      localInertiaDiagonal = [1.0, 1.0, 2.0])
-        print("object dynamics:", stringPybullet.getDynamicsInfo(obj_id, -1))
-
-        pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
-        pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
+        pybullet_interface.setObjectPosOrient(obj_id, req.pos, req.quat)
+        pybullet_interface.setObjectVelLinAng(obj_id, req.lin_vel, req.ang_vel)
         rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
         rospy.loginfo(f"Returning object linear and angular velocity: {req.lin_vel}, {req.ang_vel}")
+        rospy.loginfo(f"Returning object dynamics info: {pybullet_interface.getObjectDynamicsInfo(obj_id)}")
 
         return setObjectStateResponse("True: Set the state of the object successfully")
 
