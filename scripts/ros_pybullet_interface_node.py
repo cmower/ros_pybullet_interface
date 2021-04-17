@@ -158,8 +158,10 @@ class ROSPyBulletInterface:
         self.target_joint_position = qinit
 
         # Setup ros publishers
+        robot_name = config['robot_name']
+        topic_name = os.path.join(robot_name,CURRENT_JOINT_STATE_TOPIC)
         self.joint_state_pub = rospy.Publisher(
-            CURRENT_JOINT_STATE_TOPIC,
+            topic_name,
             JointState,
             queue_size=10
         )
@@ -396,6 +398,18 @@ class ROSPyBulletInterface:
                 msg = self.packJointForceTorqueROSMsg(reading['reading'])
                 self.sensor_pubs[reading['label']].publish(msg)
 
+    # def publishPyBulletRobotJointStateToROS(self):
+    #     for id_robot, robot in self.robots:
+    #         states = robot.getActiveJointStates()
+    #         msg = JointState(
+    #             name=[state['name'] for state in states],
+    #             position=[state['position'] for state in states],
+    #             velocity=[state['velocity'] for state in states],
+    #             effort=[state['motor_torque'] for state in states],
+    #         )
+    #         msg.header.stamp = rospy.Time.now()
+    #         self.robots_joint_state_pub[id_robot].publish(msg)
+
     def publishStaticTransformsToROS(self):
         for static_obj in self.static_collision_objects:
             if static_obj['pub_tf']:
@@ -471,6 +485,7 @@ class ROSPyBulletInterface:
         self.readROSTfs()
         self.setPyBulletCollisionVisualObjectPositionAndOrientation()
         self.visualizeLinks()
+        # self.publishPyBulletRobotJointStateToROS()
         self.publishStaticTransformsToROS()
         self.publishObjectStateTransToROS()
 
