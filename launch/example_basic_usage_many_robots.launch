@@ -27,7 +27,8 @@
     <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
       [
-      "{ros_pybullet_interface}/configs/kuka.yaml",
+      "{ros_pybullet_interface}/configs/yang.yaml",
+      "{ros_pybullet_interface}/configs/yin.yaml",
       ]
     </rosparam>
 
@@ -59,7 +60,28 @@
       name="test_ros_pybullet_interface"
       pkg="ros_pybullet_interface"
       type="test_ros_pybullet_interface.py"
-      output="screen"/>
+      output="screen">
+
+    <param
+          name="robot_name"
+          value="yin"
+          type="str"/>
+
+  </node>
+
+  <node
+      name="test_ros_pybullet_interface2"
+      pkg="ros_pybullet_interface"
+      type="test_ros_pybullet_interface.py"
+      output="screen">
+
+    <param
+          name="robot_name"
+          value="yang"
+          type="str"/>
+
+  </node>
+
 
   <!-- Setup a static tf for the whiteboard in the ros_pybullet_interface/world frame -->
   <node
