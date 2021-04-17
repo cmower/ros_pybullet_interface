@@ -276,7 +276,7 @@ class ROSPyBulletInterface:
                 'object': obj,
                 'tf_frame_id': tf_frame_id,
             })
-        else:
+        else:   
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
                 np.deg2rad(config['link_state']['orientation_eulerXYZ'])
