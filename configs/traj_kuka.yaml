@@ -1,5 +1,5 @@
 #
-# Trajectory manager for KUKA and a box configuration file
+# Trajectory manager for robot configuration file
 #
 
 motion_dimensions:
@@ -32,9 +32,3 @@ communication:
     msg_child_frame_id: 'ros_pybullet_interface/end_effector/target'
   listener:
       topic: 'ros_pybullet_interface/end_effector/traj'
-
-
-
-# 0.686681210995
-# -0.0409726649523
-# 0.0746768042445

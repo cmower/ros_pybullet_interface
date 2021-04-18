@@ -27,11 +27,12 @@
         type="bool"/>
 
     <!-- Robot config (required) -->
-    <param
-        name="robot_config"
-        value="{ros_pybullet_interface}/configs/kuka_push.yaml"
-        type="str"/>
-
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/kuka_push.yaml",
+      ]
+    </rosparam>
     <!-- Camera config (required) -->
     <param
         name="camera_config"
@@ -93,6 +94,11 @@
         value="{ros_pybullet_interface}/configs/traj_kuka.yaml"
         type="str"/>
 
+    <param
+          name="robot_name"
+          value="LWR"
+          type="str"/>
+
   </node>
 
   <node
@@ -137,6 +143,12 @@
       <node name="test_ros_interpol_interface"
           pkg="ros_pybullet_interface"
           type="test_ros_interpol_interface.py"
-          output="screen"/>
+          output="screen">
+
+          <param
+                name="robot_name"
+                value="LWR"
+                type="str"/>
+      </node>
 
 </launch>
