@@ -25,12 +25,14 @@ TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
+ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base" # listen for the pose of the robot base
+
 EEBodyPointPosition = np.array([0.0, 0.0, 0.5]) #np.zeros(3)
 
 
 class PyRBDLRobot:
 
-    def __init__(self, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0):
+    def __init__(self, file_name, end_effector_name, base_position, base_orientation_quat, q0):
 
         # Load Robot rbdl model
         file_name = utils.replacePackage(file_name)
@@ -43,8 +45,10 @@ class PyRBDLRobot:
         self.numJoints = self.rbdlModel.qdot_size
         self.rbdlEEBodyPointPosition = EEBodyPointPosition
         self.qBasePos = np.array(base_position)
-        ori = R.from_euler('xyz', base_orient_eulerXYZ, degrees=True)
-        self.qBaseOrientQuat = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(ori.as_matrix()))
+        self.qBaseOrientQuat = np.array(base_orientation_quat)
+        # old implementation with Euler angles loaded from file
+        # ori = R.from_euler('xyz', base_orient_eulerXYZ, degrees=True)
+        # self.qBaseOrientQuat = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(ori.as_matrix()))
         self.qInitial = np.array(q0)
 
         # ---- place robot to the base position and orientation
@@ -72,11 +76,15 @@ class PyRBDLRobot:
     def updateBasePos(self, posNew):
         self.q[0:3] = pos
 
-    def updateBaseOrient(self, orient_eulerXYZNew):
+    def updateBaseOrientEuler(self, orient_eulerXYZNew):
         ori_mat = np.asarray(XYZeuler2RotationMat(orient_eulerXYZNew))
         qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(ori_mat))
         self.q[3:6] = qBaseOrientQuatNew[0:3]
         self.q[-1] = qBaseOrientQuatNew[3]
+
+    def updateBaseOrientQuat(self, orient_quat):
+        self.q[3:6] = orient_quat[0:3]
+        self.q[-1] = orient_quat[3]
 
     def getJointConfig(self):
         return self.q[6:self.numJoints]
@@ -107,8 +115,8 @@ class PyRBDLRobot:
 
 class PyRBDL4dIK:
 
-    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0, ik_info):
-        self.robot = PyRBDLRobot(file_name, end_effector_name, base_position, base_orient_eulerXYZ, q0)
+    def __init__(self, time_step, file_name, end_effector_name, base_position, base_orientation_quat, q0, ik_info):
+        self.robot = PyRBDLRobot(file_name, end_effector_name, base_position, base_orientation_quat, q0)
         self.dt = time_step
 
         # task indexes to switch from full 6D to only position or orienation
@@ -156,10 +164,9 @@ class PyRBDL4dIK:
 
         # get delta orientation as a vector + also scale it
         doriVec = dori.as_rotvec() * self.scale_pos_orient
-        # print(np.linalg.norm(doriVec))
 
         # position and orientation (in euler angles) error
-        #  we stuck first angular error and then position error because of the RBDL jacobian form (see below)
+        # we stuck first angular error and then position error because of the RBDL jacobian form (see below)
         # Computes the 6-D Jacobian $G(q)$ that when multiplied with $\dot{q}$ gives a 6-D vector
         # that has the angular velocity as the first three entries and the linear velocity as the last three entries.
         delta = np.concatenate((doriVec, dpos), axis=None)
@@ -215,6 +222,9 @@ class ROSdIKInterface(object):
         # Get ros parameters
         robot_config_file_name = utils.replacePackage(rospy.get_param('~robot_config'))
 
+        self.IK_listen_buff = tf2_ros.Buffer()
+        listener = tf2_ros.TransformListener(self.IK_listen_buff)
+
         #  PyRBDLRobot
         self.robot_name = self.setupPyRBDLRobot(robot_config_file_name)
 
@@ -238,19 +248,25 @@ class ROSdIKInterface(object):
         robot_name = config['robot_name']
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
-        base_position = config['base_position']
-        base_orient_eulerXYZ = config['base_orient_eulerXYZ']
         ik_info = config['IK']
 
-        # Establish connection with Robot in PyBullet environment
-        rospy.logwarn(f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic")
+        # Establish connection with Robot in PyBullet/Real world via ROS
+        rospy.logwarn(f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic, to read the curent configuration of the robot.")
         msgRobotState = rospy.wait_for_message(f"{robot_name}/{CURRENT_JOINT_STATE_TOPIC}", JointState)
-
-        # set robot to the curent configuration obtained from pybullet env
+        # set robot to the curent configuration obtained from ros topic
         init_joint_position = list(msgRobotState.position)
 
+        rospy.loginfo(f"{self.name}: Reading for /tf topic the position and orientation of the robot")
+        # Read the position and orientation of the robot from the /tf topic
+        trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
+        # replaces base_position = config['base_position']
+        base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+        # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+        base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w]
+        # base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+
         # Create pybullet robot instance
-        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position, ik_info)
+        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_quat, init_joint_position, ik_info)
 
         return config['robot_name']
 

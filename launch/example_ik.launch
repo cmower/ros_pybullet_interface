@@ -72,6 +72,11 @@
             name="robot_name"
             value="LWR"
             type="str"/>
+
+      <param
+            name="target_name"
+            value="sphere"
+            type="str"/>
   </node>
 
 
