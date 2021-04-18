@@ -24,11 +24,11 @@
         type="bool"/>
 
     <!-- Robot config (required) -->
-    <param
-        name="robot_config"
-        value="{ros_pybullet_interface}/configs/kuka_teleop.yaml"
-        type="str"/>
-
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/kuka_teleop.yaml",
+      ]
+    </rosparam>
     <!-- Camera config (required) -->
     <param
         name="camera_config"
@@ -51,9 +51,19 @@
   </node>
 
   <!-- Launch keyboard -->
-  <node name="keyboard" pkg="keyboard" type="keyboard"/>
+  <node name="keyboard"
+        pkg="keyboard"
+        type="keyboard"/>
 
   <!-- Launch teleop node -->
-  <node name="teleop" pkg="ros_pybullet_interface" type="teleop_example_node.py" output="screen"/>
+  <node name="teleop"
+        pkg="ros_pybullet_interface"
+        type="teleop_example_node.py"
+        output="screen">
+  <param
+        name="robot_name"
+        value="LWR"
+        type="str"/>
+  </node>
 
 </launch>
