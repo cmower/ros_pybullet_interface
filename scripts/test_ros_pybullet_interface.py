@@ -12,7 +12,13 @@ TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
 class Test:
 
     def __init__(self):
-        robot_name = rospy.get_param('~robot_name')
+        # check if the name of the robot is provided
+        if rospy.has_param('~robot_name'):
+            robot_name = rospy.get_param('~robot_name')
+        else:
+            rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
+            sys.exit(0)
+
         self.joint_index = 0
         self.position = [0.0]*NDOF
         self.d = 1

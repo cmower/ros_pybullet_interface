@@ -59,7 +59,13 @@
       name="test_ros_pybullet_interface"
       pkg="ros_pybullet_interface"
       type="test_ros_pybullet_interface.py"
-      output="screen"/>
+      output="screen">
+
+      <param
+            name="robot_name"
+            value="LWR"
+            type="str"/>
+  </node>
 
   <!-- Setup a static tf for the whiteboard in the ros_pybullet_interface/world frame -->
   <node
