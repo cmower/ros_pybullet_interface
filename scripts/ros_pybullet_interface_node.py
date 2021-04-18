@@ -10,7 +10,7 @@ from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 from ros_pybullet_interface import pybullet_interface
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
-from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
+from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse, manualPybulletSteps, manualPybulletStepsResponse
 
 # ------------------------------------------------------
 #
@@ -119,12 +119,22 @@ class ROSPyBulletInterface:
         # set the server for changing object state
         self.setObjectStateServer()
 
-        if rospy.get_param('~pybullet_sim_self_loop'):
+        if rospy.get_param('~pybullet_sim_self_loop') == 0:
             pybullet_interface.updateTimeStep(PYBULLET_DT)
             pybullet_interface.runPyBullet()
             self.step = self._null
-        else:
+
+        elif rospy.get_param('~pybullet_sim_self_loop') == 1:
             self.step = self._step
+
+        elif rospy.get_param('~pybullet_sim_self_loop') == 2:
+            self.makePybulletStepsServer()
+            self.step = self._null
+
+        else:
+            rospy.logerr("ROS parameter pybullet_sim_self_loop has invalid value.")
+            self.shutdown()
+            sys.exit(0)
 
         # Setup ros timers for publishers for all robots joint and link states
         # rospy.Timer(self.dur, self.publishPyBulletJointStateToROS)
@@ -526,6 +536,20 @@ class ROSPyBulletInterface:
         s = rospy.Service('set_object_state', setObjectState, self.setObjState)
         rospy.loginfo("Server is ready to set the state of the object.")
 
+    def manualPybulletSteps(self, req):
+
+        num_steps = req.num_pybullet_steps
+        # perform a pybullet step x num_steps
+        for _ in range(num_steps):
+            self._step()
+
+        return manualPybulletStepsResponse(f"True: Successfully made {num_steps} number of pyBullet steps.")
+
+    def makePybulletStepsServer(self):
+
+        s = rospy.Service('manual_pybullet_steps', manualPybulletSteps, self.manualPybulletSteps)
+        rospy.loginfo("Server is ready to perform manual pybullet steps.")
+
 
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
@@ -544,6 +568,7 @@ class ROSPyBulletInterface:
 
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
+        # or (as we might want to manually control the rate of steps)
         self.step()
 
     def spin(self):

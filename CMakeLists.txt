@@ -15,6 +15,7 @@ catkin_python_setup()
 add_service_files(
   FILES
   setObjectState.srv
+  manualPybulletSteps.srv
 )
 
 generate_messages(
@@ -37,5 +38,6 @@ catkin_install_python(PROGRAMS
   scripts/test_ros_rbdlIK_interface.py
   scripts/test_ros_interpol_interface.py
   scripts/set_object_state_client.py
+  scripts/make_manual_Pybullet_steps.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )

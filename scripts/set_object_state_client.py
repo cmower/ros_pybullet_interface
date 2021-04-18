@@ -3,7 +3,7 @@
 import numpy as np
 import sys
 import rospy
-from ros_pybullet_interface.srv import *
+from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 
 
 if __name__ == "__main__":
@@ -21,4 +21,3 @@ if __name__ == "__main__":
         print(response.success)
     except rospy.ServiceException as e:
         print("Service call failed: %s" % e)
-
