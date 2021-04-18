@@ -23,9 +23,8 @@ import ros_pybullet_interface.utils as utils
 FREQ = 100 # IK sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
-CURRENT_END_EFFECTOR_TOPIC = 'ros_pybullet_interface/end_effector/current' # publishes end-effector poses on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
-END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
+END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 EEBodyPointPosition = np.array([0.0, 0.0, 0.5]) #np.zeros(3)
 
 
@@ -217,10 +216,11 @@ class ROSdIKInterface(object):
         robot_config_file_name = utils.replacePackage(rospy.get_param('~robot_config'))
 
         #  PyRBDLRobot
-        self.setupPyRBDLRobot(robot_config_file_name)
+        self.robot_name = self.setupPyRBDLRobot(robot_config_file_name)
 
         # Setup ros publishers
-        self.target_joint_state_publisher = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=1)
+        publishers_topic_name = f"{self.robot_name}/{TARGET_JOINT_STATE_TOPIC}"
+        self.target_joint_state_publisher = rospy.Publisher(publishers_topic_name, JointState, queue_size=1)
 
         # initialization
         self.target_EE_position = self.robotIK.robot.getCurEEPos()
@@ -235,6 +235,7 @@ class ROSdIKInterface(object):
 
         # Extract data from configuration
         file_name = config['file_name']
+        robot_name = config['robot_name']
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         base_position = config['base_position']
@@ -242,14 +243,16 @@ class ROSdIKInterface(object):
         ik_info = config['IK']
 
         # Establish connection with Robot in PyBullet environment
-        rospy.loginfo("%s: Waiting for "+CURRENT_JOINT_STATE_TOPIC +" topic", self.name)
-        msgRobotState = rospy.wait_for_message(CURRENT_JOINT_STATE_TOPIC, JointState)
+        rospy.logwarn(f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic")
+        msgRobotState = rospy.wait_for_message(f"{robot_name}/{CURRENT_JOINT_STATE_TOPIC}", JointState)
 
         # set robot to the curent configuration obtained from pybullet env
         init_joint_position = list(msgRobotState.position)
 
         # Create pybullet robot instance
         self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_eulerXYZ, init_joint_position, ik_info)
+
+        return config['robot_name']
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(
@@ -269,7 +272,7 @@ class ROSdIKInterface(object):
 
     def readTargetEEStateFromTF(self, event):
         try:
-            tf = self.tfBuffer.lookup_transform(WORLD_FRAME_ID, END_EFFECTOR_TARGET_FRAME_ID, rospy.Time())
+            tf = self.tfBuffer.lookup_transform(WORLD_FRAME_ID, f"{self.robot_name}/{END_EFFECTOR_TARGET_FRAME_ID}", rospy.Time())
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             return
         self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])

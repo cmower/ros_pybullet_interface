@@ -27,7 +27,8 @@
     <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
       [
-      "{ros_pybullet_interface}/configs/kuka.yaml",
+      "{ros_pybullet_interface}/configs/yin.yaml",
+      "{ros_pybullet_interface}/configs/yang.yaml",
       ]
     </rosparam>
 
@@ -41,6 +42,7 @@
     <rosparam param="collision_object_config_file_names">
       [
       '{ros_pybullet_interface}/configs/sphere.yaml',
+      '{ros_pybullet_interface}/configs/sphere2.yaml',
       ]
     </rosparam>
 
@@ -56,7 +58,20 @@
 
     <param
         name="robot_config"
-        value="{ros_pybullet_interface}/configs/kuka.yaml"
+        value="{ros_pybullet_interface}/configs/yin.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_PyRBDL4dIK_interface2"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace_node.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="{ros_pybullet_interface}/configs/yang.yaml"
         type="str"/>
 
   </node>
@@ -70,7 +85,39 @@
 
       <param
             name="robot_name"
-            value="LWR"
+            value="yin"
+            type="str"/>
+
+      <param
+            name="displacement"
+            value="1"
+            type="double"/>
+
+      <param
+            name="target_name"
+            value="sphere2"
+            type="str"/>
+  </node>
+
+  <node
+      name="test_ros_rbdlIK_interface2"
+      pkg="ros_pybullet_interface"
+      type="test_ros_rbdlIK_interface.py"
+      output="screen">
+
+      <param
+            name="robot_name"
+            value="yang"
+            type="str"/>
+
+      <param
+            name="displacement"
+            value="-1"
+            type="double"/>
+
+      <param
+            name="target_name"
+            value="sphere"
             type="str"/>
   </node>
 
