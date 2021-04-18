@@ -29,6 +29,7 @@
       [
       "{ros_pybullet_interface}/configs/yang.yaml",
       "{ros_pybullet_interface}/configs/yin.yaml",
+      "{ros_pybullet_interface}/configs/kuka.yaml",
       ]
     </rosparam>
 
@@ -64,7 +65,20 @@
 
     <param
           name="robot_name"
-          value="yin"
+          value="LWR"
+          type="str"/>
+
+  </node>
+
+  <node
+      name="test_ros_pybullet_interface1"
+      pkg="ros_pybullet_interface"
+      type="test_ros_pybullet_interface.py"
+      output="screen">
+
+    <param
+          name="robot_name"
+          value="yang"
           type="str"/>
 
   </node>
@@ -77,7 +91,7 @@
 
     <param
           name="robot_name"
-          value="yang"
+          value="yin"
           type="str"/>
 
   </node>
