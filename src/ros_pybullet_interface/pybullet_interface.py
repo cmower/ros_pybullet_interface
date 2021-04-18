@@ -307,10 +307,19 @@ class PyBulletRobot(PyBulletObject):
         return states
 
     def getLinkStates(self):
-        states = [None]*self.num_joints
+        # one for each joint and one for the base
+        states = [None]*(self.num_joints+1)
+        # inlcude info about the pose of the base of the robot
+        base_pose = pybullet.getBasePositionAndOrientation(self.ID)
+        states[0] = {
+            'label': "robot_base",
+            'position': base_pose[0],
+            'orientation': base_pose[1],
+        }
+        # inlcude info about the pose of all the links of the robot
         pb_states = pybullet.getLinkStates(self.ID, self.joint_ids, computeForwardKinematics=1)
         for i in range(self.num_joints):
-            states[i] = {
+            states[i+1] = {
                 'label': self.link_names[i],
                 'position': pb_states[i][4],
                 'orientation': pb_states[i][5],
