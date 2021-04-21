@@ -22,70 +22,6 @@ class TestInterpolation:
         # Name of node
         self.name = rospy.get_name()
 
-        # Initialize data stream
-        self.trajObjPlan = np.empty(0)
-        self.trajRobotPlan = np.empty(0)
-
-        # Get ros parameters
-        only_obj = rospy.get_param('~only_object')
-
-        # select appropriate data loading function
-        if only_obj:
-            rot_repr = rospy.get_param('~rotation_repr')
-            self.loadFreeMotionData(rot_repr)
-        else:
-            self.loadPushData()
-
-        # start punlishers
-        self.new_Robottraj_publisher = rospy.Publisher(NEW_TRAJ_ROBOT_TOPIC, Float64MultiArray, queue_size=1)
-        self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
-
-        # time.sleep(2.0) # wait for initialisation to complete
-
-
-
-    def loadFreeMotionData(self, rotation_repr):
-        # read from file at the moment
-        if rotation_repr == 'Euler':
-            path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data.npy')
-        elif rotation_repr == 'Quat':
-            path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data_Quat.npy')
-        with open(path2file, 'rb') as f:
-            self.trajObjPlan = np.load(f)
-
-
-    def loadPushData(self):
-
-        # Initialize data stream
-        self.trajObjPlan = np.empty(0)
-        self.trajRobotPlan = np.empty(0)
-
-        # Get ros parameters
-        only_obj = rospy.get_param('~only_object')
-
-        # select appropriate data loading function
-        if only_obj:
-            rot_repr = rospy.get_param('~rotation_repr')
-            self.loadFreeMotionData(rot_repr)
-        else:
-            self.loadPushData()
-
-        time.sleep(2.0) # wait for initialisation to complete
-
-
-
-    def loadFreeMotionData(self, rotation_repr):
-        # read from file at the moment
-        if rotation_repr == 'Euler':
-            path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data.npy')
-        elif rotation_repr == 'Quat':
-            path2file = os.path.join(ROOT_DIR, 'data/example_free_motion_object3D_TO_data_Quat.npy')
-        with open(path2file, 'rb') as f:
-            self.trajObjPlan = np.load(f)
-
-
-    def loadPushData(self):
-
         # check if the name of the robot is provided
         if rospy.has_param('~robot_name'):
             robot_name = rospy.get_param('~robot_name')
@@ -116,22 +52,16 @@ class TestInterpolation:
 
         message = self.np2DtoROSmsg(self.trajRobotPlan)
 
-        if message != None:
-            self.new_Robottraj_publisher.publish(message)
+        self.new_Robottraj_publisher.publish(message)
 
     def publishObjTrajectory(self, event):
 
         message = self.np2DtoROSmsg(self.trajObjPlan)
 
-        if message != None:
-            self.new_Objtraj_publisher.publish(message)
+        self.new_Objtraj_publisher.publish(message)
 
 
     def np2DtoROSmsg(self, data2Darray):
-
-        # check if there is nothing to publish
-        if data2Darray.size == 0:
-            return None
 
         r, c = data2Darray.shape
 
