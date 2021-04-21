@@ -36,7 +36,6 @@
        type="double"/>
 
     <!-- Robot config (required) -->
-    <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
       [
       "{ros_pybullet_interface}/configs/kuka_push.yaml",
@@ -158,11 +157,6 @@
                 name="robot_name"
                 value="LWR"
                 type="str"/>
-
-          <param
-              name="only_object"
-              value="false"
-              type="bool"/>
 
         </node>
 
