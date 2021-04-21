@@ -75,6 +75,10 @@ class TestIK:
         self.eePos_traj = np.vstack((linearMotion,transitionPtMotion, circularMotion.T))
         # self.eePos_traj = np.vstack((linearMotion))
 
+        # self.eePos_traj[:,0] = -0.6  + dx
+        # self.eePos_traj[:,1] = -0.0
+        # self.eePos_traj[:,2] =  0.4
+
 
         # ------------------Orientation ---------------------------
 
@@ -97,6 +101,10 @@ class TestIK:
 
         eeOri_traj = np.vstack((OriMotion, OriMotionFixed))
         # eeOri_traj = np.vstack((OriMotion))
+
+        # eeOri_traj[:,0] = 1.7
+        # eeOri_traj[:,1] = 0.
+        # eeOri_traj[:,2] = 0.
 
         eeOri_traj_Rot = R.from_rotvec(eeOri_traj)
         self.eeOri_traj = eeOri_traj_Rot.as_quat()

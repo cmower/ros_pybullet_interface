@@ -27,7 +27,7 @@ WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base" # listen for the pose of the robot base
 
-EEBodyPointPosition = np.array([0.0, 0.0, 0.5]) #np.zeros(3)
+EEBodyPointPosition = np.array([0.0, 0.0, 0.0]) #np.zeros(3)
 
 
 class PyRBDLRobot:
@@ -93,7 +93,8 @@ class PyRBDLRobot:
         return self.joint_name
 
     def getCurEEPos(self):
-        return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, np.array([0., 0., 0.]))
+        return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, EEBodyPointPosition)
+
 
     def getCurEEOri(self):
         return rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
