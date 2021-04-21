@@ -31,10 +31,10 @@
         type="double"/>
 
     <!-- Robot config (required) -->
-    <param
-        name="robot_config"
-        value="{ros_pybullet_interface}/configs/kuka.yaml"
-        type="str"/>
+    <rosparam param="robot_config_file_names">
+      [
+      ]
+    </rosparam>
 
     <!-- Camera config (required) -->
     <param
