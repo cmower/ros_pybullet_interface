@@ -2,11 +2,11 @@
 # PyBullet KUKA configuration file
 #
 robot_name: "yang"
-file_name: "{ros_pybullet_interface}/robots/kuka_lwr_force/kuka.urdf"
+file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
 base_position: [-1.0, 0.0, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, 0.0]
+base_orient_eulerXYZ: [0.0, 0.0, 180.0]
 init_position: [0., 28.64788976, 17.18873385, -28.64788976, 11.4591559, 45.83662361, 0.]
 
 sensors:
@@ -37,7 +37,7 @@ sensors:
 IK:
   # 0-3 orienation, 3-6 position, 0-6 both orienation and position
   # first index in IK
-  f_indx : 3
+  f_indx : 0
   # last index in IK
   l_indx : 6
 
