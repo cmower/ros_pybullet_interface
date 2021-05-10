@@ -5,9 +5,9 @@ robot_name: "yang"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [-1.0, 0.0, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, 180.0]
-init_position: [0., 28.64788976, 17.18873385, -28.64788976, 11.4591559, 45.83662361, 0.]
+base_position: [-0.8, 0.0, 0.0]
+base_orient_eulerXYZ: [0.0, 0.0, 0.0]
+init_position: [0., -30., 0., -90., 0., 30., 0.]
 
 sensors:
 
