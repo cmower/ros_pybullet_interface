@@ -1,6 +1,5 @@
 <launch>
 
-
   <!-- Launch ROS-PyBullet interface -->
   <node
       name="ros_pybullet_interface"
@@ -20,6 +19,7 @@
                      This can be used to execute one simulation step after one control/interface step
                      Useful for debugging, but not realistic
                      (specially, if control loop freqency is < 250 Hz)-->
+
     <param
         name="pybullet_sim_self_loop"
         value="True"
@@ -70,7 +70,7 @@
     <!-- Traj config (required) -->
     <param
         name="traj_config"
-        value="{ros_pybullet_interface}/configs/traj_object3D_freemotion_Quat.yaml"
+        value="{ros_pybullet_interface}/configs/traj_object3D_freemotion.yaml"
         type="str"/>
 
   </node>
@@ -88,12 +88,6 @@
 <!--          type="str"/>-->
 
   </node>
-
-
-
-
-
-
 
 
 
