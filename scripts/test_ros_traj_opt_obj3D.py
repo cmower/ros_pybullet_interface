@@ -116,7 +116,7 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0, -0.5, 0, 0, 0, 0])
+            initObjPos = np.array([0, -0.6, 0.3, 0, 0, 0])
             finObjPos = np.array([-1.0, 0, 0, 0, 0, 0])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000])
         elif ori_representation == "quaternion":
@@ -125,12 +125,12 @@ class PlanInterpWithTO:
             finObjPos = np.array([-1.0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000])
 
-        initObjVel = np.array([0.1, 0.0, 0.0, 0.1, 0.1, 0.1])
+        initObjVel = np.array([0.0, 0.3, 0.0, 0.1, 0.1, 0.1])
         finObjVel = np.array([0, 0, 0, 0, 0, 0])
         maxObjVel = np.array([10, 10, 10, 10, 10, 10])
 
         lbx, ubx, lbg, ubg, cf, gf = self.HybOpt3D.buildBounds(initObjPos, finObjPos, maxObjPos, 0.0,
-                                                          initObjVel, finObjVel, maxObjVel, 0.0)
+                                                               initObjVel, finObjVel, maxObjVel, 0.0)
 
         # solve problem
         solFlag, xSolution = self.HybOpt3D.solveProblem(self.HybProb, xInit, lbx, ubx, lbg, ubg, cf, gf)
