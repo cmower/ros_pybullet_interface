@@ -86,7 +86,7 @@ class TrajManager:
         elif self.mot_dim['rotation']['rotation_repr'] == 'Euler':
             # take euler angles directly from the planner
             idx = self.mot_dim['rotation']['rotationvec_index']
-            Ori_Rot = R.from_euler('zyx', np.array(way_pt[idx[0]:idx[1]]))
+            Ori_Rot = R.from_euler('ZYX', np.array(way_pt[idx[0]:idx[1]]))
         elif self.mot_dim['rotation']['rotation_repr'] == 'Quat':
             # take quaternion directly from the planner
             idx = self.mot_dim['rotation']['rotationvec_index']
