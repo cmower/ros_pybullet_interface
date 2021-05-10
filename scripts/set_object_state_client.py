@@ -10,7 +10,7 @@ def main():
     obj_name = "target"
     pos = [0, -0.6, 0.30]
     quat = [0, 0, 0, 1]
-    lin_vel = [0.1, 0.0, 0.0]
+    lin_vel = [0.0, 0.3, 0.0]
     ang_vel = [0.1, 0.1, 0.1]
     rospy.wait_for_service('set_object_state')
     try:
