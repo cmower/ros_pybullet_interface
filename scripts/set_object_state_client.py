@@ -8,10 +8,10 @@ from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 def main():
     # set the state of the object
     obj_name = "target"
-    pos = [0, -0.6, 0.30]
+    pos = [-0.1, 0, 0.50]
     quat = [0, 0, 0, 1]
-    lin_vel = [0.0, 0.3, 0.0]
-    ang_vel = [0.1, 0.1, 0.1]
+    lin_vel = [0.0, 0.0, 0.0]
+    ang_vel = [0.0, 0.0, 0.0]
     rospy.wait_for_service('set_object_state')
     try:
         set_object_state = rospy.ServiceProxy('set_object_state', setObjectState)
