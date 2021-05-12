@@ -255,14 +255,20 @@ class ROSdIKInterface(object):
         ik_info = config['IK']
 
         # Establish connection with Robot in PyBullet/Real world via ROS
-        rospy.logwarn(f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic, to read the curent configuration of the robot.")
+        rospy.loginfo(f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic, to read the curent configuration of the robot.")
         msgRobotState = rospy.wait_for_message(f"{robot_name}/{CURRENT_JOINT_STATE_TOPIC}", JointState)
         # set robot to the curent configuration obtained from ros topic
         init_joint_position = list(msgRobotState.position)
 
         rospy.loginfo(f"{self.name}: Reading for /tf topic the position and orientation of the robot")
-        # Read the position and orientation of the robot from the /tf topic
-        trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
+        # Loop till the position and orientation of the base the robots has been read.
+        while 1:
+            try:
+                # Read the position and orientation of the robot from the /tf topic
+                trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
+                break
+            except:
+                rospy.logwarn(f"{self.name}: /tf topic does NOT have {robot_name}/{ROBOT_BASE_ID}")
         # replaces base_position = config['base_position']
         base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
         # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
