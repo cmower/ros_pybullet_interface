@@ -57,6 +57,9 @@ class PyRBDLRobot:
         self.q = np.zeros(self.rbdlModel.q_size)
         # Modify the state to place robot in appropriate position and orientation
         self.q[0:3] = self.qBasePos
+        # following the convection of RBDL, the vector of the quaternion is in
+        # slide 3:6 of the configuration (for floating base)
+        # and the scalar part of the quaternion is last after all the joints
         self.q[3:6] = self.qBaseOrientQuat[0:3]
         self.q[-1] = self.qBaseOrientQuat[3]
         self.q[6:self.numJoints] = self.qInitial
@@ -76,13 +79,13 @@ class PyRBDLRobot:
     def updateBasePos(self, posNew):
         self.q[0:3] = pos
 
-    def updateBaseOrientEuler(self, orient_eulerXYZNew):
+    def updateBaseOrientationEuler(self, orient_eulerXYZNew):
         ori_mat = np.asarray(XYZeuler2RotationMat(orient_eulerXYZNew))
         qBaseOrientQuatNew = rbdl.Quaternion.toNumpy(rbdl.Quaternion.fromPythonMatrix(ori_mat))
         self.q[3:6] = qBaseOrientQuatNew[0:3]
         self.q[-1] = qBaseOrientQuatNew[3]
 
-    def updateBaseOrientQuat(self, orient_quat):
+    def updateBaseOrientationQuat(self, orient_quat):
         self.q[3:6] = orient_quat[0:3]
         self.q[-1] = orient_quat[3]
 
@@ -246,7 +249,7 @@ class ROSdIKInterface(object):
 
         # Extract data from configuration
         file_name = config['file_name']
-        robot_name = config['robot_name']
+        robot_name = config['name']
         end_effector_name = config['end_effector']
         use_fixed_base = config['use_fixed_base']
         ik_info = config['IK']
@@ -269,7 +272,7 @@ class ROSdIKInterface(object):
         # Create pybullet robot instance
         self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_quat, init_joint_position, ik_info)
 
-        return config['robot_name']
+        return robot_name
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(
