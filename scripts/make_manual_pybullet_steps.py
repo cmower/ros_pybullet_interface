@@ -18,7 +18,7 @@ def main():
        print(USAGE % sys.argv[0])
        return 0
 
-    rospy.wait_for_service('manual_pybullet_steps')
+    rospy.wait_for_service('manual_pybullet_steps', timeout=2)
     try:
         manual_pybullet_steps = rospy.ServiceProxy('manual_pybullet_steps', ManualPybulletSteps)
         resp = manual_pybullet_steps(num_pybullet_steps)

@@ -137,10 +137,6 @@ class ROSPyBulletInterface:
             self.shutdown()
             sys.exit(0)
 
-        # Setup ros timers for publishers for all robots joint and link states
-        # rospy.Timer(self.dur, self.publishPyBulletJointStateToROS)
-        # rospy.Timer(self.dur, self.publishPyBulletLinkStatesToROS)
-
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
@@ -519,14 +515,11 @@ class ROSPyBulletInterface:
             srv_success = True
             srv_info = "Successfully made {num_steps} number of pyBullet steps."
 
-            return ManualPybulletStepsResponse(success = srv_success, info = srv_info)
-
-        except Exception:
-
+        except Exception as error:
             srv_success = False
-            srv_info = "PyBullet stepping FAILLED"
+            srv_info = f"PyBullet stepping FAILED: {error}"
 
-            return ManualPybulletStepsResponse(success = srv_success, info = srv_info)
+        return ManualPybulletStepsResponse(success = srv_success, info = srv_info)
 
 
 
