@@ -240,9 +240,7 @@ class ROSTrajInterface(object):
         traj_config_file_name = rospy.get_param('~traj_config')
 
         # if interpolation is for a robot
-        robot_name = ""
-        if rospy.has_param('~robot_name'):
-            robot_name = rospy.get_param('~robot_name')
+        robot_name = rospy.get_param('~robot_name','')
 
         #  TrajManager
         self.setupTrajManager(traj_config_file_name, robot_name)

@@ -10,7 +10,8 @@ from geometry_msgs.msg import TransformStamped, WrenchStamped
 
 from ros_pybullet_interface import pybullet_interface
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
-from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse, manualPybulletSteps, manualPybulletStepsResponse
+from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
+from ros_pybullet_interface.srv import ManualPybulletSteps, ManualPybulletStepsResponse
 
 # ------------------------------------------------------
 #
@@ -63,7 +64,6 @@ class ROSPyBulletInterface:
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
-        # self.sensor_pubs = {}
         self.tfs = {}
         self.dynamic_collisionvisual_objects = []
         self.static_collisionvisual_objects = []
@@ -73,7 +73,7 @@ class ROSPyBulletInterface:
         # list for many robots
         self.robots = []
         self.robots_target_joint_position = []
-        self.robots_joint_state_pub = []
+        self.robots_joint_state_pubs = []
         self.robots_sensor_pubs = []
 
         # Initialization message
@@ -119,15 +119,16 @@ class ROSPyBulletInterface:
         # set the server for changing object state
         self.setObjectStateServer()
 
-        if rospy.get_param('~pybullet_sim_self_loop') == 0:
+        sim_loop_flag = rospy.get_param('~pybullet_sim_self_loop')
+        if sim_loop_flag == 0:
             pybullet_interface.updateTimeStep(PYBULLET_DT)
             pybullet_interface.runPyBullet()
             self.step = self._null
 
-        elif rospy.get_param('~pybullet_sim_self_loop') == 1:
+        elif sim_loop_flag == 1:
             self.step = self._step
 
-        elif rospy.get_param('~pybullet_sim_self_loop') == 2:
+        elif sim_loop_flag == 2:
             self.makePybulletStepsServer()
             self.step = self._null
 
@@ -168,7 +169,7 @@ class ROSPyBulletInterface:
         config = loadYAMLConfig(file_name)
 
         # get the name of the robot
-        robot_name = config['robot_name']
+        robot_name = config['name']
 
         # Setup robot
         robot = pybullet_interface.PyBulletRobot(config['file_name'])
@@ -187,7 +188,7 @@ class ROSPyBulletInterface:
 
         # Setup ros publishers
         publishers_topic_name = os.path.join(robot_name,CURRENT_JOINT_STATE_TOPIC)
-        self.robots_joint_state_pub.append(
+        self.robots_joint_state_pubs.append(
             rospy.Publisher(
                 publishers_topic_name,
                 JointState,
@@ -199,11 +200,10 @@ class ROSPyBulletInterface:
         # find the index of the robot in the list
         robot_list_index = len(self.robots) - 1
         # find corresponding to the robot topic to subscribe to
-        subscribers_topic_name = os.path.join(robot_name,TARGET_JOINT_STATE_TOPIC)
+        subscribers_topic_name = os.path.join(robot_name, TARGET_JOINT_STATE_TOPIC)
         # create subscriber that maps topic to index in the list of robot states
         rospy.Subscriber(
-            subscribers_topic_name, JointState, self.readTargetJointStateFromROS, (robot_list_index)
-        )
+            subscribers_topic_name, JointState, self.readTargetJointStateFromROS, robot_list_index)
 
         # Setup sensors
         if 'sensors' in config:
@@ -416,21 +416,7 @@ class ROSPyBulletInterface:
                 effort=[state['motor_torque'] for state in states],
             )
             msg.header.stamp = rospy.Time.now()
-            self.robots_joint_state_pub[id_robot].publish(msg)
-
-    def publishPyBulletJointStateToROS(self, event):
-        """
-            NOT used anymore, as it works only for one robot!
-        """
-        states = self.robot.getActiveJointStates()
-        msg = JointState(
-            name=[state['name'] for state in states],
-            position=[state['position'] for state in states],
-            velocity=[state['velocity'] for state in states],
-            effort=[state['motor_torque'] for state in states],
-        )
-        msg.header.stamp = rospy.Time.now()
-        self.joint_state_pub.publish(msg)
+            self.robots_joint_state_pubs[id_robot].publish(msg)
 
     def packJointForceTorqueROSMsg(self, reading):
         msg = WrenchStamped()
@@ -477,20 +463,6 @@ class ROSPyBulletInterface:
                         state['orientation']
                     )
                 )
-
-    def publishPyBulletLinkStatesToROS(self, event):
-        """
-            NOT used anymore, as it works only for one robot!
-        """
-        for state in self.robot.getLinkStates():
-            self.tf_broadcaster.sendTransform(
-                packTransformStamped(
-                    WORLD_FRAME_ID,
-                    'ros_pybullet_interface/robot/%s' % state['label'],
-                    state['position'],
-                    state['orientation']
-                )
-            )
 
     def publishObjectStateTransToROS(self):
         for obj in self.objects:
@@ -543,11 +515,11 @@ class ROSPyBulletInterface:
         for _ in range(num_steps):
             self._step()
 
-        return manualPybulletStepsResponse(f"True: Successfully made {num_steps} number of pyBullet steps.")
+        return ManualPybulletStepsResponse(f"True: Successfully made {num_steps} number of pyBullet steps.")
 
     def makePybulletStepsServer(self):
 
-        s = rospy.Service('manual_pybullet_steps', manualPybulletSteps, self.manualPybulletSteps)
+        s = rospy.Service('manual_pybullet_steps', ManualPybulletSteps, self.manualPybulletSteps)
         rospy.loginfo("Server is ready to perform manual pybullet steps.")
 
 
