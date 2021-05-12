@@ -23,6 +23,14 @@ class TeleopNode:
     def __init__(self):
         rospy.init_node('teleop_example_node', anonymous=True)
         rospy.on_shutdown(self.shutdown)
+
+        # check if the name of the robot is provided
+        if rospy.has_param('~robot_name'):
+            self.robot_name = rospy.get_param('~robot_name','')
+        else:
+            rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
+            sys.exit(0)
+
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
@@ -39,7 +47,7 @@ class TeleopNode:
             try:
                 tf = self.tf_buffer.lookup_transform(
                     WORLD_FRAME_ID,
-                    EFF_CURRENT_FRAME_ID,
+                    f"{self.robot_name}/{EFF_CURRENT_FRAME_ID}",
                     rospy.Time()
                 )
                 self.eff_transform = tf.transform
@@ -127,7 +135,7 @@ class TeleopNode:
         tf = TransformStamped()
         tf.header.stamp = rospy.Time.now()
         tf.header.frame_id = WORLD_FRAME_ID
-        tf.child_frame_id = EFF_TARGET_FRAME_ID
+        tf.child_frame_id = f"{self.robot_name}/{EFF_TARGET_FRAME_ID}"
         tf.transform = self.eff_transform
         self.tf_broadcaster.sendTransform(tf)
 

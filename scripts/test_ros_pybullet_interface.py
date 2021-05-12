@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import math
 import time
@@ -12,12 +12,16 @@ TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
 class Test:
 
     def __init__(self):
+        # check if the name of the robot is provided
+        robot_name = rospy.get_param('~robot_name','LWR')
+
         self.joint_index = 0
         self.position = [0.0]*NDOF
         self.d = 1
         self.traj_index = 0
         self.joint_traj = [math.sin(0.5*2.0*math.pi*float(i)/100.0) for i in range(200)]
-        self.pub = rospy.Publisher(TARGET_JOINT_STATE_TOPIC, JointState, queue_size=10)
+        publisher_topic_name = f"{robot_name}/{TARGET_JOINT_STATE_TOPIC}"
+        self.pub = rospy.Publisher(publisher_topic_name, JointState, queue_size=10)
         time.sleep(2.0) # wait for initialisation to complete
 
     def updateJointIndex(self):

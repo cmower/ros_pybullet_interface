@@ -239,12 +239,15 @@ class ROSTrajInterface(object):
         # Get ros parameters
         traj_config_file_name = rospy.get_param('~traj_config')
 
+        # if interpolation is for a robot
+        robot_name = rospy.get_param('~robot_name','')
+
         #  TrajManager
-        self.setupTrajManager(traj_config_file_name)
+        self.setupTrajManager(traj_config_file_name, robot_name)
 
         # Establish connection with planning node
-        rospy.loginfo("%s: Waiting for "+self.current_traj_topic +" topic", self.name)
-        msgTraj = rospy.wait_for_message(self.current_traj_topic, Float64MultiArray)
+        rospy.loginfo(f"{self.name}: Waiting for self.current_traj_topic topic")
+        msgTraj = rospy.wait_for_message(self.current_traj_topic , Float64MultiArray)
 
         # single update of trajectory
         # To be used for play-back motion plans
@@ -260,7 +263,7 @@ class ROSTrajInterface(object):
         rospy.sleep(3.0)
 
 
-    def setupTrajManager(self, config_file_name):
+    def setupTrajManager(self, config_file_name, robot):
 
         # Load robot configuration
         config = utils.loadYAMLConfig(config_file_name)
@@ -273,10 +276,10 @@ class ROSTrajInterface(object):
 
         # set info about TF publisher
         self.msg_header_frame_id = config['communication']['publisher']['header_frame_id']
-        self.msg_child_frame_id = config['communication']['publisher']['msg_child_frame_id']
+        self.msg_child_frame_id = f"{robot}/{config['communication']['publisher']['msg_child_frame_id']}"
 
         # set info for listener
-        self.current_traj_topic = config['communication']['listener']['topic']
+        self.current_traj_topic = f"{robot}/{config['communication']['listener']['topic']}"
 
         # Create trajectory manager instance
         self.trajManag = TrajManager(mot_dim, interpol)

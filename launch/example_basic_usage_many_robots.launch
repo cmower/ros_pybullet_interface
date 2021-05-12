@@ -23,14 +23,16 @@
                    This can be used to execute one simulation step after one control/interface step
                    Useful for debugging MPC-like algorithms, but not realistic
                   -->
-    <param
-        name="pybullet_sim_self_loop"
-        value="0"
-        type="int"/>
+      <param
+          name="pybullet_sim_self_loop"
+          value="0"
+          type="int"/>
 
     <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
       [
+      "{ros_pybullet_interface}/configs/yang.yaml",
+      "{ros_pybullet_interface}/configs/yin.yaml",
       "{ros_pybullet_interface}/configs/kuka.yaml",
       ]
     </rosparam>
@@ -44,44 +46,69 @@
     <!-- List collision objects (optional) -->
     <rosparam param="collision_object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/sphere.yaml',
+      '{ros_pybullet_interface}/configs/surface.yaml',
+      '{ros_pybullet_interface}/configs/whiteboard.yaml'
       ]
     </rosparam>
 
+    <!-- List visual links (optional) -->
+    <rosparam param="visframes">
+      [
+      'whiteboard/child'
+      ]
+    </rosparam>
 
   </node>
 
-  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <!-- Testing node (publisher) -->
   <node
-      name="ros_PyRBDL4dIK_interface"
+      name="test_ros_pybullet_interface"
       pkg="ros_pybullet_interface"
-      type="ros_rbdl_IK_interace_node.py"
+      type="test_ros_pybullet_interface.py"
       output="screen">
 
     <param
-        name="robot_config"
-        value="{ros_pybullet_interface}/configs/kuka.yaml"
-        type="str"/>
+          name="robot_name"
+          value="LWR"
+          type="str"/>
 
   </node>
 
-  <!-- Testing node cartesian poistions (publisher) -->
   <node
-      name="test_ros_rbdlIK_interface"
+      name="test_ros_pybullet_interface1"
       pkg="ros_pybullet_interface"
-      type="test_ros_rbdlIK_interface.py"
+      type="test_ros_pybullet_interface.py"
       output="screen">
 
-      <param
-            name="robot_name"
-            value="LWR"
-            type="str"/>
+    <param
+          name="robot_name"
+          value="yang"
+          type="str"/>
 
-      <param
-            name="target_name"
-            value="sphere"
-            type="str"/>
   </node>
 
+  <node
+      name="test_ros_pybullet_interface2"
+      pkg="ros_pybullet_interface"
+      type="test_ros_pybullet_interface.py"
+      output="screen">
+
+    <param
+          name="robot_name"
+          value="yin"
+          type="str"/>
+
+  </node>
+
+
+  <!-- Setup a static tf for the whiteboard in the ros_pybullet_interface/world frame -->
+  <node
+      pkg="tf2_ros"
+      type="static_transform_publisher"
+      name="whiteboard_tf_broadcaster"
+      args="0.1 0.2 0.3 0 0 0.6283185307179586 ros_pybullet_interface/world whiteboard"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="whiteboard_image_tf_broadcaster"
+      args="0.4 0.2 0 0 0 0 whiteboard whiteboard/child"/>
 
 </launch>

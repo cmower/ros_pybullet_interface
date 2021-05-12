@@ -22,6 +22,13 @@ class TestInterpolation:
         # Name of node
         self.name = rospy.get_name()
 
+        # check if the name of the robot is provided
+        if rospy.has_param('~robot_name'):
+            robot_name = rospy.get_param('~robot_name','')
+        else:
+            rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
+            sys.exit(0)
+
         # read from file at the moment
         path2file = os.path.join(ROOT_DIR,'data/example_1KUKA_Pushing_BoxonTable.npy')
         with open(path2file, 'rb') as f:
@@ -36,7 +43,7 @@ class TestInterpolation:
         self.posvelObjPlan = np.vstack((np.array(data[0:3,:]), np.array(data[3:6,:])))
         self.trajObjPlan = np.vstack((self.time, self.posvelObjPlan))
 
-        self.new_Robottraj_publisher = rospy.Publisher(NEW_TRAJ_ROBOT_TOPIC, Float64MultiArray, queue_size=1)
+        self.new_Robottraj_publisher = rospy.Publisher(f"{robot_name}/{NEW_TRAJ_ROBOT_TOPIC}", Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
 
         # time.sleep(2.0) # wait for initialisation to complete

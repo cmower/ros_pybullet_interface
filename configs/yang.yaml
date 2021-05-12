@@ -1,14 +1,13 @@
 #
 # PyBullet KUKA configuration file
 #
-name: "LWR"
-file_name: "{ros_pybullet_interface}/robots/kuka_lwr_force/kuka_push.urdf"
+name: "yang"
+file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [0.0, 0.0, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, 0.0]
-init_position: [-30.11280589, -49.83176737, -7.65876425, 71.40585079, 7.81488752, -44.31203921, -8.3018490]
-
+base_position: [-1.0, 0.0, 0.0]
+base_orient_eulerXYZ: [0.0, 0.0, 180.0]
+init_position: [0., 28.64788976, 17.18873385, -28.64788976, 11.4591559, 45.83662361, 0.]
 
 sensors:
 
@@ -35,7 +34,6 @@ sensors:
     joint_index: 8
 
 
-
 IK:
   # 0-3 orienation, 3-6 position, 0-6 both orienation and position
   # first index in IK
@@ -47,6 +45,6 @@ IK:
   scale_pos_orient : 0.1
 
   # parameters of the nullspace motion
-  alpha_null : [0., 0., -0., -0., 0., 0.0, 0.]
-  h_delta : [0., 0., -0., -0., 0., 90., 0.]
-  h_norm : [340., 240., 340., 240., 340., 240., 350.]
+  alpha_null : [0., 0., -0., -0., 0., 0.01, 0.] # activation per joint
+  h_delta : [0., 0., -0., -0., 0., 90., 0.]     # nominal configuration, aimed via nullspace motion
+  h_norm : [340., 240., 340., 240., 340., 240., 350.]  # normalization of the error for each joint (IIWA specific)

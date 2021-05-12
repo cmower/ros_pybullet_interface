@@ -10,28 +10,33 @@
       clear_params="true"
       output="screen">
 
-    <!-- Pybullet simulation config (required) -->
-    <!-- Flag to indicate how bullet simulation step is
-         synced with ROS control loop.
-         Options:
-              true:  pybullet executes all simulation steps in a fixed frequency
-                     This can be used to simulate real world
-                     ( use simulation freqency > 250 Hz)
-              false: pybullet executes every simulation step when commanded by ROS node
-                     This can be used to execute one simulation step after one control/interface step
-                     Useful for debugging, but not realistic
-                     (specially, if control loop freqency is < 250 Hz)-->
+      <!-- Pybullet simulation config (required) -->
+      <!-- Flag to indicate how bullet simulation step is
+           synced with ROS control loop.
+           Options:
+                0:  pybullet executes all simulation steps in a fixed frequency
+                       This can be used to simulate real world
+                       ( use simulation freqency > 250 Hz)
+                1: pybullet executes every simulation step when commanded by ROS node
+                       This can be used to execute one simulation step after one control/interface step
+                       Useful for debugging, but not realistic
+                       (specially, if control loop freqency is < 250 Hz)
+                2: pybullet executes a simulation step when ROS srv manualPybulletSteps is called
+                   This can be used to execute one simulation step after one control/interface step
+                   Useful for debugging MPC-like algorithms, but not realistic
+                  -->
     <param
         name="pybullet_sim_self_loop"
-        value="true"
-        type="bool"/>
+        value="0"
+        type="int"/>
 
     <!-- Robot config (required) -->
-    <param
-        name="robot_config"
-        value="{ros_pybullet_interface}/configs/kuka_push.yaml"
-        type="str"/>
-
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/kuka_push.yaml",
+      ]
+    </rosparam>
     <!-- Camera config (required) -->
     <param
         name="camera_config"
@@ -93,6 +98,11 @@
         value="{ros_pybullet_interface}/configs/traj_kuka.yaml"
         type="str"/>
 
+    <param
+          name="robot_name"
+          value="LWR"
+          type="str"/>
+
   </node>
 
   <node
@@ -137,6 +147,12 @@
       <node name="test_ros_interpol_interface"
           pkg="ros_pybullet_interface"
           type="test_ros_interpol_interface.py"
-          output="screen"/>
+          output="screen">
+
+          <param
+                name="robot_name"
+                value="LWR"
+                type="str"/>
+      </node>
 
 </launch>
