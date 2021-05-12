@@ -21,15 +21,16 @@ def main():
     rospy.wait_for_service('manual_pybullet_steps')
     try:
         manual_pybullet_steps = rospy.ServiceProxy('manual_pybullet_steps', ManualPybulletSteps)
-        response = manual_pybullet_steps(num_pybullet_steps)
-        print(response.success)
+        resp = manual_pybullet_steps(num_pybullet_steps)
+        if not resp.success:
+            rospy.logwarn(resp.info)
     except rospy.ServiceException as e:
-        print("Service call failed: %s" % e)
+        rospy.logerr("Service call failed: %s" % e)
         sys.exit(1)
     except Exception:
-        print("-"*70)
+        rospy.logerr("-"*70)
         traceback.print_exc(file=sys.stdout)
-        print("-"*70)
+        rospy.logerr("-"*70)
 
 
 if __name__ == "__main__":

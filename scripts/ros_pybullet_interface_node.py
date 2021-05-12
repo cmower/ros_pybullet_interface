@@ -510,12 +510,25 @@ class ROSPyBulletInterface:
 
     def manualPybulletSteps(self, req):
 
-        num_steps = req.num_pybullet_steps
-        # perform a pybullet step x num_steps
-        for _ in range(num_steps):
-            self._step()
+        try:
+            num_steps = req.num_pybullet_steps
+            # perform a pybullet step x num_steps
+            for _ in range(num_steps):
+                self._step()
 
-        return ManualPybulletStepsResponse(f"True: Successfully made {num_steps} number of pyBullet steps.")
+            srv_success = True
+            srv_info = "Successfully made {num_steps} number of pyBullet steps."
+
+            return ManualPybulletStepsResponse(success = srv_success, info = srv_info)
+
+        except Exception:
+
+            srv_success = False
+            srv_info = "PyBullet stepping FAILLED"
+
+            return ManualPybulletStepsResponse(success = srv_success, info = srv_info)
+
+
 
     def makePybulletStepsServer(self):
 
