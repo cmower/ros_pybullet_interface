@@ -201,8 +201,10 @@ class ROSPyBulletInterface:
         rospy.Subscriber(
             subscribers_topic_name, JointState, self.readTargetJointStateFromROS, robot_list_index)
 
+        self.robots[-1]['sensor_idx'] = -1
         # Setup sensors
         if 'sensors' in config:
+
 
             # Setup sensors in PyBullet and their respective ROS publishers
             for label, sensor_parameters in config['sensors'].items():
@@ -224,6 +226,7 @@ class ROSPyBulletInterface:
                         topic, WrenchStamped, queue_size=10
                     )
                     self.robots_sensor_pubs.append(sensor_pubs)
+                    self.robots[-1]['sensor_idx'] = len(self.robots_sensor_pubs) - 1
 
             # Setup ros timer to publish sensor readings
             rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
@@ -428,11 +431,13 @@ class ROSPyBulletInterface:
     def publishPyBulletSensorReadingsToROS(self, event):
         for id_robot, robot_dict in enumerate(self.robots):
             robot = robot_dict['robot']
-            for reading in robot.getSensorReadings():
-                if reading['type'] == 'joint_force_torque':
-                    msg = self.packJointForceTorqueROSMsg(reading['reading'])
-                    sensor_pubs = self.robots_sensor_pubs[id_robot]
-                    sensor_pubs[reading['label']].publish(msg)
+            robot_sensor_idx = self.robots[id_robot]['sensor_idx']
+            if robot_sensor_idx != -1:
+                for reading in robot.getSensorReadings():
+                    if reading['type'] == 'joint_force_torque':
+                        msg = self.packJointForceTorqueROSMsg(reading['reading'])
+                        sensor_pubs = self.robots_sensor_pubs[robot_sensor_idx]
+                        sensor_pubs[reading['label']].publish(msg)
 
     def publishStaticTransformsToROS(self):
         for static_obj in self.static_collision_objects:
