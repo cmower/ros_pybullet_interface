@@ -215,6 +215,9 @@ class ROSdIKInterface(object):
         # Setup constants
         self.dt = 1.0/float(FREQ)
 
+        self.IK_listen_buff = tf2_ros.Buffer()
+        listener = tf2_ros.TransformListener(self.IK_listen_buff)
+
         # Name of node
         self.name = rospy.get_name()
         # Initialization message
@@ -225,9 +228,6 @@ class ROSdIKInterface(object):
 
         # Get ros parameters
         robot_config_file_name = utils.replacePackage(rospy.get_param('~robot_config'))
-
-        self.IK_listen_buff = tf2_ros.Buffer()
-        listener = tf2_ros.TransformListener(self.IK_listen_buff)
 
         #  PyRBDLRobot
         self.robot_name = self.setupPyRBDLRobot(robot_config_file_name)
