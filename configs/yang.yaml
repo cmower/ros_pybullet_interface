@@ -1,7 +1,7 @@
 #
 # PyBullet KUKA configuration file
 #
-robot_name: "yang"
+name: "yang"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True

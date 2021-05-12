@@ -13,11 +13,7 @@ class Test:
 
     def __init__(self):
         # check if the name of the robot is provided
-        if rospy.has_param('~robot_name'):
-            robot_name = rospy.get_param('~robot_name')
-        else:
-            rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
-            sys.exit(0)
+        robot_name = rospy.get_param('~robot_name','LWR')
 
         self.joint_index = 0
         self.position = [0.0]*NDOF

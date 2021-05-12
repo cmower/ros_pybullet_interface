@@ -1,7 +1,7 @@
 #
 # PyBullet KUKA configuration file
 #
-robot_name: "LWR"
+name: "LWR"
 file_name: "{ros_pybullet_interface}/robots/kuka_lwr_force/kuka.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
