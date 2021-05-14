@@ -130,11 +130,11 @@ class PlanInterpWithTO:
     def solveTO(self):
 
         # get object and robot state from pybullet
-        basePosYang, endPosYang = self.readInitials("yang")
-        print(basePosYang, endPosYang)
+        basePosYang, baseAttYang, endPosYang, endAttYang = self.readInitials("yang")
+        print(endPosYang, endAttYang)
 
-        basePosYin, endPosYin = self.readInitials("yin")
-        print(basePosYin, endPosYin)
+        basePosYin, baseAttYin, endPosYin, endAttYin = self.readInitials("yin")
+        print(endPosYin, endAttYin)
 
         # get initial guess
         xInit = self.HybOpt_DAC.buildInitialGuess()
@@ -153,8 +153,8 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([-0.1, 0, 0.5, 0, 0, 0])
-            finObjPos = np.array([0, 0, 0, 0, 0, 0])
+            initObjPos = np.array([0.0, 0, 0.8, 0, 0, 0])
+            finObjPos = np.array([0, 0, 0.6, 0, 0, 0])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
@@ -164,16 +164,16 @@ class PlanInterpWithTO:
 
         initObjVel = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         finObjVel = np.array([0., 0., 0., 0., 0., 0.])
-        maxObjVel = np.array([2, 2, 2, 2, 2, 2])
+        maxObjVel = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5])
 
-        slackObjPos = np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
+        slackObjPos = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
         slackObjVel = np.array([0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
 
-        initArmPos1 = np.array([endPosYang[0], endPosYang[1], endPosYang[2], 0, 0, 0])
+        initArmPos1 = np.array([endPosYang[0], endPosYang[1], endPosYang[2], endAttYang[0], endAttYang[1], endAttYang[2]])
         minArmPos1 = np.array([-3.0, -3.0, -3.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
         maxArmPos1 = np.array([3.0, 3.0, 3.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
-        initArmPos2 = np.array([endPosYin[0], endPosYin[1], endPosYin[2], 0, 0, 0])
+        initArmPos2 = np.array([endPosYin[0], endPosYin[1], endPosYin[2], endAttYin[0], endAttYin[1], endAttYin[2]])
         minArmPos2 = np.array([-3.0, -3.0, -3.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
         maxArmPos2 = np.array([3.0, 3.0, 3.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
@@ -209,6 +209,7 @@ class PlanInterpWithTO:
             base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
             base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
                                 trans.transform.rotation.w]
+            base_orient_euler = R.from_quat(base_orient_quat).as_euler('ZYX')
 
             trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{END_EFFECTOR_FRAME_ID}", rospy.Time())
             # replaces base_position = config['base_position']
@@ -216,6 +217,7 @@ class PlanInterpWithTO:
             # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
             end_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
                                 trans.transform.rotation.w]
+            end_orient_euler = R.from_quat(end_orient_quat).as_euler('ZYX')
             # base_orient_eulerXYZ = config['base_orient_eulerXYZ']
 
         elif robot_name == "yin":
@@ -225,6 +227,8 @@ class PlanInterpWithTO:
             # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
             base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
                                 trans.transform.rotation.w]
+            base_orient_euler = R.from_quat(base_orient_quat).as_euler('ZYX')
+
             trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{END_EFFECTOR_FRAME_ID}",
                                                          rospy.Time())
             # replaces base_position = config['base_position']
@@ -232,8 +236,9 @@ class PlanInterpWithTO:
             # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
             end_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
                                trans.transform.rotation.w]
+            end_orient_euler = R.from_quat(end_orient_quat).as_euler('ZYX')
 
-        return base_position, end_position
+        return base_position, base_orient_euler, end_position, end_orient_euler
 
 
 if __name__=='__main__':
@@ -241,8 +246,6 @@ if __name__=='__main__':
     # --- setup the ros interface --- #
     rospy.init_node('test_dual_arm_capturing_obj3D', anonymous=True)
     rospy.logwarn("ATTENTION: This node will not run without the impact-TO library!")
-
-
 
     freq = 100
     rospy.sleep(1)
@@ -257,9 +260,9 @@ if __name__=='__main__':
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
-        PlanInterpWithTO.writeCallbackTimerYang = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangTrajectory)
-        PlanInterpWithTO.writeCallbackTimerYin = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinTrajectory)
-        PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+        # PlanInterpWithTO.writeCallbackTimerYang = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangTrajectory)
+        # PlanInterpWithTO.writeCallbackTimerYin = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinTrajectory)
+        # PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
         set_object_state_client.main()
