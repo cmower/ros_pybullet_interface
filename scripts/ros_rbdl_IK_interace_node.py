@@ -164,10 +164,18 @@ class PyRBDL4dIK:
         # dori = global_eeOri * Inv_global_eeOriTarget
 
         # least square error between two frames
-        dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
+        dori = R.align_vectors(np.transpose(global_eeOriTarget.as_matrix()), global_eeOri.as_matrix())[0]
+
+        # least square error between two frames
+        # dori = R.align_vectors(np.transpose(global_eeOriTarget.as_matrix())[:, -1].reshape(1,3), global_eeOri.as_matrix()[:, -1].reshape(1,3))[0]
+        zAxisTarget = global_eeOriTarget.as_matrix()[:, -1]
+        zAxisCurrent = global_eeOri.as_matrix()[:, -1]
+        axis = np.cross(zAxisCurrent, zAxisTarget)
+        angle = np.arccos(zAxisTarget.dot(zAxisCurrent))
 
         # get delta orientation as a vector + also scale it
         doriVec = dori.as_rotvec() * self.scale_pos_orient
+        # doriVec = axis*angle * self.scale_pos_orient
 
         # position and orientation (in euler angles) error
         # we stuck first angular error and then position error because of the RBDL jacobian form (see below)
