@@ -46,12 +46,6 @@
       [
       '{ros_pybullet_interface}/configs/sphere.yaml',
       '{ros_pybullet_interface}/configs/sphere2.yaml',
-      ]
-    </rosparam>
-
-          <!-- List visual objects (optional) -->
-    <rosparam param="visual_object_config_file_names">
-      [
       '{ros_pybullet_interface}/configs/target_obj_visual.yaml',
       ]
     </rosparam>
@@ -60,6 +54,14 @@
     <rosparam param="object_config_file_names">
       [
       '{ros_pybullet_interface}/configs/target_obj.yaml',
+      ]
+    </rosparam>
+
+    <!-- List visual links (optional) -->
+    <rosparam param="visframes">
+      [
+<!--      'yang/ros_pybullet_interface/robot/end_effector_sponge',-->
+<!--      'yin/ros_pybullet_interface/robot/end_effector_sponge',-->
       ]
     </rosparam>
 
@@ -103,6 +105,34 @@
     <param
         name="traj_config"
         value="{ros_pybullet_interface}/configs/traj_object3D_freemotion.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface_sphere1"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_sphere1.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface_sphere2"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_sphere2.yaml"
         type="str"/>
 
   </node>

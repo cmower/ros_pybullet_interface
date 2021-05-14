@@ -8,7 +8,7 @@ from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 def main():
     # set the state of the object
     obj_name = "target"
-    pos = [-0.1, 0, 0.50]
+    pos = [0.0, 0, 0.60]
     quat = [0, 0, 0, 1]
     lin_vel = [0.0, 0.0, 0.0]
     ang_vel = [0.0, 0.0, 0.0]
