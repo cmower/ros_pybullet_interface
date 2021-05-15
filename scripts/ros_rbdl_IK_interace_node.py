@@ -99,7 +99,8 @@ class PyRBDLRobot:
         return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, EEBodyPointPosition)
 
     def getCurEEOri(self):
-        return np.transpose(rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID))
+        # return np.transpose(rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID))
+        return rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
 
     # ---------------------------------------------------------------------#
     # Test funtion
@@ -126,6 +127,9 @@ class PyRBDL4dIK:
         self.f_indx = ik_info['f_indx']
         self.l_indx = ik_info['l_indx']
 
+        # weights for tracking between orientation axes
+        self.ori_axis_weights = ik_info['ori_axis_weights']
+
         # scaling parameter between orientation and position
         self.scale_pos_orient = ik_info['scale_pos_orient']
 
@@ -151,20 +155,19 @@ class PyRBDL4dIK:
         # compute global orientation of the end-effector
         global_eeOri_mat = self.robot.getCurEEOri()
         global_eeOri = R.from_matrix(global_eeOri_mat)
-        # Inv_global_eeOri = global_eeOri.inv()
+        # global_eeOri = global_eeOri.inv()
 
-        # globalTargetOri3D is a quaternion in the form x,y,z,w
-        # global_eeOriTarget = R.from_quat(globalTargetOri3D)
+        # globalTargetOri3D is a matrix form
         global_eeOriTarget = R.from_matrix(globalTargetOri3D)
         # Inv_global_eeOriTarget = global_eeOriTarget.inv()
 
-        # orientation error as in quaternions --- it did not work!
-        # diff * q1 = q2  --->  diff = q2 * inverse(q1)
-        # dori = global_eeOriTarget * Inv_global_eeOri
-        # dori = global_eeOri * Inv_global_eeOriTarget
+        # print("-----------------------------")
+        # print(global_eeOri.as_matrix())
+        # print(global_eeOriTarget.as_matrix())
+        # print(".....................")
 
         # least square error between two frames
-        dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
+        dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix(), self.ori_axis_weights)[0]
 
         # least square error between two frames
         # dori = R.align_vectors(np.transpose(global_eeOriTarget.as_matrix())[:, -1].reshape(1,3), global_eeOri.as_matrix()[:, -1].reshape(1,3))[0]
