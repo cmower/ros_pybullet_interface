@@ -37,9 +37,13 @@ sensors:
 IK:
   # 0-3 orienation, 3-6 position, 0-6 both orienation and position
   # first index in IK
-  f_indx : 3
+  f_indx : 0
   # last index in IK
   l_indx : 6
+
+  # weights for orientation tracking - [x, y, z] of the target
+  # select: at least two of the axes have to be 1
+  ori_axis_weights: [1, 1, 1]
 
   # scaling parameter between orientation and position
   scale_pos_orient : 0.1

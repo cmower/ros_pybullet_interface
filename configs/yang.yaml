@@ -41,6 +41,10 @@ IK:
   # last index in IK
   l_indx : 6
 
+  # weights for orientation tracking - [x, y, z] of the target
+  # select: at least two of the axes have to be 1
+  ori_axis_weights: [1, 1 ,1]
+
   # scaling parameter between orientation and position
   scale_pos_orient : 1
 
