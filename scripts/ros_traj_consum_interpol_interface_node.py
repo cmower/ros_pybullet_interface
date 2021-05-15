@@ -403,6 +403,7 @@ class ROSTrajInterface(object):
 
 if __name__ == '__main__':
     try:
+        rospy.sleep(1.0)
         # Initialize node
         rospy.init_node("ros_Traj_interface", anonymous=True)
         # Initialize node class
