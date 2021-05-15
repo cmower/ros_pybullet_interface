@@ -243,6 +243,8 @@ class PlanInterpWithTO:
 
 if __name__=='__main__':
 
+    rospy.sleep(1.0)
+
     # --- setup the ros interface --- #
     rospy.init_node('test_dual_arm_capturing_obj3D', anonymous=True)
     rospy.logwarn("ATTENTION: This node will not run without the impact-TO library!")
