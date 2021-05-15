@@ -98,9 +98,8 @@ class PyRBDLRobot:
     def getCurEEPos(self):
         return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, EEBodyPointPosition)
 
-
     def getCurEEOri(self):
-        return rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
+        return np.transpose(rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID))
 
     # ---------------------------------------------------------------------#
     # Test funtion
@@ -155,7 +154,8 @@ class PyRBDL4dIK:
         # Inv_global_eeOri = global_eeOri.inv()
 
         # globalTargetOri3D is a quaternion in the form x,y,z,w
-        global_eeOriTarget = R.from_quat(globalTargetOri3D)
+        # global_eeOriTarget = R.from_quat(globalTargetOri3D)
+        global_eeOriTarget = R.from_matrix(globalTargetOri3D)
         # Inv_global_eeOriTarget = global_eeOriTarget.inv()
 
         # orientation error as in quaternions --- it did not work!
@@ -164,10 +164,12 @@ class PyRBDL4dIK:
         # dori = global_eeOri * Inv_global_eeOriTarget
 
         # least square error between two frames
-        dori = R.align_vectors(np.transpose(global_eeOriTarget.as_matrix()), global_eeOri.as_matrix())[0]
+        dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix())[0]
 
         # least square error between two frames
         # dori = R.align_vectors(np.transpose(global_eeOriTarget.as_matrix())[:, -1].reshape(1,3), global_eeOri.as_matrix()[:, -1].reshape(1,3))[0]
+
+        # compute error only between a pair fo vectors
         zAxisTarget = global_eeOriTarget.as_matrix()[:, -1]
         zAxisCurrent = global_eeOri.as_matrix()[:, -1]
         axis = np.cross(zAxisCurrent, zAxisTarget)
@@ -247,8 +249,7 @@ class ROSdIKInterface(object):
         # initialization
         self.target_EE_position = self.robotIK.robot.getCurEEPos()
         curOri = R.from_matrix(self.robotIK.robot.getCurEEOri())
-        self.target_EE_orientation = curOri.as_quat()
-
+        self.target_EE_orientation = curOri.as_matrix()
 
     def setupPyRBDLRobot(self, config_file_name):
 
@@ -310,7 +311,8 @@ class ROSdIKInterface(object):
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             return
         self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
-        self.target_EE_orientation = np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w])
+        target_EE_ori = R.from_quat(np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w]))
+        self.target_EE_orientation = target_EE_ori.as_matrix()
 
     def updateRBDL(self, event):
         self.robotIK.fullDiffIKStep(self.target_EE_position, self.target_EE_orientation)
@@ -334,6 +336,7 @@ class ROSdIKInterface(object):
 
 if __name__ == '__main__':
     try:
+        rospy.sleep(1.0)
         # Initialize node
         rospy.init_node("ros_rbdl_IK_interface", anonymous=True)
         # Initialize node class
