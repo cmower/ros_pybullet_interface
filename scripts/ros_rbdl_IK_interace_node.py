@@ -99,7 +99,6 @@ class PyRBDLRobot:
         return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, EEBodyPointPosition)
 
     def getCurEEOri(self):
-        # return np.transpose(rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID))
         return rbdl.CalcBodyWorldOrientation(self.rbdlModel, self.q, self.rbdlEndEffectorID)
 
     # ---------------------------------------------------------------------#
@@ -129,6 +128,20 @@ class PyRBDL4dIK:
 
         # weights for tracking between orientation axes
         self.ori_axis_weights = ik_info['ori_axis_weights']
+        # Find the unique elements of an array
+        unique, index, counts = np.unique(np.array(self.ori_axis_weights), return_index=True, return_counts=True)
+        # get the index of the elemnt that is 1, if it exist
+        self.axis_idx = -1
+        if (counts[unique==1.0]==1.0):
+            self.axis_idx = index[unique==1.0][0]
+
+        # set the function that computes the orienation error
+        # error based on frames matching
+        self.computeOrientationDelta = self.computeOrientationDelta3D
+        # error based on vector matching
+        # (match Z axis of robot with axis with index 'axis_idx')
+        if self.axis_idx != -1:
+            self.computeOrientationDelta = self.computeOrientationDelta1axis
 
         # scaling parameter between orientation and position
         self.scale_pos_orient = ik_info['scale_pos_orient']
@@ -145,6 +158,18 @@ class PyRBDL4dIK:
         self.fullDiffIK(JG, delta)
 
     """ --------------- Functions made for self use -------------------------"""
+    def computeOrientationDelta3D(self, orientA, orientB):
+        # least square error between two frames
+        error = R.align_vectors(np.transpose(orientA.as_matrix()), orientB.as_matrix(), self.ori_axis_weights)[0]
+        return error.as_rotvec()
+
+    def computeOrientationDelta1axis(self, orientA, orientB):
+        # compute error only between a pair fo vectors
+        zAxisTarget = orientA.as_matrix()[:, self.axis_idx] # get target axis vector
+        zAxisCurrent = orientB.as_matrix()[2, :]           # get current Z axis vector
+        axis = np.cross(zAxisCurrent, zAxisTarget)
+        angle = np.arccos(zAxisTarget.dot(zAxisCurrent))
+        return  axis*angle
 
     def computeDelta(self, globalTargetPos3D, globalTargetOri3D):
         # retrieve global position of the end-effector
@@ -155,35 +180,18 @@ class PyRBDL4dIK:
         # compute global orientation of the end-effector
         global_eeOri_mat = self.robot.getCurEEOri()
         global_eeOri = R.from_matrix(global_eeOri_mat)
-        # global_eeOri = global_eeOri.inv()
 
         # globalTargetOri3D is a matrix form
         global_eeOriTarget = R.from_matrix(globalTargetOri3D)
-        # Inv_global_eeOriTarget = global_eeOriTarget.inv()
 
-        # print("-----------------------------")
-        # print(global_eeOri.as_matrix())
-        # print(global_eeOriTarget.as_matrix())
-        # print(".....................")
-
-        # least square error between two frames
-        dori = R.align_vectors(global_eeOriTarget.as_matrix(), global_eeOri.as_matrix(), self.ori_axis_weights)[0]
-
-        # least square error between two frames
-        # dori = R.align_vectors(np.transpose(global_eeOriTarget.as_matrix())[:, -1].reshape(1,3), global_eeOri.as_matrix()[:, -1].reshape(1,3))[0]
-
-        # compute error only between a pair fo vectors
-        zAxisTarget = global_eeOriTarget.as_matrix()[:, -1]
-        zAxisCurrent = global_eeOri.as_matrix()[:, -1]
-        axis = np.cross(zAxisCurrent, zAxisTarget)
-        angle = np.arccos(zAxisTarget.dot(zAxisCurrent))
+        # compute orientation error
+        dori = self.computeOrientationDelta(global_eeOriTarget, global_eeOri)
 
         # get delta orientation as a vector + also scale it
-        doriVec = dori.as_rotvec() * self.scale_pos_orient
-        # doriVec = axis*angle * self.scale_pos_orient
+        doriVec = dori * self.scale_pos_orient
 
         # position and orientation (in euler angles) error
-        # we stuck first angular error and then position error because of the RBDL jacobian form (see below)
+        # we stack first angular error and then position error because of the RBDL jacobian form (see below)
         # Computes the 6-D Jacobian $G(q)$ that when multiplied with $\dot{q}$ gives a 6-D vector
         # that has the angular velocity as the first three entries and the linear velocity as the last three entries.
         delta = np.concatenate((doriVec, dpos), axis=None)
