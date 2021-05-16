@@ -165,7 +165,7 @@ class PyRBDL4dIK:
 
     def computeOrientationDelta1axis(self, orientA, orientB):
         # compute error only between a pair fo vectors
-        zAxisTarget = orientA.as_matrix()[:, self.axis_idx] # get target axis vector
+        zAxisTarget = orientA.as_matrix()[:,self.axis_idx] # get target axis vector
         zAxisCurrent = orientB.as_matrix()[2, :]           # get current Z axis vector
         axis = np.cross(zAxisCurrent, zAxisTarget)
         angle = np.arccos(zAxisTarget.dot(zAxisCurrent))
@@ -224,9 +224,9 @@ class PyRBDL4dIK:
 
         # compute new configuration
         qnext = qprev + dq + self.alpha_null*dq_nullspace_motion
+
         #  update configuration
         self.robot.updateJointConfig(qnext)
-
 
 
 class ROSdIKInterface(object):
@@ -257,10 +257,10 @@ class ROSdIKInterface(object):
         publishers_topic_name = f"{self.robot_name}/{TARGET_JOINT_STATE_TOPIC}"
         self.target_joint_state_publisher = rospy.Publisher(publishers_topic_name, JointState, queue_size=1)
 
-        # initialization
+        # initialization of the Forward Kinematics
         self.target_EE_position = self.robotIK.robot.getCurEEPos()
         curOri = R.from_matrix(self.robotIK.robot.getCurEEOri())
-        self.target_EE_orientation = curOri.as_matrix()
+        self.target_EE_orientation = np.transpose(curOri.as_matrix())
 
     def setupPyRBDLRobot(self, config_file_name):
 
