@@ -24,7 +24,7 @@ class TestInterpolation:
 
         # check if the name of the robot is provided
         if rospy.has_param('~robot_name'):
-            robot_name = rospy.get_param('~robot_name')
+            robot_name = rospy.get_param('~robot_name','')
         else:
             rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
             sys.exit(0)
