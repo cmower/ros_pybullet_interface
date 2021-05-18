@@ -153,12 +153,12 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, 0, 0.8, 0, 0, 0])
-            finObjPos = np.array([0, 0, 0.6, 0, 0, 0])
+            initObjPos = np.array([0.0, 0.1, 0.4, 0, 0, 0])
+            finObjPos = np.array([0., 0.1, 0.8, 0, 0, 0])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
-            initObjPos = np.array([0, 0, 0.8, 0, 0, 0, 1])
+            initObjPos = np.array([0, 0, 0.6, 0, 0, 0, 1])
             finObjPos = np.array([0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
 
@@ -166,16 +166,16 @@ class PlanInterpWithTO:
         finObjVel = np.array([0., 0., 0., 0., 0., 0.])
         maxObjVel = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5])
 
-        slackObjPos = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+        slackObjPos = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
         slackObjVel = np.array([0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
 
         initArmPos1 = np.array([endPosYang[0], endPosYang[1], endPosYang[2], endAttYang[0], endAttYang[1], endAttYang[2]])
-        minArmPos1 = np.array([-3.0, -3.0, -3.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
-        maxArmPos1 = np.array([3.0, 3.0, 3.0, np.pi * 2, np.pi * 2, np.pi * 2])
+        minArmPos1 = np.array([-1.0, -1.0, 0.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
+        maxArmPos1 = np.array([2.0, 2.0, 2.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
         initArmPos2 = np.array([endPosYin[0], endPosYin[1], endPosYin[2], endAttYin[0], endAttYin[1], endAttYin[2]])
-        minArmPos2 = np.array([-3.0, -3.0, -3.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
-        maxArmPos2 = np.array([3.0, 3.0, 3.0, np.pi * 2, np.pi * 2, np.pi * 2])
+        minArmPos2 = np.array([-1.0, -1.0, 0.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
+        maxArmPos2 = np.array([2.0, 2.0, 2.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
         lbx, ubx, lbg, ubg, cf, gf = self.HybOpt_DAC.buildBounds(initObjPos, finObjPos, maxObjPos, slackObjPos,
                                                           initObjVel, finObjVel, maxObjVel, slackObjVel,
@@ -262,9 +262,9 @@ if __name__=='__main__':
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
-        # PlanInterpWithTO.writeCallbackTimerYang = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangTrajectory)
-        # PlanInterpWithTO.writeCallbackTimerYin = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinTrajectory)
-        # PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+        PlanInterpWithTO.writeCallbackTimerYang = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangTrajectory)
+        PlanInterpWithTO.writeCallbackTimerYin = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinTrajectory)
+        PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
         set_object_state_client.main()
