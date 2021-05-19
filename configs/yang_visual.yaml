@@ -1,13 +1,13 @@
 #
 # PyBullet KUKA configuration file
 #
-robot_name: "yang_visual"
+name: "yang_visual"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14_visual.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [0.8, 0.0, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, 0.0]
-init_position: [0., 30., 0., 90., 0., -29., 0.]
+base_position: [1.0, 0.0, 0.0]
+base_orient_eulerXYZ: [0.0, 0.0, 180.0]
+init_position: [0.0, -30., 0., -90., 0., 30., 90.]
 
 sensors:
 

@@ -12,6 +12,12 @@ from scipy.spatial.transform import Rotation as R
 # ROS message types
 from sensor_msgs.msg import JointState
 
+
+# ROS messages types of the real robot
+from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import MultiArrayDimension
+
+
 # from ros_pybullet_interface.utils import loadYAMLConfig
 import ros_pybullet_interface.utils as utils
 
@@ -21,13 +27,20 @@ import ros_pybullet_interface.utils as utils
 # ------------------------------------------------------
 
 FREQ = 100 # IK sampling frequency
-TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # listens for joint states on this topic
-CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # publishes joint states on this topic
+TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # publishes  for joint states on this topic
+CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # listens joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base" # listen for the pose of the robot base
 
 EEBodyPointPosition = np.array([0.0, 0.0, 0.0]) #np.zeros(3)
+
+# ------------------------------------------------------------
+#  REAL ROBOT
+# ------------------------------------------------------------
+
+CURRENT_JOINT_STATE_TOPIC = 'joint_states' # publishes joint states on this topic
+REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'PositionController/command' # commands joint states on this topic
 
 
 class PyRBDLRobot:
@@ -262,6 +275,12 @@ class ROSdIKInterface(object):
         curOri = R.from_matrix(self.robotIK.robot.getCurEEOri())
         self.target_EE_orientation = np.transpose(curOri.as_matrix())
 
+        # Setup ros publishers
+        real_world_publishers_topic_name = f"{self.robot_name}/{REAL_ROBOT_TARGET_JOINT_STATE_TOPIC}"
+        self.real_world_target_joint_state_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
+
+
+
     def setupPyRBDLRobot(self, config_file_name):
 
         # Load robot configuration
@@ -310,6 +329,22 @@ class ROSdIKInterface(object):
         msg.header.stamp = rospy.Time.now()
         self.target_joint_state_publisher.publish(msg)
 
+    def publishdIKJointStateToROS2RealWorld(self, event):
+        # Pack trajectory msg
+        msg = Float64MultiArray()
+        msg.layout.dim.append(MultiArrayDimension())
+        # info for reconstruction of the 2D array
+        msg.layout.dim[0].label  = "columns"
+        msg.layout.dim[0].size   = 7
+
+        position =  self.robotIK.robot.getJointConfig()
+
+        # add data as flattened numpy array
+        msg.data = position.flatten('C') # row major flattening
+
+        # msg.header.stamp = rospy.Time.now()
+        self.real_world_target_joint_state_publisher.publish(msg)
+
     def startListening2EETargets(self):
         # Subscribe target end-effector callback
         self.tfBuffer = tf2_ros.Buffer()
@@ -347,7 +382,6 @@ class ROSdIKInterface(object):
 
 if __name__ == '__main__':
     try:
-        rospy.sleep(1.0)
         # Initialize node
         rospy.init_node("ros_rbdl_IK_interface", anonymous=True)
         # Initialize node class
@@ -361,6 +395,10 @@ if __name__ == '__main__':
         dur = rospy.Duration(ROSdIKinterface.dt)
         rospy.Timer(dur, ROSdIKinterface.updateRBDL)
         ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, ROSdIKinterface.publishdIKJointStateToROS)
+
+        # --------------------------------------------------
+        # start the callback for the real world
+        ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, ROSdIKinterface.publishdIKJointStateToROS2RealWorld)
 
         # Ctrl-C will stop the script
         rospy.on_shutdown(ROSdIKinterface.cleanShutdown)
