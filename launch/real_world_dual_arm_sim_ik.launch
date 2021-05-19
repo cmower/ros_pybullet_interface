@@ -1,0 +1,106 @@
+<launch>
+  <!-- Launch ROS-PyBullet interface node -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface_node.py"
+      clear_params="true"
+      output="screen">
+
+      <!-- Pybullet simulation config (required) -->
+      <!-- Flag to indicate how bullet simulation step is
+           synced with ROS control loop.
+           Options:
+                0:  pybullet executes all simulation steps in a fixed frequency
+                       This can be used to simulate real world
+                       ( use simulation freqency > 250 Hz)
+                1: pybullet executes every simulation step when commanded by ROS node
+                       This can be used to execute one simulation step after one control/interface step
+                       Useful for debugging, but not realistic
+                       (specially, if control loop freqency is < 250 Hz)
+                2: pybullet executes a simulation step when ROS srv manualPybulletSteps is called
+                   This can be used to execute one simulation step after one control/interface step
+                   Useful for debugging MPC-like algorithms, but not realistic
+                  -->
+    <param
+        name="pybullet_sim_self_loop"
+        value="0"
+        type="int"/>
+
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/yin.yaml",
+      "{ros_pybullet_interface}/configs/yang.yaml",
+      "{ros_pybullet_interface}/configs/yin_visual.yaml",
+      "{ros_pybullet_interface}/configs/yang_visual.yaml",
+      ]
+    </rosparam>
+
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="{ros_pybullet_interface}/configs/realworld_camera.yaml"
+        type="str"/>
+
+    <!-- List visual objects (optional) -->
+    <rosparam param="visual_object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/sphere.yaml',
+      '{ros_pybullet_interface}/configs/sphere2.yaml',
+      '{ros_pybullet_interface}/configs/target_obj_visual.yaml',
+      ]
+    </rosparam>
+
+    <!-- List objects (optional) -->
+    <rosparam param="object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/target_obj.yaml',
+      ]
+    </rosparam>
+
+    <!-- List visual links (optional) -->
+    <rosparam param="visframes">
+      [
+<!--      'yang/ros_pybullet_interface/robot/end_effector_sponge',-->
+<!--      'yin/ros_pybullet_interface/robot/end_effector_sponge',-->
+      ]
+    </rosparam>
+
+
+    <remap from="yin_visual/joint_states" to="yin/ros_pybullet_interface/joint_state/target" />
+    <remap from="yang_visual/joint_states" to="yang/ros_pybullet_interface/joint_state/target" />
+
+
+  </node>
+
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <node
+      name="ros_PyRBDL4dIK_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace_node.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="{ros_pybullet_interface}/configs/yin.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_PyRBDL4dIK_interface2"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace_node.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="{ros_pybullet_interface}/configs/yang.yaml"
+        type="str"/>
+
+  </node>
+
+
+
+</launch>

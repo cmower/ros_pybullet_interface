@@ -153,8 +153,8 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, 0.1, 0.4, 0, 0, 0])
-            finObjPos = np.array([0., 0.1, 0.8, 0, 0, 0])
+            initObjPos = np.array([0.0, 0.0, 0.6, 0, 0, 0])
+            finObjPos = np.array([0., 0.0, 0.75, 0, 0, 0])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
@@ -171,11 +171,11 @@ class PlanInterpWithTO:
 
         initArmPos1 = np.array([endPosYang[0], endPosYang[1], endPosYang[2], endAttYang[0], endAttYang[1], endAttYang[2]])
         minArmPos1 = np.array([-1.0, -1.0, 0.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
-        maxArmPos1 = np.array([2.0, 2.0, 2.0, np.pi * 2, np.pi * 2, np.pi * 2])
+        maxArmPos1 = np.array([1.0, 1.0, 1.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
         initArmPos2 = np.array([endPosYin[0], endPosYin[1], endPosYin[2], endAttYin[0], endAttYin[1], endAttYin[2]])
         minArmPos2 = np.array([-1.0, -1.0, 0.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
-        maxArmPos2 = np.array([2.0, 2.0, 2.0, np.pi * 2, np.pi * 2, np.pi * 2])
+        maxArmPos2 = np.array([1.0, 1.0, 1.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
         lbx, ubx, lbg, ubg, cf, gf = self.HybOpt_DAC.buildBounds(initObjPos, finObjPos, maxObjPos, slackObjPos,
                                                           initObjVel, finObjVel, maxObjVel, slackObjVel,

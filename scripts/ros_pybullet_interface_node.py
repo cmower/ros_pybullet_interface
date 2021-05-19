@@ -27,6 +27,14 @@ CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publ
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 
 
+
+# ------------------------------------------------------------
+#  REAL ROBOT
+# ------------------------------------------------------------
+
+REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'joint_states'  # publishes joint states on this topic
+TARGET_JOINT_STATE_TOPIC = REAL_ROBOT_TARGET_JOINT_STATE_TOPIC
+
 # ------------------------------------------------------
 #
 # Helper functions
@@ -233,7 +241,7 @@ class ROSPyBulletInterface:
                     self.robots[-1]['sensor_idx'] = len(self.robots_sensor_pubs) - 1
 
             # Setup ros timer to publish sensor readings
-            rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+            # rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
 
 
     def setupPyBulletVisualLinks(self, linkid):
@@ -276,7 +284,7 @@ class ROSPyBulletInterface:
                 'object': obj,
                 'tf_frame_id': tf_frame_id,
             })
-        else:   
+        else:
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
                 np.deg2rad(config['link_state']['orientation_eulerXYZ'])
