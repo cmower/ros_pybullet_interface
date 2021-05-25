@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <launch>
 
@@ -29,7 +29,7 @@
                   -->
     <param
         name="pybullet_sim_self_loop"
-        value="0"
+        value="2"
         type="int"/>
 
     <param
@@ -91,40 +91,48 @@
 
     </node>
 
+    <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+    <!-- <node
+        name="ros_JOAO_node"
+        pkg="ros_pybullet_interface"
+        type="ros_JOAO_node.py"
+        output="screen">
 
-  <node
-      name="ros_traj_consum_interpol_interface1"
-      pkg="ros_pybullet_interface"
-      type="ros_traj_consum_interpol_interface_node.py"
-      output="screen">
+      <param
+          name="???"
+          value="????"
+          type="str"/> -->
 
-    <!-- Traj config (required) -->
-    <param
-        name="traj_config"
-        value="{ros_pybullet_interface}/configs/traj_kuka.yaml"
-        type="str"/>
+      <!-- You need to publish into \tf :
 
-    <param
-          name="robot_name"
-          value="LWR"
-          type="str"/>
+        in your init add:
+        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
 
-  </node>
+        define the following
+        header_frame_id: 'ros_pybullet_interface/world'
+        msg_child_frame_id: 'LWR/ros_pybullet_interface/end_effector/target'
 
-  <node
-      name="ros_traj_consum_interpol_interface2"
-      pkg="ros_pybullet_interface"
-      type="ros_traj_consum_interpol_interface_node.py"
-      output="screen">
+        with
 
-    <!-- Traj config (required) -->
-    <param
-        name="traj_config"
-        value="{ros_pybullet_interface}/configs/traj_box.yaml"
-        type="str"/>
+        msg = TransformStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = self.msg_header_frame_id
+        msg.child_frame_id = self.msg_child_frame_id
+        msg.transform.translation.x = motion[0]
+        msg.transform.translation.y = motion[1]
+        msg.transform.translation.z = motion[2]
+        msg.transform.rotation.x = motion[3]
+        msg.transform.rotation.y = motion[4]
+        msg.transform.rotation.z = motion[5]
+        msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
 
-  </node>
+        # Publish msg
+        self.tfBroadcaster.sendTransform(msg)
 
+
+
+
+     </node> -->
 
 
   <node
@@ -148,18 +156,5 @@
         args="0.4 0.0 -0.06 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
         />
 
-
-      <!-- Testing node trajectory publisher -->
-      <node name="test_ros_interpol_interface"
-          pkg="ros_pybullet_interface"
-          type="test_ros_interpol_interface.py"
-          output="screen">
-
-          <param
-                name="robot_name"
-                value="LWR"
-                type="str"/>
-
-        </node>
 
 </launch>
