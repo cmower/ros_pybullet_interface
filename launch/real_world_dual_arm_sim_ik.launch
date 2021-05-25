@@ -67,9 +67,15 @@
       ]
     </rosparam>
 
+    <!-- full robot in bullet to read from the real robot -->
+    <remap from="yin/ros_pybullet_interface/joint_state/target" to="yin/joint_states" />
+    <remap from="yang/ros_pybullet_interface/joint_state/target" to="yang/joint_states" />
 
-    <remap from="yin_visual/joint_states" to="yin/ros_pybullet_interface/joint_state/target" />
-    <remap from="yang_visual/joint_states" to="yang/ros_pybullet_interface/joint_state/target" />
+    <!-- visual robot in bullet to read from the IK state of the robot -->
+    <!-- <remap from="yin_visual/joint_states" to="yin/ros_pybullet_interface/joint_state/target" />
+    <remap from="yang_visual/joint_states" to="yang/ros_pybullet_interface/joint_state/target" /> -->
+    <remap from="yin_visual/ros_pybullet_interface/joint_state/target" to="yin/ros_pybullet_interface/joint_state/target" />
+    <remap from="yang_visual/ros_pybullet_interface/joint_state/target" to="yang/ros_pybullet_interface/joint_state/target" />
 
 
   </node>
@@ -86,6 +92,8 @@
         value="{ros_pybullet_interface}/configs/yin.yaml"
         type="str"/>
 
+    <remap from="yin/joint_states" to="yin/ros_pybullet_interface/joint_state/current" />
+
   </node>
 
   <node
@@ -98,6 +106,8 @@
         name="robot_config"
         value="{ros_pybullet_interface}/configs/yang.yaml"
         type="str"/>
+
+        <remap from="yang/joint_states" to="yang/ros_pybullet_interface/joint_state/current" />
 
   </node>
 

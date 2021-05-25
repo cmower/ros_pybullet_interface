@@ -38,8 +38,10 @@ EEBodyPointPosition = np.array([0.0, 0.0, 0.0]) #np.zeros(3)
 # ------------------------------------------------------------
 #  REAL ROBOT
 # ------------------------------------------------------------
-
-CURRENT_JOINT_STATE_TOPIC = 'joint_states' # publishes joint states on this topic
+# CURRENT_JOINT_STATE_TOPIC = 'joint_states' # publishes joint states on this topic
+# test on robot and compare with commit:
+# https://github.com/cmower/ros_pybullet_interface/commit/e3ce90b58998ea3078abda3f5733db883448bb6e
+NDOF = 7
 REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'PositionController/command' # commands joint states on this topic
 
 
@@ -335,7 +337,7 @@ class ROSdIKInterface(object):
         msg.layout.dim.append(MultiArrayDimension())
         # info for reconstruction of the 2D array
         msg.layout.dim[0].label  = "columns"
-        msg.layout.dim[0].size   = 7
+        msg.layout.dim[0].size   = NDOF
 
         position =  self.robotIK.robot.getJointConfig()
 

@@ -31,9 +31,10 @@ WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 # ------------------------------------------------------------
 #  REAL ROBOT
 # ------------------------------------------------------------
-
-REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'joint_states'  # publishes joint states on this topic
-TARGET_JOINT_STATE_TOPIC = REAL_ROBOT_TARGET_JOINT_STATE_TOPIC
+# test on robot and compare with commit:
+# https://github.com/cmower/ros_pybullet_interface/commit/12d603ea46791a7db6a6ac0195dcef6cf7597cf1
+# REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'joint_states'  # publishes joint states on this topic
+# TARGET_JOINT_STATE_TOPIC = REAL_ROBOT_TARGET_JOINT_STATE_TOPIC
 
 # ------------------------------------------------------
 #
@@ -241,7 +242,7 @@ class ROSPyBulletInterface:
                     self.robots[-1]['sensor_idx'] = len(self.robots_sensor_pubs) - 1
 
             # Setup ros timer to publish sensor readings
-            # rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+            rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
 
 
     def setupPyBulletVisualLinks(self, linkid):
