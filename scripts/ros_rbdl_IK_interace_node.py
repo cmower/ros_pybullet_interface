@@ -183,7 +183,14 @@ class PyRBDL4dIK:
         zAxisTarget = orientA.as_matrix()[:,self.axis_idx] # get target axis vector
         zAxisCurrent = orientB.as_matrix()[2, :]           # get current Z axis vector
         axis = np.cross(zAxisCurrent, zAxisTarget)
-        angle = np.arccos(zAxisTarget.dot(zAxisCurrent))
+        vectdot_align = zAxisTarget.dot(zAxisCurrent)
+        # we clip the value of the dot product to ensure that it's between -1 to 1
+        # as the vectors fo the dot product are normalized
+        angle = np.arccos(np.clip(vectdot_align, -1.0, 1.0))
+
+        if np.isnan(angle).any():
+            rospy.logerr(" The is something wrong with orientantion of the IK.")
+
         return  axis*angle
 
     def computeDelta(self, globalTargetPos3D, globalTargetOri3D):
