@@ -1,5 +1,5 @@
 <launch>
-  
+
   <node
       name="ros_traj_consum_interpol_interface"
       pkg="ros_pybullet_interface"
@@ -56,7 +56,7 @@
 
     <param
       name="robot_name"
-      value="yang"
+      value="yang_visual"
       type="str"/>
 
   </node>
@@ -75,7 +75,7 @@
 
     <param
       name="robot_name"
-      value="yin"
+      value="yin_visual"
       type="str"/>
 
   </node>
