@@ -67,23 +67,14 @@
       ]
     </rosparam>
 
-
-
-    <!-- visual robot in bullet to read from the IK state of the robot -->
-    <!-- <remap from="yin_visual/ros_pybullet_interface/joint_state/target" to="yin/ros_pybullet_interface/joint_state/target" />
-    <remap from="yang_visual/ros_pybullet_interface/joint_state/target" to="yang/ros_pybullet_interface/joint_state/target" /> -->
-
-    <!-- <remap from="yin_visual/joint_states" to="yin/ros_pybullet_interface/joint_state/target" />
-    <remap from="yang_visual/joint_states" to="yang/ros_pybullet_interface/joint_state/target" /> -->
-    <!-- <remap from="yin_visual/ros_pybullet_interface/joint_state/target" to="yin/ros_pybullet_interface/joint_state/current" />
-    <remap from="yang_visual/ros_pybullet_interface/joint_state/target" to="yang/ros_pybullet_interface/joint_state/current" /> -->
-
     <!-- full robot in bullet to read from the real robot -->
     <remap from="yin/ros_pybullet_interface/joint_state/target" to="yin/joint_states" />
     <remap from="yang/ros_pybullet_interface/joint_state/target" to="yang/joint_states" />
 
 
   </node>
+
+
 
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
@@ -100,10 +91,11 @@
     <remap from="yin_visual/ros_pybullet_interface/joint_state/current"  to="yin/joint_states" />
 
     <!-- command that activates the forwarding of commands to the robots -->
-    <remap from="yin_visual/PositionController/command"  to="yin/PositionController/command" />
-
+    <!-- <remap from="yin_visual/PositionController/command"  to="yin/PositionController/command" /> -->
 
   </node>
+
+
 
   <node
       name="ros_PyRBDL4dIK_interface2"
@@ -119,11 +111,18 @@
         <remap from="yang_visual/ros_pybullet_interface/joint_state/current"  to="yang/joint_states" />
 
         <!-- command that activates the forwarding of commands to the robots -->
-        <remap from="yang_visual/PositionController/command"  to="yang/PositionController/command" />
-
+        <!-- <remap from="yang_visual/PositionController/command"  to="yang/PositionController/command" /> -->
 
   </node>
 
+
+  <!-- <arg name="command_real_robots" default="false"/> -->
+
+  <!-- command that activates the forwarding of commands to the robots -->
+  <!-- <group if="$(arg command_real_robots)"> -->
+    <!-- <remap from="yin_visual/PositionController/command"  to="yin/PositionController/command" /> -->
+    <!-- <remap from="yang_visual/PositionController/command"  to="yang/PositionController/command" /> -->
+  <!-- </group> -->
 
 
 
