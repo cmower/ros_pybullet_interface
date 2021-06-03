@@ -59,13 +59,6 @@
       ]
     </rosparam>
 
-    <!-- List visual links (optional) -->
-    <rosparam param="visframes">
-      [
-<!--      'yang/ros_pybullet_interface/robot/end_effector_sponge',-->
-<!--      'yin/ros_pybullet_interface/robot/end_effector_sponge',-->
-      ]
-    </rosparam>
 
     <!-- full robot in bullet to read from the real robot -->
     <remap from="yin/ros_pybullet_interface/joint_state/target" to="yin/joint_states" />
@@ -74,6 +67,9 @@
 
   </node>
 
+
+  <!-- Flag that activates forwarding of commands to the robots -->
+  <arg name="command_real_robots" default="false"/>
 
 
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
@@ -91,10 +87,9 @@
     <remap from="yin_visual/ros_pybullet_interface/joint_state/current"  to="yin/joint_states" />
 
     <!-- command that activates the forwarding of commands to the robots -->
-    <!-- <remap from="yin_visual/PositionController/command"  to="yin/PositionController/command" /> -->
+    <remap if="$(arg command_real_robots)" from="yin_visual/PositionController/command"  to="yin/PositionController/command" />
 
   </node>
-
 
 
   <node
@@ -111,18 +106,9 @@
         <remap from="yang_visual/ros_pybullet_interface/joint_state/current"  to="yang/joint_states" />
 
         <!-- command that activates the forwarding of commands to the robots -->
-        <!-- <remap from="yang_visual/PositionController/command"  to="yang/PositionController/command" /> -->
+        <remap if="$(arg command_real_robots)" from="yang_visual/PositionController/command"  to="yang/PositionController/command" />
 
   </node>
-
-
-  <!-- <arg name="command_real_robots" default="false"/> -->
-
-  <!-- command that activates the forwarding of commands to the robots -->
-  <!-- <group if="$(arg command_real_robots)"> -->
-    <!-- <remap from="yin_visual/PositionController/command"  to="yin/PositionController/command" /> -->
-    <!-- <remap from="yang_visual/PositionController/command"  to="yang/PositionController/command" /> -->
-  <!-- </group> -->
 
 
 
