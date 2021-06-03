@@ -22,8 +22,8 @@ from py_pack import yaml
 from py_pack import hybrid_tosrb
 from py_pack import hybrid_todac
 
-NEW_TRAJ_Yang_TOPIC = 'yang_visual/ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
-NEW_TRAJ_Yin_TOPIC = 'yin_visual/ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+
+NEW_TRAJ_TOPIC= 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
@@ -38,6 +38,14 @@ class PlanInterpWithTO:
         # Name of node
         self.name = rospy.get_name()
 
+        # check if the name of the robot is provided
+        if rospy.has_param('~robot1_name') and rospy.has_param('~robot2_name'):
+            self.robot1_name = rospy.get_param('~robot1_name')
+            self.robot2_name = rospy.get_param('~robot2_name')
+        else:
+            rospy.logerr(f"The name of the robots is not set in {rospy.get_name()}")
+            sys.exit(0)
+
         # Initialize data stream
         self.trajObjPlan = np.empty(0)
         self.trajRobotPlan = np.empty(0)
@@ -48,8 +56,8 @@ class PlanInterpWithTO:
         listener = tf2_ros.TransformListener(self.IK_listen_buff)
 
         # start punlishers
-        self.new_Yangtraj_publisher = rospy.Publisher(NEW_TRAJ_Yang_TOPIC, Float64MultiArray, queue_size=1)
-        self.new_Yintraj_publisher = rospy.Publisher(NEW_TRAJ_Yin_TOPIC, Float64MultiArray, queue_size=1)
+        self.new_Yangtraj_publisher = rospy.Publisher(f'{self.robot1_name}/{NEW_TRAJ_TOPIC}', Float64MultiArray, queue_size=1)
+        self.new_Yintraj_publisher = rospy.Publisher(f'{self.robot2_name}/{NEW_TRAJ_TOPIC}', Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
 
         time.sleep(2.0) # wait for initialisation to complete
@@ -130,10 +138,10 @@ class PlanInterpWithTO:
     def solveTO(self):
 
         # get object and robot state from pybullet
-        basePosYang, baseAttYang, endPosYang, endAttYang = self.readInitials("yang_visual")
+        basePosYang, baseAttYang, endPosYang, endAttYang = self.readInitials(self.robot1_name)
         print(endPosYang, endAttYang)
 
-        basePosYin, baseAttYin, endPosYin, endAttYin = self.readInitials("yin_visual")
+        basePosYin, baseAttYin, endPosYin, endAttYin = self.readInitials(self.robot2_name)
         print(endPosYin, endAttYin)
 
         # get initial guess
@@ -153,8 +161,8 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, 0.0, 0.6, 0, 0, 0])
-            finObjPos = np.array([0., 0.0, 0.75, 0, 0, 0])
+            initObjPos = np.array([0.0, 0.0, 0.66, 0, 0, 0])
+            finObjPos = np.array([0., 0.0, 0.725, 0, 0, 0])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
