@@ -5,9 +5,13 @@ name: "yang"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [1.0, 0.0, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, 180.0]
-init_position: [0.0, -30., 0., -90., 0., 30., 90.]
+base_position: [1.1, 0.1, 0.0]
+base_orient_eulerXYZ: [0.0, -30.0, 0.0]
+init_position: [0.0, 45., 0., 80., 0., -10., 90.]
+#---remounting
+#base_position: [1.1, 0.1, 0.0]
+#base_orient_eulerXYZ: [0.0, -30.0, 0.0]
+#init_position: [0.0, 45., 0., 80., 0., -10., 90.]
 
 sensors:
 
@@ -46,9 +50,9 @@ IK:
   ori_axis_weights: [1, 1, 1]
 
   # scaling parameter between orientation and position
-  scale_pos_orient : 1
+  scale_pos_orient : 1.0
 
   # parameters of the nullspace motion
-  alpha_null : [0., 0., -0., -0., 0., 0.0, 0.] # activation per joint
-  h_delta : [0., 0., -0., -0., 0., 90., 0.]     # nominal configuration, aimed via nullspace motion
+  alpha_null : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # activation per joint
+  h_delta : [0., 0., -0., -0., 0., 0., 0.]     # nominal configuration, aimed via nullspace motion
   h_norm : [340., 240., 340., 240., 340., 240., 350.]  # normalization of the error for each joint (IIWA specific)
