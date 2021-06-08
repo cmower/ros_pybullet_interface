@@ -130,10 +130,10 @@ class PlanInterpWithTO:
     def solveTO(self):
 
         # get object and robot state from pybullet
-        basePosYang, baseAttYang, endPosYang, endAttYang = self.readInitials("yang")
+        basePosYang, baseAttYang, baseAttYang_Quat, endPosYang, endAttYang, endAttYang_Quat = self.readInitials("yang")
         print(endPosYang, endAttYang)
 
-        basePosYin, baseAttYin, endPosYin, endAttYin = self.readInitials("yin")
+        basePosYin, baseAttYin, baseAttYin_Quat, endPosYin, endAttYin, endAttYin_Quat = self.readInitials("yin")
         print(endPosYin, endAttYin)
 
         # get initial guess
@@ -153,8 +153,8 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, 0.0, 0.6, 0, 0, 0])
-            finObjPos = np.array([0., 0.0, 0.75, 0, 0, 0])
+            initObjPos = np.array([0.0, 0.0, 0.6, 0/180*np.pi, 0, 0])
+            finObjPos = np.array([0., 0.0, 0.75, 0/180*np.pi, 0, 0])
             maxObjPos = np.array([2, 2, 2, 2*np.pi, 2*np.pi, 2*np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
@@ -169,11 +169,11 @@ class PlanInterpWithTO:
         slackObjPos = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
         slackObjVel = np.array([0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
 
-        initArmPos1 = np.array([endPosYang[0], endPosYang[1], endPosYang[2]])
+        initArmPos1 = np.array(endPosYang)
         minArmPos1 = np.array([-1.0, -1.0, 0.0])
         maxArmPos1 = np.array([1.0, 1.0, 1.0])
 
-        initArmPos2 = np.array([endPosYin[0], endPosYin[1], endPosYin[2]])
+        initArmPos2 = np.array(endPosYin)
         minArmPos2 = np.array([-1.0, -1.0, 0.0])
         maxArmPos2 = np.array([1.0, 1.0, 1.0])
 
@@ -188,11 +188,20 @@ class PlanInterpWithTO:
         if (solFlag):
             timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array, forLimb1Array,\
             posLimb2Array, velLimb2Array, forLimb2Array = self.HybOpt_DAC.decodeSol(xSolution)
+
             self.HybOpt_DAC.plotResult(timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array,
                                        forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, animateFlag=False)
-
+            m, n = posLimb1Array.shape
+            # for i in range(n):
+            #     posLimb1Array[3:, i] = endAttYang_Quat
+            #     posLimb2Array[3:, i] = endAttYin_Quat
+            # posLimb1Array[3:7, 0] = endAttYang_Quat
+            # posLimb2Array[3:7, 0] = endAttYin_Quat
+            # posLimb1Array[3:6, 0] = endAttYang
+            # posLimb2Array[3:6, 0] = endAttYin
             self.trajObjPlan = np.vstack((np.vstack((timeArray, posBodyArray)), velBodyArray))
             self.trajYangPlan = np.vstack((np.vstack((timeArray, posLimb1Array)), velLimb1Array))
+            print('dimension:', posLimb1Array.shape, velLimb1Array.shape)
             self.trajYinPlan = np.vstack((np.vstack((timeArray, posLimb2Array)), velLimb2Array))
 
         return solFlag
@@ -238,7 +247,7 @@ class PlanInterpWithTO:
                                trans.transform.rotation.w]
             end_orient_euler = R.from_quat(end_orient_quat).as_euler('ZYX')
 
-        return base_position, base_orient_euler, end_position, end_orient_euler
+        return base_position, base_orient_euler, base_orient_quat, end_position, end_orient_euler, end_orient_quat
 
 
 if __name__=='__main__':
