@@ -13,6 +13,7 @@ motion_dimensions:
     translationZ:
     translationZ_index: 2
 
+#  'Quat' and [3,7] for quaternion, 'Euler' and [3,6] for euler angles
   rotation:
     rotation_repr: 'Euler'
     rotationvec:
