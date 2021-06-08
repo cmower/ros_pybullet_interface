@@ -156,31 +156,33 @@ class PlanInterpWithTO:
             initObjPos = np.array([0.0, 0.0, 0.6, 0, 0, 0])
             finObjPos = np.array([0., 0.0, 0.75, 0, 0, 0])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
+            minObjPos = np.array([-2, -2, 0.6, -np.pi, -np.pi, -np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
             initObjPos = np.array([0, 0, 0.6, 0, 0, 0, 1])
             finObjPos = np.array([0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
+            minObjPos = np.array([-2, -2, 0.6, -np.pi, -np.pi, -np.pi])
 
         initObjVel = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         finObjVel = np.array([0., 0., 0., 0., 0., 0.])
-        maxObjVel = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5])
+        maxObjVel = np.array([2.0, 2.0, 2.0, 2.0, 2.0, 2.0])
 
         slackObjPos = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
         slackObjVel = np.array([0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
 
         initArmPos1 = np.array([endPosYang[0], endPosYang[1], endPosYang[2], endAttYang[0], endAttYang[1], endAttYang[2]])
-        minArmPos1 = np.array([-1.0, -1.0, 0.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
+        minArmPos1 = np.array([-1.0, -1.0, 0.2, -np.pi * 2, -np.pi * 2, -np.pi * 2])
         maxArmPos1 = np.array([1.0, 1.0, 1.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
         initArmPos2 = np.array([endPosYin[0], endPosYin[1], endPosYin[2], endAttYin[0], endAttYin[1], endAttYin[2]])
-        minArmPos2 = np.array([-1.0, -1.0, 0.0, -np.pi * 2, -np.pi * 2, -np.pi * 2])
+        minArmPos2 = np.array([-1.0, -1.0, 0.2, -np.pi * 2, -np.pi * 2, -np.pi * 2])
         maxArmPos2 = np.array([1.0, 1.0, 1.0, np.pi * 2, np.pi * 2, np.pi * 2])
 
-        lbx, ubx, lbg, ubg, cf, gf = self.HybOpt_DAC.buildBounds(initObjPos, finObjPos, maxObjPos, slackObjPos,
-                                                          initObjVel, finObjVel, maxObjVel, slackObjVel,
-                                                          initArmPos1, minArmPos1, maxArmPos1,
-                                                          initArmPos2, minArmPos2, maxArmPos2)
+        lbx, ubx, lbg, ubg, cf, gf = self.HybOpt_DAC.buildBounds(initObjPos, finObjPos, minObjPos, maxObjPos, slackObjPos,
+                                                                 initObjVel, finObjVel, maxObjVel, slackObjVel,
+                                                                 initArmPos1, minArmPos1, maxArmPos1,
+                                                                 initArmPos2, minArmPos2, maxArmPos2)
 
         solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, xInit, lbx, ubx, lbg, ubg, cf, gf)
 
