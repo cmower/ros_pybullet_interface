@@ -59,26 +59,18 @@
       ]
     </rosparam>
 
-    <!-- List visual links (optional) -->
-    <rosparam param="visframes">
-      [
-<!--      'yang/ros_pybullet_interface/robot/end_effector_sponge',-->
-<!--      'yin/ros_pybullet_interface/robot/end_effector_sponge',-->
-      ]
-    </rosparam>
 
     <!-- full robot in bullet to read from the real robot -->
     <remap from="yin/ros_pybullet_interface/joint_state/target" to="yin/joint_states" />
     <remap from="yang/ros_pybullet_interface/joint_state/target" to="yang/joint_states" />
 
-    <!-- visual robot in bullet to read from the IK state of the robot -->
-    <!-- <remap from="yin_visual/joint_states" to="yin/ros_pybullet_interface/joint_state/target" />
-    <remap from="yang_visual/joint_states" to="yang/ros_pybullet_interface/joint_state/target" /> -->
-    <remap from="yin_visual/ros_pybullet_interface/joint_state/target" to="yin/ros_pybullet_interface/joint_state/target" />
-    <remap from="yang_visual/ros_pybullet_interface/joint_state/target" to="yang/ros_pybullet_interface/joint_state/target" />
-
 
   </node>
+
+
+  <!-- Flag that activates forwarding of commands to the robots -->
+  <arg name="command_real_robots" default="false"/>
+
 
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
@@ -89,12 +81,16 @@
 
     <param
         name="robot_config"
-        value="{ros_pybullet_interface}/configs/yin.yaml"
+        value="{ros_pybullet_interface}/configs/yin_visual.yaml"
         type="str"/>
 
-    <remap from="yin/joint_states" to="yin/ros_pybullet_interface/joint_state/current" />
+    <remap from="yin_visual/ros_pybullet_interface/joint_state/current"  to="yin/joint_states" />
+
+    <!-- command that activates the forwarding of commands to the robots -->
+    <remap if="$(arg command_real_robots)" from="yin_visual/PositionController/command"  to="yin/PositionController/command" />
 
   </node>
+
 
   <node
       name="ros_PyRBDL4dIK_interface2"
@@ -104,10 +100,13 @@
 
     <param
         name="robot_config"
-        value="{ros_pybullet_interface}/configs/yang.yaml"
+        value="{ros_pybullet_interface}/configs/yang_visual.yaml"
         type="str"/>
 
-        <remap from="yang/joint_states" to="yang/ros_pybullet_interface/joint_state/current" />
+        <remap from="yang_visual/ros_pybullet_interface/joint_state/current"  to="yang/joint_states" />
+
+        <!-- command that activates the forwarding of commands to the robots -->
+        <remap if="$(arg command_real_robots)" from="yang_visual/PositionController/command"  to="yang/PositionController/command" />
 
   </node>
 

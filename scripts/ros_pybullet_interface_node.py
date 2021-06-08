@@ -150,6 +150,9 @@ class ROSPyBulletInterface:
             self.shutdown()
             sys.exit(0)
 
+        # Setup ros timer to publish sensor readings
+        rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
@@ -240,10 +243,6 @@ class ROSPyBulletInterface:
                     )
                     self.robots_sensor_pubs.append(sensor_pubs)
                     self.robots[-1]['sensor_idx'] = len(self.robots_sensor_pubs) - 1
-
-            # Setup ros timer to publish sensor readings
-            rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
-
 
     def setupPyBulletVisualLinks(self, linkid):
         self.tfs[linkid] = {
