@@ -84,7 +84,7 @@
   <!-- Testing node trajectory publisher -->
   <node name="test_dual_arm_capturing_obj3D"
       pkg="ros_pybullet_interface"
-      type="temp_Real_World_test_dual_arm_capturing_obj3D.py"
+      type="test_dual_arm_capturing_obj3D.py"
       output="screen">
 
 <!--      <param-->
