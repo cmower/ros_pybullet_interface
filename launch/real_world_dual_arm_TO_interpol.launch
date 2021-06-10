@@ -26,6 +26,9 @@
         value="{ros_pybullet_interface}/configs/traj_sphere1.yaml"
         type="str"/>
 
+      <remap from="yang_visual/ros_pybullet_interface/end_effector/traj"  to="yang/ros_pybullet_interface/end_effector/traj" />
+
+
   </node>
 
   <node
@@ -39,6 +42,9 @@
         name="traj_config"
         value="{ros_pybullet_interface}/configs/traj_sphere2.yaml"
         type="str"/>
+
+     <remap from="yin_visual/ros_pybullet_interface/end_effector/traj"  to="yin/ros_pybullet_interface/end_effector/traj" />
+
 
   </node>
 

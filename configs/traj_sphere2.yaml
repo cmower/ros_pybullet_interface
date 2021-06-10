@@ -38,5 +38,4 @@ communication:
     msg_child_frame_id: 'ros_pybullet_interface/sphere2'
 
   listener:
-      topic: 'yin_visual/ros_pybullet_interface/end_effector/traj'
-      # topic: 'yin/ros_pybullet_interface/end_effector/traj'
+      topic: 'yin/ros_pybullet_interface/end_effector/traj'
