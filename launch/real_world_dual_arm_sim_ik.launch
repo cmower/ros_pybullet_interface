@@ -48,14 +48,14 @@
       [
       '{ros_pybullet_interface}/configs/sphere.yaml',
       '{ros_pybullet_interface}/configs/sphere2.yaml',
-      '{ros_pybullet_interface}/configs/target_obj_visual.yaml',
+      '{ros_pybullet_interface}/configs/target_obj_visual_demo.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
     <rosparam param="object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/target_obj.yaml',
+      '{ros_pybullet_interface}/configs/target_obj_demo.yaml',
       ]
     </rosparam>
 
@@ -87,7 +87,7 @@
     <remap from="yin_visual/ros_pybullet_interface/joint_state/current"  to="yin/joint_states" />
 
     <!-- command that activates the forwarding of commands to the robots -->
-    <remap if="$(arg command_real_robots)" from="yin_visual/PositionController/command"  to="yin/PositionController/command" />
+    <remap if="$(arg command_real_robots)" from="yin_visual/sim/PositionController/command"  to="yin/PositionController/command" />
 
   </node>
 
@@ -106,7 +106,7 @@
         <remap from="yang_visual/ros_pybullet_interface/joint_state/current"  to="yang/joint_states" />
 
         <!-- command that activates the forwarding of commands to the robots -->
-        <remap if="$(arg command_real_robots)" from="yang_visual/PositionController/command"  to="yang/PositionController/command" />
+        <remap if="$(arg command_real_robots)" from="yang_visual/sim/PositionController/command"  to="yang/PositionController/command" />
 
   </node>
 

@@ -33,7 +33,7 @@ WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base" # listen for the pose of the robot base
 
-EEBodyPointPosition = np.array([0.0, 0.0, 0.0]) #np.zeros(3)
+EEBodyPointPosition = np.array([0.0, 0.0, -0.0]) #np.zeros(3)
 
 # ------------------------------------------------------------
 #  REAL ROBOT
@@ -42,7 +42,7 @@ EEBodyPointPosition = np.array([0.0, 0.0, 0.0]) #np.zeros(3)
 # test on robot and compare with commit:
 # https://github.com/cmower/ros_pybullet_interface/commit/e3ce90b58998ea3078abda3f5733db883448bb6e
 NDOF = 7
-REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'PositionController/command' # commands joint states on this topic
+REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'sim/PositionController/command' # commands joint states on this topic
 
 
 class PyRBDLRobot:
