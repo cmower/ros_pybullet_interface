@@ -247,7 +247,8 @@ class TrajManager:
             if rot_repr == 'Euler':
                 rot_idx = self.mot_dim['rotation']['rotationvec_index']
                 for i in range(rot_idx[0],rot_idx[1]):
-                    interSeqTime, interSeq_I = interpol.interpolatePolyfit(time_vector[0,:],  traj_plan[i,:], polyOrder = 3, sampleFreq=self.interFreq, plotFlag=False, plotTitle="EulerVsTime")
+                    # interSeqTime, interSeq_I = interpol.interpolatePolyfit(time_vector[0,:],  traj_plan[i,:], polyOrder = 3, sampleFreq=self.interFreq, plotFlag=True, plotTitle="EulerVsTime")
+                    interSeqTime, interSeq_I = interpol.interpolateCubicSpline(time_vector[0,:],  traj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="EulerVsTime")
                     tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
                 row_len += 3
 
