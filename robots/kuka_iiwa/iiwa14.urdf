@@ -388,14 +388,14 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 -0.006"/>
             <geometry>
-                <cylinder length="0.015" radius="0.04"/>
+                <cylinder length="0.00001" radius="0.04"/>
             </geometry>
             <material name="Silver"/>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 -0.006"/>
             <geometry>
-                <cylinder length="0.015" radius="0.04"/>
+                <cylinder length="0.00001" radius="0.04"/>
             </geometry>
         </collision>
     </link>
