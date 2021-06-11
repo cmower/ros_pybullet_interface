@@ -53,7 +53,7 @@
     <!-- List collision objects (optional) -->
     <rosparam param="collision_object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/table.yaml',
+      '{ros_pybullet_interface}/configs/table_lwr_sliding.yaml',
       ]
     </rosparam>
 
@@ -156,5 +156,14 @@
         args="0.4 0.0 -0.06 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
         />
 
+        <!-- Serviec call to advance pybullet 10 steps:
+        rosservice call manual_pybullet_steps 10
+        
+            ./make_manual_pybullet_steps.py
+
+            import make_manual_pybullet_steps
+            make_manual_pybullet_steps.main(10)
+
+        -->
 
 </launch>
