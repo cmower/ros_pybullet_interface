@@ -63,7 +63,7 @@ def go2initial(robot_name=None, target_joint_position = np.asarray([0,0,0,0,0,0,
     msg.layout.dim[0].size   = NDOF
 
     # move robot to target config by publishing robot configuration states
-    for i in range(NUM_STEPS):
+    for i in range(4,NUM_STEPS):
 
         # add data as flattened numpy array
         msg.data = joint_values[i,:]
