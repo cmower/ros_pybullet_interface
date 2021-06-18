@@ -21,6 +21,12 @@ import sliding_pack
 NEW_TRAJ_ROBOT_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 CMD_DOF = 7
+GLB_ORI_OBJ = np.array([0., 0., 1.])
+GLB_ORI_ROBOT = np.array([0., 0., -1.])
+TABLE_HEIGHT = 0.
+SAFETY_HEIGHT = 0.1
+OBJECT_NAME = "ros_pybullet_interface/catch_box"
+ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
 
 class ROSSlidingMPC:
 
@@ -35,8 +41,8 @@ class ROSSlidingMPC:
 
         # start subcriber
         # TODO: subscriber to read object position and orientation
-        self.IK_listen_buff = tf2_ros.Buffer()
-        listener = tf2_ros.TransformListener(self.IK_listen_buff)
+        self.mpc_listen_buff = tf2_ros.Buffer()
+        tf_listener = tf2_ros.TransformListener(self.mpc_listen_buff)
 
         # Establish connection with planning node
         rospy.loginfo(f"{self.name}: Waiting for self.current_traj_topic topic")
@@ -109,7 +115,7 @@ class ROSSlidingMPC:
 
         time.sleep(2.0) # wait for initialisation to complete
 
-    def publishPose(self, pose):
+    def publishPose(self, event):
         """ Publish 6D information for the respective rigid body """
 
         # pose = self.trajManag.getNextWayPt()
@@ -148,17 +154,22 @@ class ROSSlidingMPC:
         if obj_pose != None:
             self.publishPose(obj_pose)
 
-    def readPose(self, body_name):
+    def readTFs(self, event):
+        """ Read robot and object pose periodically """
 
-        trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{body_name}/{END_EFFECTOR_FRAME_ID}", rospy.Time())
+        self._obj_pose = readPose(OBJECT_NAME)
+        self._robot_pose = readPose(ROBOT_NAME)
+
+    def readPose(self, frame_id_string):
+
+        trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME_ID, frame_id_string, rospy.Time())
         # replaces base_position = config['base_position']
-        end_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+        end_position = np.array([trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z])
         # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-        end_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
-                            trans.transform.rotation.w]
-        end_orient_rot = R.from_quat(end_orient_quat).as_matrix()
+        end_orient_quat = np.array([trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w])
+        end_pose = np.hstack((end_position, end_orient_quat))
 
-        return end_position, end_orient_rot
+        return end_pose
 
 
     def buildMPC(self):
@@ -168,23 +179,41 @@ class ROSSlidingMPC:
 
     def solveMPC(self):
 
-        # TODO: compute system state from robot and object poses
+        obj_pos_2d_read = self._obj_pose[0:2]
+        obj_ori_2d_read = np.linalg.norm(R.from_quat(self._obj_pose[3:]).as_rotvec())
+        robot_pos_2d_read = self._robot_pose[0:2]
+        # compute relative angle between pusher (robot) and slider (object)
+        psi_prov = self.optObj.dyn.psi(np.array(
+            obj_pos_2d_read[0],
+            obj_pos_2d_read[1],
+            obj_ori_2d_read,
+            0.]),
+            robot_pos_2d_read)
+        # build initial state for optimizer
+        x0 = np.array([
+            obj_pos_2d_read[0],
+            obj_pos_2d_read[1],
+            obj_ori_2d_read,
+            psi_prov])
         # we can store those as self._robot_pose and self._obj_pose
         # ---- solve problem ----
-        resultFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(idx, x0)
+        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(idx, x0)
         x_next = x_opt[:,0]
         robot_pos = x_next[0:3] + np.dot(dyn.R(x_next), np.array([-dyn.sl/2, -dyn.sl/2, 0]))
 
-        # TODO: fix the quaternions for the orientation of the robot and the object
-        self._cmd_obj_pose = np.array([x_next[0], x_next[1], 0., ...)
-        self._cmd_robot_pose = np.array([robot_pos[0], robot_pos[1], ...])
-
-
         # decode solution
-        if (solFlag):
-            timeArray, posArray, velArray, forceArray = self.HybOpt3D.decodeSol(xSolution, animateFlag=False)
-
-        self.trajObjPlan = np.vstack((np.vstack((timeArray, posArray)), velArray))
+        # compute object pose
+        obj_pose_2d = self.optObj.dyn.s(x_next)
+        obj_pos = np.hstack((obj_pose_2d[0:2], TABLE_HEIGHT))
+        obj_ori = R.from_rotvec(GLB_ORI_OBJ * pose_2d[2])
+        obj_ori_quat = obj_ori.as_quat()
+        self._cmd_obj_pose = np.hstack((obj_pos, obj_ori_quat))
+        # compute robot pose
+        robot_pos_2d = self.optObj.dyn.p(x_next)
+        robot_pos = np.hstack((robot_pos_2d, TABLE_HEIGHT+SAFETY_HEIGHT))
+        robot_ori = R.from_rotvec(GLB_ORI_ROBOT)
+        robot_ori_quat = robot_ori.as_quat()
+        self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
 
         return solFlag
 
@@ -209,6 +238,10 @@ if __name__=='__main__':
     # Create timer for periodic publisher
     dur = rospy.Duration(ROSSlidingMPC.dt)
     ROSSlidingMPC.writeCallbackTimer = rospy.Timer(dur, ROSSlidingMPC.publishPose)
+
+    # Create timer for periodic subscriber
+    dur = rospy.Duration(ROSSlidingMPC.dt)
+    ROSSlidingMPC.readTFSCallbackTimer = rospy.Timer(dur, ROSSlidingMPC.readTFs)
 
     if solFlag == True:
         rospy.loginfo(" TO problem solved!")
