@@ -2,8 +2,6 @@
 
 <launch>
 
-
-  <!-- Launch ROS-PyBullet interface -->
   <!-- Launch ROS-PyBullet interface -->
   <node
       name="ros_pybullet_interface"
@@ -29,7 +27,7 @@
                   -->
     <param
         name="pybullet_sim_self_loop"
-        value="2"
+        value="0"
         type="int"/>
 
     <param
@@ -60,16 +58,14 @@
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/box.yaml',
-      '{ros_pybullet_interface}/configs/box1.yaml',
-      '{ros_pybullet_interface}/configs/box2.yaml',
+      '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
     <rosparam param="object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/box3.yaml',
+      '{ros_pybullet_interface}/configs/sliding_box.yaml',
       ]
     </rosparam>
 
@@ -92,78 +88,24 @@
     </node>
 
     <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
-    <!-- <node
-        name="ros_JOAO_node"
+    <node
+        name="mpc_sliding_node"
         pkg="ros_pybullet_interface"
-        type="ros_JOAO_node.py"
+        type="test_ros_mpc_sliding.py"
         output="screen">
 
-      <param
-          name="???"
-          value="????"
-          type="str"/> -->
-
-      <!-- You need to publish into \tf :
-
-        in your init add:
-        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
-
-        define the following
-        header_frame_id: 'ros_pybullet_interface/world'
-        msg_child_frame_id: 'LWR/ros_pybullet_interface/end_effector/target'
-
-        with
-
-        msg = TransformStamped()
-        msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = self.msg_header_frame_id
-        msg.child_frame_id = self.msg_child_frame_id
-        msg.transform.translation.x = motion[0]
-        msg.transform.translation.y = motion[1]
-        msg.transform.translation.z = motion[2]
-        msg.transform.rotation.x = motion[3]
-        msg.transform.rotation.y = motion[4]
-        msg.transform.rotation.z = motion[5]
-        msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
-
-        # Publish msg
-        self.tfBroadcaster.sendTransform(msg)
-
-
-
-
-     </node> -->
+      <!-- <param -->
+      <!--     name="???" -->
+      <!--     value="????" -->
+      <!--     type="str"/> -1-> -->
+     </node>
 
 
   <node
       pkg="tf2_ros"
       type="static_transform_publisher"
       name="table_tf_broadcaster"
-      args="1.25 1.25 -0.075 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world table"
+      args="1.25 1.25 -0.075 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world ros_pybullet_interface/table_sliding"
       />
-
-    <node
-        pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="box1_tf_broadcaster"
-        args="-0.05 0.75 0.07 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box1"
-        />
-
-    <node
-        pkg="tf2_ros"
-        type="static_transform_publisher"
-        name="box2_tf_broadcaster"
-        args="0.4 0.0 -0.06 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/box2"
-        />
-
-        <!-- Serviec call to advance pybullet 10 steps:
-        rosservice call manual_pybullet_steps 10
-        
-            ./make_manual_pybullet_steps.py
-
-            import make_manual_pybullet_steps
-            make_manual_pybullet_steps.main(10)
-
-        -->
 
 </launch>

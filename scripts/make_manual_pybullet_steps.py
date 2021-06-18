@@ -17,6 +17,9 @@ def main():
     else:
        print(USAGE % sys.argv[0])
        return 0
+    makeStep(num_pybullet_steps)
+
+def makeStep(num_pybullet_steps):
 
     rospy.wait_for_service('manual_pybullet_steps', timeout=2)
     try:

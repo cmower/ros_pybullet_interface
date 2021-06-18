@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import sys
-import os
-import math
 import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import tf2_ros
 
 import rospy
 
@@ -13,20 +12,24 @@ from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
 # ros_pybullet funcs
 from ros_pybullet_interface.utils import ROOT_DIR
-import set_object_state_client
+import make_manual_pybullet_steps
 
 # --- import external library
 import sliding_pack
 
-NEW_TRAJ_ROBOT_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
-NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 CMD_DOF = 7
 GLB_ORI_OBJ = np.array([0., 0., 1.])
 GLB_ORI_ROBOT = np.array([0., 0., -1.])
 TABLE_HEIGHT = 0.
 SAFETY_HEIGHT = 0.1
-OBJECT_NAME = "ros_pybullet_interface/catch_box"
+# OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
+OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
+OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
+
 ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
+WORLD_FRAME = "ros_pybullet_interface/world"
+END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
+RUN_FREQ = 100
 
 class ROSSlidingMPC:
 
@@ -35,18 +38,9 @@ class ROSSlidingMPC:
         # Name of node
         self.name = rospy.get_name()
 
-        # start punlishers
-        self.new_Robottraj_publisher = rospy.Publisher(NEW_TRAJ_ROBOT_TOPIC, Float64MultiArray, queue_size=1)
-        self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
-
         # start subcriber
-        # TODO: subscriber to read object position and orientation
         self.mpc_listen_buff = tf2_ros.Buffer()
-        tf_listener = tf2_ros.TransformListener(self.mpc_listen_buff)
-
-        # Establish connection with planning node
-        rospy.loginfo(f"{self.name}: Waiting for self.current_traj_topic topic")
-        msgTraj = rospy.wait_for_message(self.current_traj_topic , Float64MultiArray)
+        _ = tf2_ros.TransformListener(self.mpc_listen_buff)
 
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
 
@@ -55,10 +49,14 @@ class ROSSlidingMPC:
         self.trajRobotPlan = np.empty(0)
 
         # Initialize internal variables
-        self._cmd_robot_pose = np.empty(CMD_DOF)
-        self._cmd_obj_pose = np.empty(CMD_DOF)
-        self._obj_pose = np.empty(CMD_DOF)
-        self._robot_pose = np.empty(CMD_DOF)
+        # self._cmd_robot_pose = np.empty(CMD_DOF)
+        # self._cmd_obj_pose = np.empty(CMD_DOF)
+        # self._obj_pose = np.empty(CMD_DOF)
+        # self._robot_pose = np.empty(CMD_DOF)
+        self._cmd_robot_pose = None
+        self._cmd_obj_pose = None
+        self._obj_pose = None
+        self._robot_pose = None
 
         ## Set Problem constants
         #  -------------------------------------------------------------------
@@ -81,7 +79,7 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # Computing Problem constants
         #  -------------------------------------------------------------------
-        dt = 1.0/freq # sampling time
+        self.dt = 1.0/freq # sampling time
         N = int(T*freq) # total number of iterations
         Nidx = int(N)
         # Nidx = 3
@@ -105,21 +103,18 @@ class ROSSlidingMPC:
         x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.2, N, N_MPC)
         #  -------------------------------------------------------------------
         # stack state and derivative of state
-        self.X_nom_val, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, dt)
+        self.X_nom_val, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
         #  ------------------------------------------------------------------
         # define optimization problem
         #  -------------------------------------------------------------------
         self.optObj = sliding_pack.nlp.MPC_nlpClass(
-                dyn, N_MPC, X_nom_val, dt=dt)
+                self.dyn, N_MPC, self.X_nom_val, dt=self.dt)
         #  -------------------------------------------------------------------
 
-        time.sleep(2.0) # wait for initialisation to complete
+        time.sleep(2.0)  # wait for initialisation to complete
 
-    def publishPose(self, event):
+    def publishPose(self, pose, frame_id):
         """ Publish 6D information for the respective rigid body """
-
-        # pose = self.trajManag.getNextWayPt()
-        # TODO: we need to get position and orientation of robot and object
 
         # if the pose plan is not empty
         if pose is not None:
@@ -127,42 +122,33 @@ class ROSSlidingMPC:
             # Pack pose msg
             msg = TransformStamped()
             msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = self.msg_header_frame_id
-            msg.child_frame_id = self.msg_child_frame_id
+            msg.header.frame_id = WORLD_FRAME
+            msg.child_frame_id = frame_id
             msg.transform.translation.x = pose[0]
             msg.transform.translation.y = pose[1]
             msg.transform.translation.z = pose[2]
             msg.transform.rotation.x = pose[3]
             msg.transform.rotation.y = pose[4]
             msg.transform.rotation.z = pose[5]
-            msg.transform.rotation.w = pose[6] # NOTE: the ordering here may be wrong
+            msg.transform.rotation.w = pose[6]
 
             # Publish msg
             self.tfBroadcaster.sendTransform(msg)
 
-    def publishRobotPose(self, event):
+    def publishRobotObjectPose(self, event):
 
-        robot_pose = self.np2DtoROSmsg(self.trajRobotPlan) # TODO: replace func for robot
-
-        if robot_pose != None:
-            self.publishPose(robot_pose)
-
-    def publishObjectPose(self, event):
-
-        obj_pose = self.np2DtoROSmsg(self.trajRobotPlan) # TODO: replace func for object
-
-        if obj_pose != None:
-            self.publishPose(obj_pose)
+        self.publishPose(self._cmd_robot_pose, END_EFFECTOR_TARGET_FRAME_ID)
+        self.publishPose(self._cmd_obj_pose, OBJECT_TARGET_FRAME_ID)
 
     def readTFs(self, event):
         """ Read robot and object pose periodically """
 
-        self._obj_pose = readPose(OBJECT_NAME)
-        self._robot_pose = readPose(ROBOT_NAME)
+        self._obj_pose = self.readPose(OBJECT_NAME)
+        self._robot_pose = self.readPose(ROBOT_NAME)
 
     def readPose(self, frame_id_string):
 
-        trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME_ID, frame_id_string, rospy.Time())
+        trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, frame_id_string, rospy.Time())
         # replaces base_position = config['base_position']
         end_position = np.array([trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z])
         # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
@@ -177,13 +163,16 @@ class ROSSlidingMPC:
         # build the problem
         self.optObj.buildProblem(self.solver_name, self.code_gen, self.no_printing)
 
-    def solveMPC(self):
+    def solveMPC(self, event):
+
+        if self._obj_pose is None or self._robot_pose is None:
+            return -1
 
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = np.linalg.norm(R.from_quat(self._obj_pose[3:]).as_rotvec())
         robot_pos_2d_read = self._robot_pose[0:2]
         # compute relative angle between pusher (robot) and slider (object)
-        psi_prov = self.optObj.dyn.psi(np.array(
+        psi_prov = self.optObj.dyn.psi(np.array([
             obj_pos_2d_read[0],
             obj_pos_2d_read[1],
             obj_ori_2d_read,
@@ -215,36 +204,33 @@ class ROSSlidingMPC:
         robot_ori_quat = robot_ori.as_quat()
         self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
 
+        # service stuff
+        make_manual_pybullet_steps.makeStep(1)
+
         return solFlag
 
 
 if __name__=='__main__':
 
+    time.sleep(2.)
     # --- setup the ros interface --- #
     rospy.init_node('test_ros_traj_opt_obj3D', anonymous=True)
     rospy.logwarn("ATTENTION: This node will not run without the impact-TO library!")
     # Initialize node class
     ROSSlidingMPC = ROSSlidingMPC()
 
-    freq = 100
-    PlanInterpWithTO = PlanInterpWithTO()
-    rospy.loginfo("%s: node started.", PlanInterpWithTO.name)
+    rospy.loginfo("%s: node started.", ROSSlidingMPC.name)
 
-    # build the TO problem
-    PlanInterpWithTO.buildTO()
-    # solve the TO problem
-    solFlag = PlanInterpWithTO.solveTO()
-
-    # Create timer for periodic publisher
-    dur = rospy.Duration(ROSSlidingMPC.dt)
-    ROSSlidingMPC.writeCallbackTimer = rospy.Timer(dur, ROSSlidingMPC.publishPose)
+    # build the MPC problem
+    ROSSlidingMPC.buildMPC()
 
     # Create timer for periodic subscriber
-    dur = rospy.Duration(ROSSlidingMPC.dt)
-    ROSSlidingMPC.readTFSCallbackTimer = rospy.Timer(dur, ROSSlidingMPC.readTFs)
+    dur_pubsub = rospy.Duration(1./RUN_FREQ)
+    ROSSlidingMPC.readTFSCallbackTimer = rospy.Timer(dur_pubsub, ROSSlidingMPC.readTFs)
 
-    if solFlag == True:
-        rospy.loginfo(" TO problem solved!")
-        set_object_state_client.main()
+    # Create timer for periodic publisher
+    ROSSlidingMPC.writePoseCallbackTimer = rospy.Timer(dur_pubsub, ROSSlidingMPC.publishRobotObjectPose)
+    dur = rospy.Duration(ROSSlidingMPC.dt)
+    ROSSlidingMPC.solveMPCCallbackTimer = rospy.Timer(dur, ROSSlidingMPC.solveMPC)
 
     rospy.spin()
