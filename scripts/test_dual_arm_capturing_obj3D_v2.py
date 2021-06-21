@@ -153,16 +153,16 @@ class PlanInterpWithTO:
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, 0.0, 0.6, 0/180*np.pi, 0, 0])
-            finObjPos = np.array([0., 0.0, 0.75, 0/180*np.pi, 0, 0])
+            initObjPos = np.array([0.0, -0.5, 0.3, 0/180*np.pi, 0, 0])
+            finObjPos = np.array([0., 0.0, 0.6, 0/180*np.pi, 0, 0])
             maxObjPos = np.array([2, 2, 2, 2*np.pi, 2*np.pi, 2*np.pi])
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
-            initObjPos = np.array([0, 0, 0.6, 0, 0, 0, 1])
+            initObjPos = np.array([0, 0, 0.5, 0, 0, 0, 1])
             finObjPos = np.array([0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
 
-        initObjVel = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0.0, 0.2, 0.0, 0.0, 0.0, 0.0])
         finObjVel = np.array([0., 0., 0., 0., 0., 0.])
         maxObjVel = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5])
 
@@ -195,8 +195,8 @@ class PlanInterpWithTO:
             # for i in range(n):
             #     posLimb1Array[3:, i] = endAttYang_Quat
             #     posLimb2Array[3:, i] = endAttYin_Quat
-            # posLimb1Array[3:7, 0] = endAttYang_Quat
-            # posLimb2Array[3:7, 0] = endAttYin_Quat
+            posLimb1Array[3:7, 0] = endAttYang_Quat
+            posLimb2Array[3:7, 0] = endAttYin_Quat
             # posLimb1Array[3:6, 0] = endAttYang
             # posLimb2Array[3:6, 0] = endAttYin
             self.trajObjPlan = np.vstack((np.vstack((timeArray, posBodyArray)), velBodyArray))
