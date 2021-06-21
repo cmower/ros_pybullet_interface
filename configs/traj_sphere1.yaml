@@ -3,7 +3,7 @@
 #
 
 motion_dimensions:
-  number: 6
+  number: 7
 
   trans:
     translationX:
@@ -13,18 +13,18 @@ motion_dimensions:
     translationZ:
     translationZ_index: 2
 
-  rotation:
-    rotation_repr: 'None'
-    rotationvec: [ 1.0, 0.0, 0.0 ]  # unit vector
-    rotationangle: 180.0
-    rotationvec_index: [ ]
+#  rotation:
+#    rotation_repr: 'None'
+#    rotationvec: [ 1.0, 0.0, 0.0 ]  # unit vector
+#    rotationangle: 180.0
+#    rotationvec_index: [ ]
 
 #  #  'Quat' and [3,7] for quaternion, 'Euler' and [3,6] for euler angles
-#  rotation:
-#    rotation_repr: 'Quat'
-#    rotationvec:
-#    rotationangle:
-#    rotationvec_index: [ 3,7 ]
+  rotation:
+    rotation_repr: 'Quat'
+    rotationvec:
+    rotationangle:
+    rotationvec_index: [ 3,7 ]
 
 
 interpolation:
