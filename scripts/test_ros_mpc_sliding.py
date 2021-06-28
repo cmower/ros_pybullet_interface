@@ -22,8 +22,8 @@ GLB_ORI_OBJ = np.array([0., 0., 1.])
 GLB_ORI_ROBOT = np.array([0., 0., -1.])
 TABLE_HEIGHT = 0.
 SAFETY_HEIGHT = 0.1
-OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
-# OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
+# OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
+OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
 OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
 
 ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
@@ -193,7 +193,9 @@ class ROSSlidingMPC:
         # decode solution
         # compute object pose
         obj_pose_2d = self.optObj.dyn.s(x_next)
-        obj_pos = np.hstack((obj_pose_2d[0:2], TABLE_HEIGHT))
+        print(obj_pose_2d[0:2])
+        print( TABLE_HEIGHT)
+        obj_pos = np.hstack((obj_pose_2d[0:2], [TABLE_HEIGHT]))
         obj_ori = R.from_rotvec(GLB_ORI_OBJ * pose_2d[2])
         obj_ori_quat = obj_ori.as_quat()
         self._cmd_obj_pose = np.hstack((obj_pos, obj_ori_quat))

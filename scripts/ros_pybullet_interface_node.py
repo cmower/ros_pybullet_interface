@@ -302,9 +302,14 @@ class ROSPyBulletInterface:
             self.tfs[tf_frame_id] = {
                 'received': False, 'position': None, 'orientation': None
             }
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + str(len(self.static_collision_objects))
             self.dynamic_collisionvisual_objects.append({
                 'object': obj,
                 'tf_frame_id': tf_frame_id,
+                'object_name': name,
             })
         else:
             obj.setBasePositionAndOrientation(
@@ -522,17 +527,17 @@ class ROSPyBulletInterface:
                     )
                 )
         for obj in self.dynamic_collisionvisual_objects:
-            object_id = obj.getObjectID()
-            print(obj)
-            pos, orient = pybullet_interface.getObjectPosOrient(object_id)
-            self.tf_broadcaster.sendTransform(
-                    packTransformStamped(
-                        WORLD_FRAME_ID,
-                        f"ros_pybullet_interface/{obj['object_name']}",
-                        pos,
-                        orient
+            if 'object_name' in obj:
+                object_id = obj['object'].getObjectID()
+                pos, orient = pybullet_interface.getObjectPosOrient(object_id)
+                self.tf_broadcaster.sendTransform(
+                        packTransformStamped(
+                            WORLD_FRAME_ID,
+                            f"ros_pybullet_interface/{obj['object_name']}",
+                            pos,
+                            orient
+                        )
                     )
-                )
 
     def visualizeLinks(self):
         for linkid in self.visframes:
