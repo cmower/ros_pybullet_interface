@@ -18,17 +18,17 @@ import make_manual_pybullet_steps
 import sliding_pack
 
 CMD_DOF = 7
-GLB_ORI_OBJ = np.array([0., 0., 1.])
+# GLB_ORI_OBJ = np.array([0., 0., 1.])
 GLB_ORI_ROBOT = np.array([0., 0., -1.])
-TABLE_HEIGHT = 0.
-SAFETY_HEIGHT = 0.1
+TABLE_HEIGHT = 0.2
+SAFETY_HEIGHT = 0.3
 # OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
 OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
 OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
 
 ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
 WORLD_FRAME = "ros_pybullet_interface/world"
-END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
+END_EFFECTOR_TARGET_FRAME_ID = 'LWR/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 RUN_FREQ = 100
 
 class ROSSlidingMPC:
@@ -183,28 +183,29 @@ class ROSSlidingMPC:
             robot_pos_2d_read)
         # build initial state for optimizer
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, psi_prov.elements()[0]]
-        # we can store those as self._robot_pose and self._obj_pose
-        # ---- solve problem ----
+        # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
         self.idx_nom += 1
-        x_next = x_opt[:,0]
-        robot_pos = x_next[0:3] + np.dot(self.optObj.dyn.R(x_next), np.array([-self.optObj.dyn.sl/2, -self.optObj.dyn.sl/2, 0]))
+        x_next = x_opt[:,1]
 
         # decode solution
         # compute object pose
-        obj_pose_2d = self.optObj.dyn.s(x_next)
-        print(obj_pose_2d[0:2])
-        print( TABLE_HEIGHT)
-        obj_pos = np.hstack((obj_pose_2d[0:2], [TABLE_HEIGHT]))
-        obj_ori = R.from_rotvec(GLB_ORI_OBJ * pose_2d[2])
+        obj_pose_2d = np.array(self.optObj.dyn.s(x_next).elements())
+        # obj_pos = np.vstack((obj_pose_2d[0:2], TABLE_HEIGHT)).T[0]
+        obj_pos = np.hstack((obj_pose_2d[0:2], TABLE_HEIGHT))
+        GLB_ORI_OBJ = np.array([0., 0., obj_pose_2d[2]])
+        obj_ori = R.from_rotvec(GLB_ORI_OBJ)
         obj_ori_quat = obj_ori.as_quat()
         self._cmd_obj_pose = np.hstack((obj_pos, obj_ori_quat))
         # compute robot pose
-        robot_pos_2d = self.optObj.dyn.p(x_next)
+        robot_pos_2d = np.array(self.optObj.dyn.p(x_next).elements())
         robot_pos = np.hstack((robot_pos_2d, TABLE_HEIGHT+SAFETY_HEIGHT))
         robot_ori = R.from_rotvec(GLB_ORI_ROBOT)
         robot_ori_quat = robot_ori.as_quat()
         self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
+        print('robot pos: ', robot_pos)
+        print('obj pos: ', obj_pos)
+        input()
 
         # service stuff
         make_manual_pybullet_steps.makeStep(1)

@@ -27,7 +27,7 @@
                   -->
     <param
         name="pybullet_sim_self_loop"
-        value="0"
+        value="2"
         type="int"/>
 
     <param

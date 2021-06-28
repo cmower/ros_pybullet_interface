@@ -302,6 +302,11 @@ class ROSPyBulletInterface:
             self.tfs[tf_frame_id] = {
                 'received': False, 'position': None, 'orientation': None
             }
+            if 'position' in config['link_state'] and 'orientation_eulerXYZ' in config['link_state']:
+                obj.setBasePositionAndOrientation(
+                    config['link_state']['position'],
+                    np.deg2rad(config['link_state']['orientation_eulerXYZ'])
+                )
             if 'name' in config:
                 name = config['name']
             else:
