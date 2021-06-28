@@ -521,6 +521,18 @@ class ROSPyBulletInterface:
                         orient
                     )
                 )
+        for obj in self.dynamic_collisionvisual_objects:
+            object_id = obj.getObjectID()
+            print(obj)
+            pos, orient = pybullet_interface.getObjectPosOrient(object_id)
+            self.tf_broadcaster.sendTransform(
+                    packTransformStamped(
+                        WORLD_FRAME_ID,
+                        f"ros_pybullet_interface/{obj['object_name']}",
+                        pos,
+                        orient
+                    )
+                )
 
     def visualizeLinks(self):
         for linkid in self.visframes:
