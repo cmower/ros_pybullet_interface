@@ -22,8 +22,8 @@ GLB_ORI_OBJ = np.array([0., 0., 1.])
 GLB_ORI_ROBOT = np.array([0., 0., -1.])
 TABLE_HEIGHT = 0.
 SAFETY_HEIGHT = 0.1
-# OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
-OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
+OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
+# OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
 OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
 
 ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
@@ -47,6 +47,9 @@ class ROSSlidingMPC:
         # Initialize data stream
         self.trajObjPlan = np.empty(0)
         self.trajRobotPlan = np.empty(0)
+
+        # Nominal trajectory indexing 
+        self.idx_nom = 0
 
         # Initialize internal variables
         # self._cmd_robot_pose = np.empty(CMD_DOF)
@@ -179,16 +182,13 @@ class ROSSlidingMPC:
             0.]),
             robot_pos_2d_read)
         # build initial state for optimizer
-        x0 = np.array([
-            obj_pos_2d_read[0],
-            obj_pos_2d_read[1],
-            obj_ori_2d_read,
-            psi_prov])
+        x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, psi_prov.elements()[0]]
         # we can store those as self._robot_pose and self._obj_pose
         # ---- solve problem ----
-        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(idx, x0)
+        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
+        self.idx_nom += 1
         x_next = x_opt[:,0]
-        robot_pos = x_next[0:3] + np.dot(dyn.R(x_next), np.array([-dyn.sl/2, -dyn.sl/2, 0]))
+        robot_pos = x_next[0:3] + np.dot(self.optObj.dyn.R(x_next), np.array([-self.optObj.dyn.sl/2, -self.optObj.dyn.sl/2, 0]))
 
         # decode solution
         # compute object pose

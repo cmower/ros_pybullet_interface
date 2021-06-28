@@ -1,5 +1,7 @@
 file_name: '{ros_pybullet_interface}/objects/box.obj'
 
+name: 'visual_sliding_box'
+
 # Basic parameters
 mesh_scale: [0.125, 0.125, 0.075]
 rgba_color: [0.3, 0.3, 0.3, 0.5]
