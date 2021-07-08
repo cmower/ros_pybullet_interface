@@ -1,9 +1,9 @@
-file_name: '{ros_pybullet_interface}/objects/box.obj'
+file_name: '{ros_pybullet_interface}/objects/box_sliding.obj'
 
 name: 'sliding_box'
 
 # Basic parameters
-mesh_scale: [0.125, 0.125, 0.075]
+mesh_scale: [0.2, 0.2, 0.1]
 rgba_color: [0.3, 0.8, 0.3, 1.0]
 base_mass: 1.0
 
@@ -35,7 +35,7 @@ link_state:
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
   #
-  position: [0, -0.6, 0.3]
+  position: [0, -0.6, -0.055]
   orientation_eulerXYZ: [0.0, 0.0, 0.0]
 
-  # tf_frame_id: "ros_pybullet_interface/sliding_box"
+  tf_frame_id: "ros_pybullet_interface/sliding_box"

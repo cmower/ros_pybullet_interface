@@ -1,7 +1,7 @@
 file_name: '{ros_pybullet_interface}/objects/whiteboard.obj'
 
 # Basic parameters
-mesh_scale: [5.0, 7.0, 4.0]
+mesh_scale: [5.0, 7.0, 1.0]
 rgba_color: [0.52, 0.36, 0.25, 1]
 # rgba_color: [0.6, 0.55, 0., 1]
 base_mass: -1.0
