@@ -60,36 +60,13 @@
 
   </node>
 
-
   <node
-      name="ros_traj_consum_interpol_interface2"
+      name="read_publish_object_state"
       pkg="ros_pybullet_interface"
-      type="ros_traj_consum_interpol_interface_node.py"
+      type="read_publish_object_estimation.py"
+      clear_params="true"
       output="screen">
-
-    <!-- Traj config (required) -->
-    <param
-        name="traj_config"
-        value="{ros_pybullet_interface}/configs/traj_object3D_freemotion.yaml"
-        type="str"/>
-
   </node>
-
-
-  <!-- Testing node trajectory publisher -->
-  <node name="test_ros_traj_opt_obj3D"
-      pkg="ros_pybullet_interface"
-      type="test_ros_traj_opt_obj3D.py"
-      output="screen">
-
-<!--      <param-->
-<!--          name="rotation_repr"-->
-<!--          value="Quat"-->
-<!--          type="str"/>-->
-
-  </node>
-
-
 
 
 

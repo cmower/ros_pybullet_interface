@@ -577,6 +577,12 @@ class ROSPyBulletInterface:
         # or (as we might want to manually control the rate of steps)
         self.step()
 
+        for obj in self.objects:
+            # print(pybullet_interface.getObjectPosOrient(obj['object_id']))
+            print(pybullet_interface.getObjectLinAngVel(obj['object_id']))
+
+
+
     def spin(self):
         try:
             rospy.spin()
