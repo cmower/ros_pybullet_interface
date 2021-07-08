@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- Testing node cartesian poistions (publisher) -->
+  <node
+      name="go_init_sliding_pose"
+      pkg="ros_pybullet_interface"
+      type="go_init_sliding_pose.py"
+      output="screen">
+
+      <param
+            name="robot_name"
+            value="LWR"
+            type="str"/>
+
+      <param
+            name="target_name"
+            value="sphere"
+            type="str"/>
+  </node>
+
+</launch>

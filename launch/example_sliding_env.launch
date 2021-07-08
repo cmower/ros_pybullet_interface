@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- Launch ROS-PyBullet interface -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface_node.py"
+      clear_params="true"
+      output="screen">
+
+      <!-- Pybullet simulation config (required) -->
+      <!-- Flag to indicate how bullet simulation step is
+           synced with ROS control loop.
+           Options:
+                0:  pybullet executes all simulation steps in a fixed frequency
+                       This can be used to simulate real world
+                       ( use simulation freqency > 250 Hz)
+                1: pybullet executes every simulation step when commanded by ROS node
+                       This can be used to execute one simulation step after one control/interface step
+                       Useful for debugging, but not realistic
+                       (specially, if control loop freqency is < 250 Hz)
+                2: pybullet executes a simulation step when ROS srv manualPybulletSteps is called
+                   This can be used to execute one simulation step after one control/interface step
+                   Useful for debugging MPC-like algorithms, but not realistic
+                  -->
+    <param
+        name="pybullet_sim_self_loop"
+        value="2"
+        type="int"/>
+
+    <param
+       name="Z_gravity"
+       value="-9.81"
+       type="double"/>
+
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/kuka_push.yaml",
+      ]
+    </rosparam>
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
+        type="str"/>
+
+    <!-- List collision objects (optional) -->
+    <rosparam param="collision_object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/table_lwr_sliding.yaml',
+      ]
+    </rosparam>
+
+    <!-- List visual objects (optional) -->
+    <rosparam param="visual_object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
+      ]
+    </rosparam>
+
+    <!-- List objects (optional) -->
+    <rosparam param="object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/sliding_box.yaml',
+      ]
+    </rosparam>
+
+
+  </node>
+
+
+    <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+    <node
+        name="ros_PyRBDL4dIK_interface"
+        pkg="ros_pybullet_interface"
+        type="ros_rbdl_IK_interace_node.py"
+        output="screen">
+
+      <param
+          name="robot_config"
+          value="{ros_pybullet_interface}/configs/kuka_push.yaml"
+          type="str"/>
+    </node>
+
+    <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+    <!-- <node -->
+    <!--     name="mpc_sliding_node" -->
+    <!--     pkg="ros_pybullet_interface" -->
+    <!--     type="test_ros_mpc_sliding.py" -->
+    <!--     required="true" -->
+    <!--     output="screen"> -->
+    <!--     <!-1- List visual objects (optional) -1-> -->
+    <!--     <rosparam param="visual_object_config_file_names"> -->
+    <!--       [ -->
+    <!--       '{ros_pybullet_interface}/configs/visual_sliding_box.yaml', -->
+    <!--       ] -->
+    <!--     </rosparam> -->
+    <!--  </node> -->
+
+
+  <node
+      pkg="tf2_ros"
+      type="static_transform_publisher"
+      name="table_tf_broadcaster"
+      args="1.25 1.25 -0.075 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world ros_pybullet_interface/table_sliding"
+      />
+
+  <!-- Testing node cartesian poistions (publisher) -->
+  <!-- <node -->
+  <!--     name="go_init_sliding_pose" -->
+  <!--     pkg="ros_pybullet_interface" -->
+  <!--     type="go_init_sliding_pose.py" -->
+  <!--     output="screen"> -->
+
+  <!--     <param -->
+  <!--           name="robot_name" -->
+  <!--           value="LWR" -->
+  <!--           type="str"/> -->
+
+  <!--     <param -->
+  <!--           name="target_name" -->
+  <!--           value="sphere" -->
+  <!--           type="str"/> -->
+  <!-- </node> -->
+
+</launch>
