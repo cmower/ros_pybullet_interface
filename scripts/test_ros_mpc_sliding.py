@@ -73,7 +73,7 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        a = 0.2 # side dimension of the square slider in meters
+        a = 0.17 # side dimension of the square slider in meters
         T = 12 # time of the simulation is seconds
         freq = 50 # number of increments per second
         r_pusher = 0.015 # radius of the cylindrical pusher in meter
@@ -99,8 +99,9 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # define system dynamics
         #  -------------------------------------------------------------------
+        self.sliding_mode = 'sticking_contact'
         self.dyn = sliding_pack.dyn.System_square_slider_quasi_static_ellipsoidal_limit_surface(
-                mode='sliding_contact',
+                mode=self.sliding_mode,
                 slider_dim=a,
                 pusher_radious=r_pusher,
                 miu=miu_p,
@@ -123,8 +124,14 @@ class ROSSlidingMPC:
         #  ------------------------------------------------------------------
         # define optimization problem
         #  -------------------------------------------------------------------
-        W_x = cs.diag(cs.SX([1.0, 1.0, 0.01, 0.0]))
-        W_u = cs.diag(cs.SX([0., 0., 0., 0.]))
+        if self.sliding_mode == 'sliding_contact':
+            W_x = cs.diag(cs.SX([1.0, 1.0, 0.01, 0.0]))
+            W_u = cs.diag(cs.SX([0., 0., 0., 0.]))
+        elif self.sliding_mode == 'sticking_contact':
+            W_x = cs.diag(cs.SX([1.0, 1.0, 0.01, 0.]))
+            W_u = cs.diag(cs.SX([0., 0.]))
+        else:
+            rospy.logerr('Wrong specification of sliding mode')
         self.optObj = sliding_pack.nlp.MPC_nlpClass(
                 self.dyn, N_MPC, W_x, W_u, self.X_nom_val, dt=self.dt)
         #  -------------------------------------------------------------------
@@ -187,22 +194,25 @@ class ROSSlidingMPC:
             return -1
 
         obj_pos_2d_read = self._obj_pose[0:2]
-        # obj_ori_2d_read = np.linalg.norm(R.from_quat(self._obj_pose[3:]).as_rotvec())-1.57079
-        obj_ori_2d_read = np.linalg.norm(R.from_quat(self._obj_pose[3:]).as_rotvec())
-        robot_pos_2d_read = self._robot_pose[0:2]
+        obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
+        # robot_pos_2d_read = self._robot_pose[0:2]
         # compute relative angle between pusher (robot) and slider (object)
-        psi_prov = self.optObj.dyn.psi(np.array([
-            obj_pos_2d_read[0],
-            obj_pos_2d_read[1],
-            obj_ori_2d_read,
-            0.]),
-            robot_pos_2d_read)
-        # build initial state for optimizer
+        # psi_prov = self.optObj.dyn.psi(np.array([
+        #     obj_pos_2d_read[0],
+        #     obj_pos_2d_read[1],
+        #     obj_ori_2d_read,
+        #     0.]),
+        #     robot_pos_2d_read)
+        # build initial state for optimizer: TODO: get this from dyn function
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, 0.]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
         self.idx_nom += 1
         x_next = x_opt[:, 1]
+        print('*******************')
+        print(x0)
+        print(self.X_nom_val[:, self.idx_nom].T)
+        print(x_next)
 
         # decode solution
         # compute object pose
@@ -215,25 +225,13 @@ class ROSSlidingMPC:
         GLB_ORI_OBJ = np.array([0., 0., obj_pose_2d[2]])
         obj_ori = R.from_rotvec(GLB_ORI_OBJ)
         obj_ori_quat = obj_ori.as_quat()
-        print('*******************')
-        print(self.idx_nom)
-        print(self.X_nom_val[:, self.idx_nom])
-        print(self._obj_pose)
-        print('---------------------')
-        print(x0)
-        print(x_next)
         self._cmd_obj_pose = np.hstack((obj_pos, obj_ori_quat))
         # compute robot pose
         robot_pos_2d = np.array(self.optObj.dyn.p(x_next).elements())
         robot_pos = np.hstack((robot_pos_2d, TABLE_HEIGHT+SAFETY_HEIGHT))
         robot_ori = R.from_matrix(GLB_ORI_ROBOT)
         robot_ori_quat = robot_ori.as_quat()
-        print('xxxxxxxxxxxxxxxxxxxxxxx')
-        print(robot_ori.as_matrix())
-        print(robot_ori_quat)
         self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
-        # print('nom obj pos: ', self.X_nom_val[:, self.idx_nom])
-        # print('obj pose: ', obj_pose_2d)
         if self.idx_nom > self.Nidx:
             rospy.signal_shutdown("End of nominal trajectory")
         else:
