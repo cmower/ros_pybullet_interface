@@ -407,7 +407,7 @@ class ROSPyBulletInterface:
 
             obj.setBasePositionAndOrientation(
                 config['link_state']['position'],
-                config['link_state']['orientation_eulerXYZ'],
+                np.deg2rad(config['link_state']['orientation_eulerXYZ']),
             )
 
             # book-keeping object names and ids
