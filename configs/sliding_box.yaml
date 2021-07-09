@@ -35,7 +35,9 @@ link_state:
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
   #
-  position: [0, -0.6, -0.055]
-  orientation_eulerXYZ: [0.0, 0.0, 0.0]
+  # position: [0, -0.6, -0.055]
+  position: [0.5, 0.0, -0.055]
+  # orientation_eulerXYZ: [0., 0., 1.5707]
+  orientation_eulerXYZ: [0., 0., 90.]
 
   tf_frame_id: "ros_pybullet_interface/sliding_box"

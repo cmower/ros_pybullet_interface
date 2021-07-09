@@ -26,8 +26,8 @@ GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 0., -1.]])
 TABLE_HEIGHT = -0.055
 SAFETY_HEIGHT = 0.1
-# OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
-OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
+OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
+# OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
 OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
 
 ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
@@ -193,6 +193,9 @@ class ROSSlidingMPC:
         if self._obj_pose is None or self._robot_pose is None:
             return -1
 
+        # TODO: have the virtual obj follow the nom traj
+        # TODO: start the motion with a wrong angle
+        # TODO: change to sliding motion
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
         # robot_pos_2d_read = self._robot_pose[0:2]
