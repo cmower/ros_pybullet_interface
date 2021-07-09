@@ -125,7 +125,7 @@ class PlanInterpWithTO:
             finObjPos = np.array([-1.0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000])
 
-        initObjVel = np.array([0.0, 0.3, 0.0, 0.1, 0.1, 0.1])
+        initObjVel = np.array([0.3, 0.0, 0.0, 0.1, 0.1, 0.1])
         finObjVel = np.array([0, 0, 0, 0, 0, 0])
         maxObjVel = np.array([10, 10, 10, 10, 10, 10])
 
