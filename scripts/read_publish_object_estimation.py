@@ -13,6 +13,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 
 WORLD_FRAME_ID = "ros_pybullet_interface/world"
 TARGET_FRAME_ID = "ros_pybullet_interface/target"
+PUBLISHER_TOPIC_NAME = "target/sensor/pose"
 FREQ = 100
 
 class ObjectRepublisher():
@@ -24,8 +25,7 @@ class ObjectRepublisher():
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
 
         # Setup ros publishers
-        publisher_topic_name = f"target/sensor/pose"
-        self.target_state_publisher = rospy.Publisher(publisher_topic_name, PoseWithCovarianceStamped, queue_size=1)
+        self.target_state_publisher = rospy.Publisher(PUBLISHER_TOPIC_NAME, PoseWithCovarianceStamped, queue_size=1)
 
         #  info about the node
         self.name = "Object read-state and publish to Kalman"
