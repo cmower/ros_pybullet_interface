@@ -41,7 +41,7 @@ class TestIK:
 
         self.eePos_traj = np.zeros((1, 3))
         self.eePos_traj[0,0] = 0.5
-        self.eePos_traj[0,1] = -0.118
+        self.eePos_traj[0,1] = -0.13
         self.eePos_traj[0,2] = 0.05
 
 

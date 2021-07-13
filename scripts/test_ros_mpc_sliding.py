@@ -20,7 +20,6 @@ import make_manual_pybullet_steps
 import sliding_pack
 
 CMD_DOF = 7
-# GLB_ORI_OBJ = np.array([0., 0., 1.])
 GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 1., 0.],
                           [0., 0., -1.]])
@@ -56,10 +55,10 @@ class ROSSlidingMPC:
         # Nominal trajectory indexing 
         self.idx_nom = 0
 
-        # load visual object initial position
-        visual_obj_file_name = rospy.get_param('~visual_object_config_file_names', [])[0]
-        visual_obj_config = loadYAMLConfig(visual_obj_file_name)
-        visual_obj_pos0 = visual_obj_config['link_state']['position']
+        # load object initial position
+        obj_file_name = rospy.get_param('~object_config_file_names', [])[0]
+        obj_config = loadYAMLConfig(obj_file_name)
+        obj_pos0 = obj_config['link_state']['position']
 
         # Initialize internal variables
         # self._cmd_robot_pose = np.empty(CMD_DOF)
@@ -68,18 +67,18 @@ class ROSSlidingMPC:
         # self._robot_pose = np.empty(CMD_DOF)
         self._cmd_robot_pose = None
         self._cmd_obj_pose = None
+        self._cmd_visual_obj_pose = None
         self._obj_pose = None
         self._robot_pose = None
 
         # Set Problem constants
         #  -------------------------------------------------------------------
         a = 0.17 # side dimension of the square slider in meters
-        T = 12 # time of the simulation is seconds
+        T = 5 # time of the simulation is seconds
         freq = 50 # number of increments per second
         r_pusher = 0.015 # radius of the cylindrical pusher in meter
-        miu_p = 0.2  # friction between pusher and slider
-        N_MPC = 15 # time horizon for the MPC controller
-        x_init_val = [-0.01, 0.03, 30*(np.pi/180.), 0]
+        miu_p = 0.1  # friction between pusher and slider
+        N_MPC = 50 # time horizon for the MPC controller
         f_lim = 0.3 # limit on the actuations
         psi_dot_lim = 3.0 # limit on the actuations
         psi_lim = 40*(np.pi/180.0)
@@ -99,7 +98,7 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # define system dynamics
         #  -------------------------------------------------------------------
-        self.sliding_mode = 'sticking_contact'
+        self.sliding_mode = 'sliding_contact'
         self.dyn = sliding_pack.dyn.System_square_slider_quasi_static_ellipsoidal_limit_surface(
                 mode=self.sliding_mode,
                 slider_dim=a,
@@ -113,8 +112,8 @@ class ROSSlidingMPC:
         ## Generate Nominal Trajectory
         #  -------------------------------------------------------------------
         x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.0, 0.5, N, N_MPC)
-        x0_nom = x0_nom + visual_obj_pos0[0]
-        x1_nom = x1_nom + visual_obj_pos0[1]
+        x0_nom = x0_nom + obj_pos0[0]
+        x1_nom = x1_nom + obj_pos0[1]
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(-np.pi/2, 3*np.pi/2, 0.1, N, N_MPC)
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.2, N, N_MPC)
@@ -163,7 +162,7 @@ class ROSSlidingMPC:
     def publishRobotObjectPose(self, event):
 
         self.publishPose(self._cmd_robot_pose, END_EFFECTOR_TARGET_FRAME_ID)
-        self.publishPose(self._cmd_obj_pose, OBJECT_TARGET_FRAME_ID)
+        self.publishPose(self._cmd_visual_obj_pose, OBJECT_TARGET_FRAME_ID)
 
     def readTFs(self, event):
         """ Read robot and object pose periodically """
@@ -193,8 +192,6 @@ class ROSSlidingMPC:
         if self._obj_pose is None or self._robot_pose is None:
             return -1
 
-        # TODO: have the virtual obj follow the nom traj
-        # TODO: start the motion with a wrong angle
         # TODO: change to sliding motion
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
@@ -225,10 +222,18 @@ class ROSSlidingMPC:
         else:
             obj_pose_2d = np.array(self.optObj.dyn.s(x_next).elements())
         obj_pos = np.hstack((obj_pose_2d[0:2], TABLE_HEIGHT))
-        GLB_ORI_OBJ = np.array([0., 0., obj_pose_2d[2]])
-        obj_ori = R.from_rotvec(GLB_ORI_OBJ)
+        obj_ori = np.array([0., 0., obj_pose_2d[2]])
+        obj_ori = R.from_rotvec(obj_ori)
         obj_ori_quat = obj_ori.as_quat()
         self._cmd_obj_pose = np.hstack((obj_pos, obj_ori_quat))
+        # set visula object pose
+        # TODO: later replace with call of func from dyn class
+        visual_obj_pose_2d = np.array(self.X_nom_val[:, self.idx_nom].T)[0]
+        visual_obj_pos = np.hstack((visual_obj_pose_2d[0:2], TABLE_HEIGHT))
+        visual_obj_ori = np.array([0., 0., visual_obj_pose_2d[2]])
+        visual_obj_ori = R.from_rotvec(visual_obj_ori)
+        visual_obj_ori_quat = visual_obj_ori.as_quat()
+        self._cmd_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
         # compute robot pose
         robot_pos_2d = np.array(self.optObj.dyn.p(x_next).elements())
         robot_pos = np.hstack((robot_pos_2d, TABLE_HEIGHT+SAFETY_HEIGHT))

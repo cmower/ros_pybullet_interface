@@ -10,7 +10,7 @@
         required="true"
         output="screen">
         <!-- List visual objects (optional) -->
-        <rosparam param="visual_object_config_file_names">
+        <rosparam param="object_config_file_names">
           [
           '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
           ]

@@ -8,15 +8,15 @@ rgba_color: [0.3, 0.8, 0.3, 1.0]
 base_mass: 1.0
 
 # Dynamic parameters
-lateral_friction: 1.0
-spinning_friction: 0.0
-rolling_friction: 0.0
-restitution: 0.0
+lateral_friction: 0.1
+spinning_friction: 0.
+rolling_friction: 0.
+restitution: 0.5
 linear_damping: 0.04
 angular_damping: 0.04
 contact_stiffness: 2000.0
 contact_damping: 0.7
-localInertiaDiagonal: [1.0, 1.0, 1.0]
+localInertiaDiagonal: [0.0125, 0.0125, 0.0125]
 
 link_state:
 
@@ -38,6 +38,6 @@ link_state:
   # position: [0, -0.6, -0.055]
   position: [0.5, 0.0, -0.055]
   # orientation_eulerXYZ: [0., 0., 1.5707]
-  orientation_eulerXYZ: [0., 0., 90.]
+  orientation_eulerXYZ: [0., 0., 110.]
 
   tf_frame_id: "ros_pybullet_interface/sliding_box"

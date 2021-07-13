@@ -8,13 +8,13 @@ base_mass: -1.0
 
 # Dynamic parameters
 lateral_friction: 1.0
-spinning_friction: 0.0
-rolling_friction: 0.0
-restitution: 0.95
+spinning_friction: 0.
+rolling_friction: 0.
+restitution: 0.5
 linear_damping: 0.04
 angular_damping: 0.04
 contact_stiffness: 2000.0
-contact_damping: 50.0
+contact_damping: 0.7
 
 link_state:
 
