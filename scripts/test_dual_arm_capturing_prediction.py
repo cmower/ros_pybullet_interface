@@ -276,7 +276,7 @@ if __name__=='__main__':
 
     ori_representation = params['TOproblem']['ori_representation']
     #---SET OBJECT STATE FOR INITIALIZATION: Moving, Swinging, Flying---#
-    objectState = "Flying"
+    objectState = "Moving"
 
     if objectState == "Moving":
         # get bounds of variables and constraints
@@ -285,15 +285,20 @@ if __name__=='__main__':
             initObjPos = np.array([0.0, -1.5, 0.3, 0 / 180 * np.pi, 0, 0])
             finObjPos = np.array([0., 0.0, 0.6, 0 / 180 * np.pi, 0, 0])
             maxObjPos = np.array([2, 2, 2, 2 * np.pi, 2 * np.pi, 2 * np.pi])
+            pos = initObjPos[0:3]
+            quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
             initObjPos = np.array([0, 0, 0.5, 0, 0, 0, 1])
             finObjPos = np.array([0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
+            pos = initObjPos[0:3]
+            quat = initObjPos[3:7]
 
         initObjVel = np.array([0.0, 0.4, 0.0, 0.0, 0.0, 0.0])
         finObjVel = np.array([0., 0., 0., 0., 0., 0.])
         maxObjVel = np.array([1.5, 1.5, 1.5, 1.5, 1.5, 1.5])
+        lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     if objectState == "Flying":
         if ori_representation == "euler":
@@ -301,15 +306,21 @@ if __name__=='__main__':
             initObjPos = np.array([0, -2.0, -1.0, 0, 0, 0])
             finObjPos = np.array([0, 0, 0.5, 0, 0, 0])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000])
+            pos = initObjPos[0:3]
+            quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
+
         elif ori_representation == "quaternion":
             # quaternion representation initialization #
             initObjPos = np.array([-2.0, 0, -1.0, 0, 0, 0, 1])
             finObjPos = np.array([0, 0, 0, 0, 0, 0, 1])
             maxObjPos = np.array([1000, 1000, 1000, 1000, 1000, 1000, 1000])
+            pos = initObjPos[0:3]
+            quat = initObjPos[3:7]
 
         initObjVel = np.array([0, 2.5, 5.5, 0.0, 0.0, 0.0])
         finObjVel = np.array([0, 0, 0, 0, 0, 0])
         maxObjVel = np.array([20, 20, 20, 20, 20, 20])
+        lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     slackObjPos = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
     slackObjVel = np.array([0.001, 0.001, 0.001, 0.001, 0.001, 0.001])
@@ -370,6 +381,6 @@ if __name__=='__main__':
         PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
-        set_object_state_client.main()
+        set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target')
 
     rospy.spin()

@@ -151,29 +151,10 @@ class PlanInterpWithTO:
             # Get ros parameters
             only_obj = rospy.get_param('~only_object')
         '''
-        path2extrPck = os.environ['PATH2HYBRIDMPC']
-        paramFile = os.path.join(path2extrPck,"py_pack/config/parameters.yml")
-        with open(paramFile, 'r') as ymlfile:
-            params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
+        finObjPos = np.array([0., 0.0, 0.60, 0, 0, 0])
+        maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
+        minObjPos = np.array([-2, -2, 0.15, -np.pi, -np.pi, -np.pi])
 
-        ori_representation = params['TOproblem']['ori_representation']
-
-        # get bounds of variables and constraints
-        if ori_representation == "euler":
-            # euler representation initialization #
-            initObjPos = np.array([0.0, 0.15, 0.2, 0, 0, 0])
-            finObjPos = np.array([0., 0.0, 0.60, 0, 0, 0])
-            maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
-            minObjPos = np.array([-2, -2, 0.15, -np.pi, -np.pi, -np.pi])
-        elif ori_representation == "quaternion":
-            # quaternion representation initialization #
-            initObjPos = np.array([0, 0, 0.6, 0, 0, 0, 1])
-            finObjPos = np.array([0, 0, 0, 0, 0, 0, 1])
-            maxObjPos = np.array([2, 2, 2, np.pi, np.pi, np.pi])
-            minObjPos = np.array([-2, -2, 0.6, -np.pi, -np.pi, -np.pi])
-
-
-        initObjVel = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         finObjVel = np.array([0., 0., 0., 0., 0., 0.])
         maxObjVel = np.array([2.0, 2.0, 2.0, 2.0, 2.0, 2.0])
 
@@ -249,6 +230,30 @@ if __name__=='__main__':
     # build the TO problem
     normIndex = [0, 3]
     PlanInterpWithTO.buildTO(normIndex)
+
+    # --- set initials
+    path2extrPck = os.environ['PATH2HYBRIDMPC']
+    paramFile = os.path.join(path2extrPck, "py_pack/config/parameters.yml")
+    with open(paramFile, 'r') as ymlfile:
+        params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
+
+    ori_representation = params['TOproblem']['ori_representation']
+
+    # get bounds of variables and constraints
+    if ori_representation == "euler":
+        # euler representation initialization #
+        initObjPos = np.array([0.0, 0.15, 0.2, 0, 0, 0])
+        pos = initObjPos[0:3]
+        R.from_euler('ZYX', initObjPos[3:6]).as_quat()
+    elif ori_representation == "quaternion":
+        # quaternion representation initialization #
+        initObjPos = np.array([0, 0, 0.6, 0, 0, 0, 1])
+        pos = initObjPos[0:3]
+        quat = initObjPos[3:7]
+
+    initObjVel = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    lin_vel = initObjVel[0:3]; ang_vel = initObjVel[3:6]
+
     # solve the TO problem
     solFlag = PlanInterpWithTO.solveTO()
 
@@ -259,6 +264,6 @@ if __name__=='__main__':
         PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
-        set_object_state_client.main()
+        set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target' )
 
     rospy.spin()
