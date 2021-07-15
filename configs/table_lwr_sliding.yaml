@@ -7,13 +7,13 @@ rgba_color: [0.52, 0.36, 0.25, 1]
 base_mass: -1.0
 
 # Dynamic parameters
-lateral_friction: 1.0
+lateral_friction: 0.2
 spinning_friction: 0.
 rolling_friction: 0.
-restitution: 0.5
+restitution: 0.0
 linear_damping: 0.04
 angular_damping: 0.04
-contact_stiffness: 2000.0
+contact_stiffness: 10000.0
 contact_damping: 0.7
 
 link_state:

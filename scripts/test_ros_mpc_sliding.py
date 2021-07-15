@@ -61,10 +61,6 @@ class ROSSlidingMPC:
         obj_pos0 = obj_config['link_state']['position']
 
         # Initialize internal variables
-        # self._cmd_robot_pose = np.empty(CMD_DOF)
-        # self._cmd_obj_pose = np.empty(CMD_DOF)
-        # self._obj_pose = np.empty(CMD_DOF)
-        # self._robot_pose = np.empty(CMD_DOF)
         self._cmd_robot_pose = None
         self._cmd_obj_pose = None
         self._cmd_visual_obj_pose = None
@@ -74,14 +70,14 @@ class ROSSlidingMPC:
         # Set Problem constants
         #  -------------------------------------------------------------------
         a = 0.17 # side dimension of the square slider in meters
-        T = 5 # time of the simulation is seconds
-        freq = 50 # number of increments per second
+        T = 6  # time of the simulation is seconds
+        freq = 50  # number of increments per second
         r_pusher = 0.015 # radius of the cylindrical pusher in meter
-        miu_p = 0.1  # friction between pusher and slider
-        N_MPC = 50 # time horizon for the MPC controller
-        f_lim = 0.3 # limit on the actuations
-        psi_dot_lim = 3.0 # limit on the actuations
-        psi_lim = 40*(np.pi/180.0)
+        miu_p = 0.2  # friction between pusher and slider
+        N_MPC = 50  # time horizon for the MPC controller
+        f_lim = 0.6  # limit on the actuations
+        psi_dot_lim = 5.0  # limit on the actuations
+        psi_lim = 60*(np.pi/180.0)
         # solver_name = 'ipopt'
         self.solver_name = 'snopt'
         # solver_name = 'gurobi'
@@ -98,7 +94,7 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # define system dynamics
         #  -------------------------------------------------------------------
-        self.sliding_mode = 'sliding_contact'
+        self.sliding_mode = 'sliding_contact_cc'
         self.dyn = sliding_pack.dyn.System_square_slider_quasi_static_ellipsoidal_limit_surface(
                 mode=self.sliding_mode,
                 slider_dim=a,
@@ -123,7 +119,7 @@ class ROSSlidingMPC:
         #  ------------------------------------------------------------------
         # define optimization problem
         #  -------------------------------------------------------------------
-        if self.sliding_mode == 'sliding_contact':
+        if self.sliding_mode == 'sliding_contact_cc':
             W_x = cs.diag(cs.SX([1.0, 1.0, 0.01, 0.0]))
             W_u = cs.diag(cs.SX([0., 0., 0., 0.]))
         elif self.sliding_mode == 'sticking_contact':
@@ -195,16 +191,16 @@ class ROSSlidingMPC:
         # TODO: change to sliding motion
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
-        # robot_pos_2d_read = self._robot_pose[0:2]
+        robot_pos_2d_read = self._robot_pose[0:2]
         # compute relative angle between pusher (robot) and slider (object)
-        # psi_prov = self.optObj.dyn.psi(np.array([
-        #     obj_pos_2d_read[0],
-        #     obj_pos_2d_read[1],
-        #     obj_ori_2d_read,
-        #     0.]),
-        #     robot_pos_2d_read)
+        psi0 = self.optObj.dyn.psi(np.array([
+            obj_pos_2d_read[0],
+            obj_pos_2d_read[1],
+            obj_ori_2d_read,
+            0.]),
+            robot_pos_2d_read).elements()[0]
         # build initial state for optimizer: TODO: get this from dyn function
-        x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, 0.]
+        x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
         self.idx_nom += 1
@@ -213,6 +209,7 @@ class ROSSlidingMPC:
         print(x0)
         print(self.X_nom_val[:, self.idx_nom].T)
         print(x_next)
+        print(u_opt[:,1])
 
         # decode solution
         # compute object pose
