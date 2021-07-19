@@ -84,6 +84,8 @@ def getObjectPosOrient(obj_id):
 def getObjectDynamicsInfo(obj_id):
     return pybullet.getDynamicsInfo(obj_id, -1)
 
+def getObjectLinAngVel(obj_id):
+    return pybullet.getBaseVelocity(obj_id)
 
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""

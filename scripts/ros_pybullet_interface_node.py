@@ -577,6 +577,7 @@ class ROSPyBulletInterface:
         # or (as we might want to manually control the rate of steps)
         self.step()
 
+
     def spin(self):
         try:
             rospy.spin()
