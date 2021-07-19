@@ -1,0 +1,21 @@
+estimation:
+  condition: -1.4
+
+object:
+  finObjPos: [0., 0.0, 0.6, 0, 0, 0]
+  maxObjPos: [2, 2, 2, 6.28, 6.28, 6.28]
+  finObjVel: [0., 0., 0., 0., 0., 0.]
+  maxObjVel: [1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
+  slackObjPos: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+  slackObjVel: [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+  reducedNode: 40
+
+robotYin:
+  workspace: 1.2
+  minWorkspace: [-1.0, -1.0, -0.2]
+  maxWorkspace: [1.0, 1.0, 1.0]
+
+robotYang:
+  workspace: 1.2
+  minWorkspace: [ -1.0, -1.0, -0.2 ]
+  maxWorkspace: [ 1.0, 1.0, 1.0 ]
