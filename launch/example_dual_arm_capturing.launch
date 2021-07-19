@@ -68,6 +68,14 @@
 
   </node>
 
+  <node
+      name="read_publish_object_state"
+      pkg="ros_pybullet_interface"
+      type="read_publish_object_estimation.py"
+      clear_params="true"
+      output="screen">
+  </node>
+
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
       name="ros_PyRBDL4dIK_interface"
