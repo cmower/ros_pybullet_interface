@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import rospy
 import tf2_ros
+import tf_conversions
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped, WrenchStamped
 
@@ -188,12 +189,32 @@ class ROSPyBulletInterface:
         self.robots.append({"robot": robot,
                             "robot_name": robot_name}
                             )
+
         robot.setBasePositionAndOrientation(
             config['base_position'],
             np.deg2rad(config['base_orient_eulerXYZ'])
         )
         qinit = np.deg2rad(config['init_position'])
         robot.setJointPositions(qinit)
+
+        # Loop 10 times to get the position and orientation of the base the robots from the vicon
+        for _ in range(10):
+            try:
+                # Read the position and orientation of the robot from the /tf topic
+                trans = self.tf_buffer.lookup_transform(WORLD_FRAME_ID, f"vicon/<subject_name>/<segment_name>_{robot_name}", rospy.Time())
+                # replaces base_position = config['base_position']
+                base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+                # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+                base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w]
+
+                robot.setBasePositionAndOrientation(
+                    base_position,
+                    tf_conversions.transformations.euler_from_quaternion(base_orient_quat)
+                )
+                break
+            except:
+                rospy.logwarn(f"{self.name}: /tf topic does NOT have vicon/<subject_name>/<segment_name>_{robot_name}")
+
 
         # Specify target joint position
         self.robots_target_joint_position.append(qinit)
