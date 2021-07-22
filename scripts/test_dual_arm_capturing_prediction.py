@@ -182,7 +182,7 @@ class PlanInterpWithTO:
         self.HybProb_warmstart = self.HybOpt_DAC.buildProblem(warmStart=True)
 
         # get initial guess
-        self.xInit = self.HybOpt_DAC.buildInitialGuess()
+        # self.xInit = self.HybOpt_DAC.buildInitialGuess()
         with open(self.initFile, 'rb') as f:
             self.xInit = np.load(f)
 
@@ -194,10 +194,10 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos1, self.minArmEEPos1, self.maxArmEEPos1,
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
-        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
         # with open(self.initFile, 'wb') as f:
         #     np.save(f, np.array(xSolution))
-        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
         # decode solution
         if (solFlag):
@@ -284,17 +284,17 @@ class PredictionWithTO():
         start_time = time.time()
 
         # solve problem
-        # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
+        preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
         # with open(self.initFile, 'wb') as f:
         #     np.save(f, np.array(xSolution))
-        preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
+        # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
         # decode solution
         if (preFlag):
             timePre, posBodyPre, velBodyPre, force = self.HybOpt3D_SRB.decodeSol(xSolution, animateFlag=False)
 
             start_time_contactSelection = time.time()
-            initIndex, normVector = self.HybOpt3D_SRB.contactSelection(posBodyPre, self.r, self.L0, self.R0)
+            initIndex, normIndex, normVector = self.HybOpt3D_SRB.contactSelection(posBodyPre, self.r, self.L0, self.R0)
             print("#---Contact selection time: %s seconds ---#" % (time.time() - start_time_contactSelection))
             print("#---Prediction time: %s seconds ---#" % (time.time() - start_time))
             print("#---Index for the initial state for TO: %s ---#" % (initIndex))
@@ -483,34 +483,38 @@ if __name__=='__main__':
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     set_object_state_client.setObjState(pos, quat, lin_vel*0, ang_vel*0, 'target')
-    rospy.sleep(1.1)
+    rospy.sleep(1.2)
     set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target')
 
     # get object and robot state from pybullet
     initObjPos, initObjVel = Initials.startEstimation()
+    # initObjVel = np.array([0.0, 0.4, 0.0, 0.0, 0.0, 0.0])
     print(initObjPos, type(initObjPos), initObjVel, type(initObjPos))
+    start_time = time.time()
 
     # solve the trajectory optimization for prediction
     initIndex, normVector, timePre, posBodyPre, velBodyPre = PredictionWithTO.solveTO(initObjPos, initObjVel)
 
     # solve the TO problem
-    solFlag, time, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2 = \
+    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2 = \
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector)
 
     commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
     print(commandFlag, posBodyPre[:, initIndex])
 
     if commandFlag == True:
-        trajObjPlan = np.vstack((np.vstack((time, posBody)), velBody))
-        trajYangPlan = np.vstack((np.vstack((time, posLimb1)), velLimb1))
-        trajYinPlan = np.vstack((np.vstack((time, posLimb2)), velLimb2))
+        trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
+        trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
+        trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
     else:
         trajObjPlan, trajYangPlan, trajYinPlan = \
-            rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, time, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)
+            rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)
 
     PlanInterpWithTO.trajObjPlan = trajObjPlan
     PlanInterpWithTO.trajYangPlan = trajYangPlan
     PlanInterpWithTO.trajYinPlan = trajYinPlan
+
+    print('Computation time:', time.time()-start_time)
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
