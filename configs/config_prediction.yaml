@@ -12,10 +12,10 @@ object:
 
 robotYin:
   workspace: 1.0
-  minWorkspace: [-1.0, -1.0, -0.2]
-  maxWorkspace: [1.0, 1.0, 1.0]
+  minWorkspace: [-0.9, -0.9, -0.2]
+  maxWorkspace: [0.9, 0.9, 0.9]
 
 robotYang:
   workspace: 1.0
-  minWorkspace: [ -1.0, -1.0, -0.2 ]
-  maxWorkspace: [ 1.0, 1.0, 1.0 ]
+  minWorkspace: [-0.9, -0.9, -0.2]
+  maxWorkspace: [0.9, 0.9, 0.9]
