@@ -197,11 +197,12 @@ class ROSPyBulletInterface:
         qinit = np.deg2rad(config['init_position'])
         robot.setJointPositions(qinit)
 
-        # Loop 10 times to get the position and orientation of the base the robots from the vicon
-        for _ in range(10):
+        # Loop 2 times to get the position and orientation of the base the robots from the vicon
+        for _ in range(2):
             try:
-                # Read the position and orientation of the robot from the /tf topic
-                trans = self.tf_buffer.lookup_transform(WORLD_FRAME_ID, f"vicon/<subject_name>/<segment_name>_{robot_name}", rospy.Time())
+                # Read the position and orientation of the robot from the topic
+                trans = rospy.wait_for_message(f"vicon_offset/{robot_name}_frame/{robot_name}_frame", TransformStamped, timeout=2)
+
                 # replaces base_position = config['base_position']
                 base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
                 # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
