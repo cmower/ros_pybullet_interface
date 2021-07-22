@@ -326,6 +326,7 @@ class ROSPyBulletInterface:
                 'position': config['link_state']['position'],
                 'orientation': config['link_state']['orientation_eulerXYZ'],
             })
+            static_col_obj = {}
             if 'pub_tf' in config['link_state']:
                 static_col_obj['pub_tf'] = config['link_state']['pub_tf']
             else:
