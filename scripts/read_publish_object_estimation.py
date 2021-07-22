@@ -16,6 +16,13 @@ TARGET_FRAME_ID = "ros_pybullet_interface/target"
 PUBLISHER_TOPIC_NAME = "target/sensor/pose"
 FREQ = 100
 
+# ------------------------------------------------------------------------------
+#  Real data from vicon
+# ------------------------------------------------------------------------------
+# WORLD_FRAME_ID = "vicon/world"
+# TARGET_FRAME_ID = "vicon/white_box_iiwas/white_box_iiwas"
+
+
 class ObjectRepublisher():
 
     def __init__(self):
