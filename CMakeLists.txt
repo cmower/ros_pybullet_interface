@@ -39,5 +39,6 @@ catkin_install_python(PROGRAMS
   scripts/test_ros_interpol_interface.py
   scripts/set_object_state_client.py
   scripts/make_manual_pybullet_steps.py
+  scripts/hw_interface/sim_joint_cmd_2_smartservo.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )

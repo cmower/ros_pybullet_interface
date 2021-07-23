@@ -1,0 +1,68 @@
+<launch>
+
+  <node
+      name="ros_vicon_offset"
+      pkg="ros_pybullet_interface"
+      type="vicon_tf_offset.py"
+      output="screen">
+
+    <param
+        name="object_name"
+        value="white_box_iiwas"
+        type="str"/>
+
+    <param
+        name="offset"
+        value="-0.01772 0.01112 -0.220 0.0 0.0 0.0"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_vicon_offset_yang_base"
+      pkg="ros_pybullet_interface"
+      type="vicon_tf_offset.py"
+      output="screen">
+
+    <param
+        name="object_name"
+        value="yang_frame"
+        type="str"/>
+
+    <param
+        name="offset"
+        value="-0.153 0.153 0.0 0.0 0.0 0.0"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_vicon_offset_yin_base"
+      pkg="ros_pybullet_interface"
+      type="vicon_tf_offset.py"
+      output="screen">
+
+    <param
+        name="object_name"
+        value="yin_frame"
+        type="str"/>
+
+    <param
+        name="offset"
+        value="0.153 0.153 0.0 180.0 0.0 0.0"
+        type="str"/>
+
+  </node>
+
+
+  <node
+      name="read_publish_object_state"
+      pkg="ros_pybullet_interface"
+      type="read_publish_object_estimation.py"
+      clear_params="true"
+      output="screen">
+  </node>
+
+
+
+</launch>
