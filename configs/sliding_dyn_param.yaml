@@ -6,7 +6,7 @@ sideLenght: 0.17 #  [meter]
 pusherRadious: 0.015 #  [meter]
 pusherFricCoef: 0.2
 pusherForceLim:  0.6
-pusherAngleLim: 1.047
+pusherAngleLim: 1.0
 pusherAngleVelLim: 5.0
 Kz_max: 50
 Kz_min: 0.1

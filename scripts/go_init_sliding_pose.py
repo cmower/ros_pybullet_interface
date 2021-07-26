@@ -8,6 +8,7 @@ import tf2_ros
 import rospy
 from geometry_msgs.msg import TransformStamped
 import make_manual_pybullet_steps
+from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
 
 r = 0.1 # radius
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
@@ -39,10 +40,36 @@ class TestIK:
         # make a line along Z
         num_samplesLin = 100
 
+        # load object initial position
+        obj_file_name = rospy.get_param('~object_config_file_name', [])[0]
+        obj_config = loadYAMLConfig(obj_file_name)
+        obj_pos0 = obj_config['link_state']['position']
+        obj_ori0 = obj_config['link_state']['orientation_eulerXYZ']
+
+        # load object dynamics
+        sliding_dyn_file_name = rospy.get_param('~sliding_param_dyn', [])[0]
+        dyn_config = loadYAMLConfig(sliding_dyn_file_name)
+        sideLenght = dyn_config['sideLenght']
+        pusherRadious = dyn_config['pusherRadious']
+        print(obj_pos0)
+        print(obj_ori0)
+        # print(sideLenght)
+        # print(pusherRadious)
+        # sys.exit()
+
+        # compute end-effector initial position
+        _L = sideLenght/2. + pusherRadious + 0.01
         self.eePos_traj = np.zeros((1, 3))
-        self.eePos_traj[0,0] = 0.5
-        self.eePos_traj[0,1] = -0.15
+        self.eePos_traj[0,0] = obj_pos0[0] + np.cos(np.deg2rad(180.+obj_ori0[2]))*_L
+        self.eePos_traj[0,1] = obj_pos0[1] + np.sin(np.deg2rad(180.+obj_ori0[2]))*_L
         self.eePos_traj[0,2] = 0.05
+
+        # # compute end-effector initial position
+        # self.eePos_traj = np.zeros((1, 3))
+        # self.eePos_traj[0,0] = 0.5
+        # self.eePos_traj[0,1] = -0.15
+        # self.eePos_traj[0,2] = 0.05
+
 
 
         # ------------------Orientation ---------------------------

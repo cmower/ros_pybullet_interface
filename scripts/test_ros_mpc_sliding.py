@@ -55,7 +55,7 @@ class ROSSlidingMPC:
         # Nominal trajectory indexing 
         self.idx_nom = 0
 
-        # load object initial position
+        # load visual object initial position
         obj_file_name = rospy.get_param('~object_config_file_name', [])[0]
         obj_config = loadYAMLConfig(obj_file_name)
         obj_pos0 = obj_config['link_state']['position']
@@ -79,9 +79,9 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        T = 6  # time of the simulation is seconds
+        T = 7  # time of the simulation is seconds
         freq = RUN_FREQ  # number of increments per second
-        N_MPC = 15  # time horizon for the MPC controller
+        N_MPC = 20  # time horizon for the MPC controller
         #  -------------------------------------------------------------------
         # Computing Problem constants
         #  -------------------------------------------------------------------
@@ -100,12 +100,12 @@ class ROSSlidingMPC:
         # Generate Nominal Trajectory
         #  -------------------------------------------------------------------
         x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.0, 0.5, N, N_MPC)
-        x0_nom = x0_nom + obj_pos0[0]
-        x1_nom = x1_nom + obj_pos0[1]
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(-np.pi/2, 3*np.pi/2, 0.1, N, N_MPC)
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.2, N, N_MPC)
+        # x1_nom, x0_nom = sliding_pack.traj.generate_traj_eight(0.3, N, N_MPC)
         #  -------------------------------------------------------------------
+        x0_nom = x0_nom + obj_pos0[0]
+        x1_nom = x1_nom + obj_pos0[1]
         # stack state and derivative of state
         self.X_nom_val, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
         #  ------------------------------------------------------------------

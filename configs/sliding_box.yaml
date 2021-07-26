@@ -12,8 +12,8 @@ lateral_friction: 0.2
 spinning_friction: 0.
 rolling_friction: 0.
 restitution: 0.0
-linear_damping: 0.04
-angular_damping: 0.04
+linear_damping: 0.
+angular_damping: 0.
 contact_stiffness: 10000.0
 contact_damping: 0.7
 localInertiaDiagonal: [0.0125, 0.0125, 0.0125]
