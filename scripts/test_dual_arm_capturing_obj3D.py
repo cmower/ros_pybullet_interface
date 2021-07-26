@@ -19,8 +19,8 @@ import set_object_state_client
 from py_pack import yaml
 
 # --- import Hybrid Trajectory Optimization class
-from py_pack import hybrid_tosrb
-from py_pack import hybrid_todac
+from py_pack import hybridto_srb
+from py_pack import hybridto_dac
 
 
 NEW_TRAJ_TOPIC= 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic

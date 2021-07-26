@@ -16,8 +16,8 @@ import set_object_state_client
 from py_pack import yaml, np, LA, R
 
 # --- import Hybrid Trajectory Optimization class
-from py_pack import hybrid_tosrb
-from py_pack import hybrid_todac_v2
+from py_pack import hybridto_srb
+from py_pack import hybridto_dac_v2
 
 # ROS message types
 from nav_msgs.msg import Odometry
@@ -170,12 +170,8 @@ class PlanInterpWithTO:
 
     def buildTO(self):
 
-        #  create instance of the Hybrid optimisation class
-        self.HybOpt3D = hybrid_tosrb.HybridTOClass3D()
-
-        self.HybOpt_DAC = hybrid_todac_v2.HybridTOClass_DAC()
-        # self.normIndex = normIndex
-
+        # create instance of the Hybrid optimisation class
+        self.HybOpt_DAC = hybridto_dac_v2.HybridTOClass_DAC()
         # build the problem
         self.HybProb = self.HybOpt_DAC.buildProblem()
         # build the problem with warm start
@@ -194,10 +190,10 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos1, self.minArmEEPos1, self.maxArmEEPos1,
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
-        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
         # with open(self.initFile, 'wb') as f:
         #     np.save(f, np.array(xSolution))
-        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
         # decode solution
         if (solFlag):
@@ -216,7 +212,7 @@ class PlanInterpWithTO:
             # posLimb2Array[3:6, 0] = endAttYin
 
 
-        return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, posLimb2Array, velLimb2Array
+        return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array
 
 
     def stateMachine(self, posInitTraj):
@@ -231,6 +227,8 @@ class PlanInterpWithTO:
                 break
 
         return commandFlag
+
+
 
 
 class PredictionWithTO():
@@ -263,7 +261,7 @@ class PredictionWithTO():
     def buildTO(self):
 
         #  create instance of the Hybrid optimisation class
-        self.HybOpt3D_SRB = hybrid_tosrb.HybridTOClass3D()
+        self.HybOpt3D_SRB = hybridto_srb.HybridTOClass3D()
 
         # build the problem
         self.HybProb = self.HybOpt3D_SRB.buildProblem()
@@ -271,7 +269,7 @@ class PredictionWithTO():
         self.HybProb_warmstart = self.HybOpt3D_SRB.buildProblem(warmStart=True)
 
         # initialize the optimization
-        self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
+        # self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
         with open(self.initFile, 'rb') as f:
             self.xInit_SRB = np.load(f)
 
@@ -355,7 +353,6 @@ class InitialsOfPrediciton():
         self.objectState[10:13] = angular_velocity
 
     def getPosVel(self):
-
 
         eulerAngle = R.from_quat(self.objectState[3:7]).as_euler('ZYX')
         pose = np.hstack((self.objectState[0:3], eulerAngle))
@@ -464,7 +461,7 @@ if __name__=='__main__':
             pos = initObjPos[0:3]
             quat = initObjPos[3:7]
 
-        initObjVel = np.array([0.0, 0.4, 0.0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0.0, 0.5, 0.0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     if objectState == "Flying":
@@ -496,16 +493,22 @@ if __name__=='__main__':
     initIndex, normVector, timePre, posBodyPre, velBodyPre = PredictionWithTO.solveTO(initObjPos, initObjVel)
 
     # solve the TO problem
-    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2 = \
+    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector)
 
     commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
-    print(commandFlag, posBodyPre[:, initIndex])
+    print('solFlag =', solFlag, 'commandFlag =',commandFlag)
+
+    # Visualize the planning result for capturing swinging object
+    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2,
+    #                                        forLimb2, animateFlag=False)
 
     if commandFlag == True:
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
         trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
+
+
     else:
         trajObjPlan, trajYangPlan, trajYinPlan = \
             rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)

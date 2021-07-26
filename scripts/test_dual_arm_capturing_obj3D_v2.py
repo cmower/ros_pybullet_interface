@@ -19,8 +19,8 @@ import set_object_state_client
 from py_pack import yaml
 
 # --- import Hybrid Trajectory Optimization class
-from py_pack import hybrid_tosrb
-from py_pack import hybrid_todac_v2
+from py_pack import hybridto_srb
+from py_pack import hybridto_dac_v2
 
 NEW_TRAJ_Yang_TOPIC = 'yang/ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_Yin_TOPIC = 'yin/ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
@@ -116,18 +116,15 @@ class PlanInterpWithTO:
         return msg
 
 
-    def buildTO(self, normIndex):
+    def buildTO(self):
 
         #  create instance of the Hybrid optimisation class
-        self.HybOpt3D = hybrid_tosrb.HybridTOClass3D()
-
-        self.HybOpt_DAC = hybrid_todac_v2.HybridTOClass_DAC(normIndex)
-        # self.normIndex = normIndex
+        self.HybOpt_DAC = hybridto_dac_v2.HybridTOClass_DAC()
 
         # build the problem
         self.HybProb = self.HybOpt_DAC.buildProblem()
 
-    def solveTO(self):
+    def solveTO(self, initObjPos, initObjVel, normVector):
 
         # get object and robot state from pybullet
         basePosYang, baseAttYang, baseAttYang_Quat, endPosYang, endAttYang, endAttYang_Quat = self.readInitials("yang")
@@ -192,41 +189,22 @@ class PlanInterpWithTO:
         rospy.loginfo(f"{self.name}: Reading for /tf topic the position and orientation of the robot")
         # Read the position and orientation of the robot from the /tf topic
 
-        if robot_name == "yang":
-            # trans = IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
-            trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
-            # replaces base_position = config['base_position']
-            base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
-            base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
-                                trans.transform.rotation.w]
-            base_orient_euler = R.from_quat(base_orient_quat).as_euler('ZYX')
+        # trans = IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
+        trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
+        # replaces base_position = config['base_position']
+        base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+        base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
+                            trans.transform.rotation.w]
+        base_orient_euler = R.from_quat(base_orient_quat).as_euler('ZYX')
 
-            trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{END_EFFECTOR_FRAME_ID}", rospy.Time())
-            # replaces base_position = config['base_position']
-            end_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
-            # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-            end_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
-                                trans.transform.rotation.w]
-            end_orient_euler = R.from_quat(end_orient_quat).as_euler('ZYX')
-            # base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-
-        elif robot_name == "yin":
-            trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
-            # replaces base_position = config['base_position']
-            base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
-            # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-            base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
-                                trans.transform.rotation.w]
-            base_orient_euler = R.from_quat(base_orient_quat).as_euler('ZYX')
-
-            trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{END_EFFECTOR_FRAME_ID}",
-                                                         rospy.Time())
-            # replaces base_position = config['base_position']
-            end_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
-            # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-            end_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
-                               trans.transform.rotation.w]
-            end_orient_euler = R.from_quat(end_orient_quat).as_euler('ZYX')
+        trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{END_EFFECTOR_FRAME_ID}", rospy.Time())
+        # replaces base_position = config['base_position']
+        end_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+        # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+        end_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z,
+                            trans.transform.rotation.w]
+        end_orient_euler = R.from_quat(end_orient_quat).as_euler('ZYX')
+        # base_orient_eulerXYZ = config['base_orient_eulerXYZ']
 
         return base_position, base_orient_euler, base_orient_quat, end_position, end_orient_euler, end_orient_quat
 
@@ -246,7 +224,8 @@ if __name__=='__main__':
 
     # build the TO problem
     normIndex = [0, 3]
-    PlanInterpWithTO.buildTO(normIndex)
+    normVector = [1,0,0,-1,0,0]
+    PlanInterpWithTO.buildTO()
 
     # get bounds of variables and constraints
     path2extrPck = os.environ['PATH2HYBRIDMPC']
@@ -273,7 +252,7 @@ if __name__=='__main__':
     lin_vel = initObjVel[0:3];    ang_vel = initObjVel[3:6]
 
     # solve the TO problem
-    solFlag = PlanInterpWithTO.solveTO()
+    solFlag = PlanInterpWithTO.solveTO(initObjPos, initObjVel, normVector)
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")

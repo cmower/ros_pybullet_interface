@@ -18,7 +18,7 @@ import set_object_state_client
 from py_pack import yaml
 
 # --- import Hybrid Trajectory Optimization class
-from py_pack import hybrid_tosrb
+from py_pack import hybridto_srb
 
 NEW_TRAJ_ROBOT_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
@@ -91,7 +91,7 @@ class PlanInterpWithTO:
     def buildTO(self):
 
         #  create instance of the Hybrid optimisation class
-        self.HybOpt3D = hybrid_tosrb.HybridTOClass3D()
+        self.HybOpt3D = hybridto_srb.HybridTOClass3D()
 
         # build the problem
         self.HybProb = self.HybOpt3D.buildProblem()
