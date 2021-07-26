@@ -4,7 +4,7 @@ file_name: '{ros_pybullet_interface}/objects/target.obj'
 name: 'yang_workspace_visual'
 
 # Basic parameters
-mesh_scale: [0.24, 0.44, 0.65]
+mesh_scale: [1.4, 1.0, 1.4]
 rgba_color: [0.1, 0.9, 0.1, 0.5]
 base_mass: 0
 
