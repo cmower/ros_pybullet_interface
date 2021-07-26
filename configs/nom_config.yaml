@@ -1,0 +1,13 @@
+#
+# Configuration file for tracking using sliding
+# 
+
+contactMode: 'sticking'  # 'sticking', 'sliding_cc', or 'sliding_mi'
+solverName: 'snopt'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
+W_x: [1.0, 1.0, 0.01, 0.]  # diagonal state weights
+W_u: [0.1, 0.1]  # diagonal control weights
+K_goal: 100
+X_goal: null
+linDynFlag: False
+codeGenFlag: False
+noPrintingFlag: True

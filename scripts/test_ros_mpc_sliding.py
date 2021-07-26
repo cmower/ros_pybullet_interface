@@ -33,7 +33,7 @@ ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
 WORLD_FRAME = "ros_pybullet_interface/world"
 END_EFFECTOR_TARGET_FRAME_ID = 'LWR/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 SHOW_NOM_FLAG = False
-RUN_FREQ = 100
+RUN_FREQ = 50
 
 class ROSSlidingMPC:
 
@@ -56,9 +56,19 @@ class ROSSlidingMPC:
         self.idx_nom = 0
 
         # load object initial position
-        obj_file_name = rospy.get_param('~object_config_file_names', [])[0]
+        obj_file_name = rospy.get_param('~object_config_file_name', [])[0]
         obj_config = loadYAMLConfig(obj_file_name)
         obj_pos0 = obj_config['link_state']['position']
+
+        # Get config files
+        #  -------------------------------------------------------------------
+        sliding_dyn_file_name = rospy.get_param('~sliding_param_dyn', [])[0]
+        dyn_config = loadYAMLConfig(sliding_dyn_file_name)
+        tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
+        tracking_config = loadYAMLConfig(tracking_traj_file_name)
+        # nom_traj_file_name = rospy.get_param('~sliding_param_nom_traj', [])[0]
+        # nom_config = loadYAMLConfig(nom_traj_file_name)
+        #  -------------------------------------------------------------------
 
         # Initialize internal variables
         self._cmd_robot_pose = None
@@ -69,21 +79,9 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        a = 0.17 # side dimension of the square slider in meters
         T = 6  # time of the simulation is seconds
-        freq = 50  # number of increments per second
-        r_pusher = 0.015 # radius of the cylindrical pusher in meter
-        miu_p = 0.2  # friction between pusher and slider
-        N_MPC = 50  # time horizon for the MPC controller
-        f_lim = 0.6  # limit on the actuations
-        psi_dot_lim = 5.0  # limit on the actuations
-        psi_lim = 60*(np.pi/180.0)
-        # solver_name = 'ipopt'
-        self.solver_name = 'snopt'
-        # solver_name = 'gurobi'
-        # solver_name = 'qpoases'
-        self.no_printing = True
-        self.code_gen = False
+        freq = RUN_FREQ  # number of increments per second
+        N_MPC = 15  # time horizon for the MPC controller
         #  -------------------------------------------------------------------
         # Computing Problem constants
         #  -------------------------------------------------------------------
@@ -94,18 +92,12 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # define system dynamics
         #  -------------------------------------------------------------------
-        self.sliding_mode = 'sliding_contact_cc'
-        self.dyn = sliding_pack.dyn.System_square_slider_quasi_static_ellipsoidal_limit_surface(
-                mode=self.sliding_mode,
-                slider_dim=a,
-                pusher_radious=r_pusher,
-                miu=miu_p,
-                f_lim=f_lim,
-                psi_dot_lim=psi_dot_lim,
-                psi_lim=psi_lim
+        self.dyn = sliding_pack.dyn.Sys_sq_slider_quasi_static_ellip_lim_surf(
+                dyn_config, 
+                tracking_config['contactMode']
         )
         #  -------------------------------------------------------------------
-        ## Generate Nominal Trajectory
+        # Generate Nominal Trajectory
         #  -------------------------------------------------------------------
         x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.0, 0.5, N, N_MPC)
         x0_nom = x0_nom + obj_pos0[0]
@@ -119,16 +111,9 @@ class ROSSlidingMPC:
         #  ------------------------------------------------------------------
         # define optimization problem
         #  -------------------------------------------------------------------
-        if self.sliding_mode == 'sliding_contact_cc':
-            W_x = cs.diag(cs.SX([1.0, 1.0, 0.01, 0.0]))
-            W_u = cs.diag(cs.SX([0., 0., 0., 0.]))
-        elif self.sliding_mode == 'sticking_contact':
-            W_x = cs.diag(cs.SX([1.0, 1.0, 0.01, 0.]))
-            W_u = cs.diag(cs.SX([0., 0.]))
-        else:
-            rospy.logerr('Wrong specification of sliding mode')
-        self.optObj = sliding_pack.nlp.MPC_nlpClass(
-                self.dyn, N_MPC, W_x, W_u, self.X_nom_val, dt=self.dt)
+        self.optObj = sliding_pack.to.buildOptObj(
+                self.dyn, N_MPC, tracking_config,
+                self.X_nom_val, dt=self.dt)
         #  -------------------------------------------------------------------
 
         time.sleep(2.0)  # wait for initialisation to complete
@@ -178,17 +163,11 @@ class ROSSlidingMPC:
         return end_pose
 
 
-    def buildMPC(self):
-
-        # build the problem
-        self.optObj.buildProblem(self.solver_name, self.code_gen, self.no_printing)
-
     def solveMPC(self, event):
 
         if self._obj_pose is None or self._robot_pose is None:
             return -1
 
-        # TODO: change to sliding motion
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
         robot_pos_2d_read = self._robot_pose[0:2]
@@ -205,11 +184,6 @@ class ROSSlidingMPC:
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
         self.idx_nom += 1
         x_next = x_opt[:, 1]
-        print('*******************')
-        print(x0)
-        print(self.X_nom_val[:, self.idx_nom].T)
-        print(x_next)
-        print(u_opt[:,1])
 
         # decode solution
         # compute object pose
@@ -240,10 +214,11 @@ class ROSSlidingMPC:
         if self.idx_nom > self.Nidx:
             rospy.signal_shutdown("End of nominal trajectory")
         else:
-            input()
+            # input()
+            pass
 
         # service stuff
-        make_manual_pybullet_steps.makeStep(1)
+        make_manual_pybullet_steps.makeStep(int(100./RUN_FREQ))
 
         return solFlag
 
@@ -258,9 +233,6 @@ if __name__=='__main__':
     ROSSlidingMPC = ROSSlidingMPC()
 
     rospy.loginfo("%s: node started.", ROSSlidingMPC.name)
-
-    # build the MPC problem
-    ROSSlidingMPC.buildMPC()
 
     # Create timer for periodic subscriber
     dur_pubsub = rospy.Duration(1./RUN_FREQ)

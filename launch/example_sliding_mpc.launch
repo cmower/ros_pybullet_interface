@@ -10,9 +10,27 @@
         required="true"
         output="screen">
         <!-- List visual objects (optional) -->
-        <rosparam param="object_config_file_names">
+        <rosparam param="object_config_file_name">
           [
           '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
+          ]
+        </rosparam>
+        <!-- Sys dyn param -->
+        <rosparam param="sliding_param_dyn">
+          [
+          '{ros_pybullet_interface}/configs/sliding_dyn_param.yaml',
+          ]
+        </rosparam>
+        <!-- Tracking to param -->
+        <rosparam param="sliding_param_tracking_traj">
+          [
+          '{ros_pybullet_interface}/configs/tracking_config.yaml',
+          ]
+        </rosparam>
+        <!-- Nominal to param -->
+        <rosparam param="sliding_param_nom_traj">
+          [
+          '{ros_pybullet_interface}/configs/nom_config.yaml',
           ]
         </rosparam>
      </node>

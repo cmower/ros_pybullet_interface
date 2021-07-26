@@ -36,9 +36,10 @@ link_state:
   #   world frame is called 'ros_pybullet_interface/world'.
   #
   # position: [0, -0.6, -0.055]
-  position: [0.5, 0.0, -0.055]
+  # position: [0.5, 0.0, -0.055]
+  position: [0.5, 0.0, 0.]
   # orientation_eulerXYZ: [0., 0., 1.5707]
-  orientation_eulerXYZ: [0., 0., 70.]
-  # orientation_eulerXYZ: [0., 0., 110.]
+  # orientation_eulerXYZ: [0., 0., 70.]
+  orientation_eulerXYZ: [0., 0., 110.]
 
   tf_frame_id: "ros_pybullet_interface/sliding_box"
