@@ -11,16 +11,21 @@ import numpy as np
 from geometry_msgs.msg import PoseWithCovarianceStamped
 
 
-WORLD_FRAME_ID = "ros_pybullet_interface/world"
-TARGET_FRAME_ID = "ros_pybullet_interface/target"
+
 PUBLISHER_TOPIC_NAME = "target/sensor/pose"
 FREQ = 100
 
 # ------------------------------------------------------------------------------
+#  Sim data from bullet
+# ------------------------------------------------------------------------------
+WORLD_FRAME_ID_SIM = "ros_pybullet_interface/world"
+TARGET_FRAME_ID_SIM = "ros_pybullet_interface/target"
+
+# ------------------------------------------------------------------------------
 #  Real data from vicon
 # ------------------------------------------------------------------------------
-# WORLD_FRAME_ID = "vicon/world"
-# TARGET_FRAME_ID = "vicon/white_box_iiwas/white_box_iiwas"
+WORLD_FRAME_ID_REAL = "vicon/world"
+TARGET_FRAME_ID_REAL = "vicon/white_box_iiwas/white_box_iiwas"
 
 
 class ObjectRepublisher():
@@ -34,6 +39,21 @@ class ObjectRepublisher():
         # Setup ros publishers
         self.target_state_publisher = rospy.Publisher(PUBLISHER_TOPIC_NAME, PoseWithCovarianceStamped, queue_size=1)
 
+        if rospy.has_param('~sim_or_real'):
+            sim_or_real_flag = rospy.get_param('~sim_or_real')
+            if sim_or_real_flag == "sim":
+                self.world_frame_id = WORLD_FRAME_ID_SIM
+                self.target_frame_id = TARGET_FRAME_ID_SIM
+            elif sim_or_real_flag == "real":
+                self.world_frame_id = WORLD_FRAME_ID_REAL
+                self.target_frame_id = TARGET_FRAME_ID_REAL
+            else:
+                rospy.logerr(f"The sim_or_real parameter is not correctly set in {rospy.get_name()}. It should be <sim> or <real>")
+                sys.exit(0)
+        else:
+            rospy.logerr(f"The im_or_real parameter is not set in {rospy.get_name()}")
+            sys.exit(0)
+
         #  info about the node
         self.name = "Object read-state and publish to Kalman"
         self.msg_index = 0
@@ -42,7 +62,7 @@ class ObjectRepublisher():
     def read2publish(self, event):
 
         try:
-            tf = self.tfBuffer.lookup_transform(WORLD_FRAME_ID, TARGET_FRAME_ID, rospy.Time())
+            tf = self.tfBuffer.lookup_transform(self.world_frame_id, self.target_frame_id, rospy.Time())
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             return
         target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
