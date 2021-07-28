@@ -26,8 +26,7 @@
         value="{ros_pybullet_interface}/configs/traj_sphere1.yaml"
         type="str"/>
 
-      <remap from="yang_visual/ros_pybullet_interface/end_effector/traj"  to="yang/ros_pybullet_interface/end_effector/traj" />
-
+      <!-- <remap from="yang_visual/ros_pybullet_interface/end_effector/traj"  to="yang/ros_pybullet_interface/end_effector/traj" /> -->
 
   </node>
 
@@ -43,7 +42,7 @@
         value="{ros_pybullet_interface}/configs/traj_sphere2.yaml"
         type="str"/>
 
-     <remap from="yin_visual/ros_pybullet_interface/end_effector/traj"  to="yin/ros_pybullet_interface/end_effector/traj" />
+     <!-- <remap from="yin_visual/ros_pybullet_interface/end_effector/traj"  to="yin/ros_pybullet_interface/end_effector/traj" /> -->
 
 
   </node>
@@ -90,7 +89,7 @@
   <!-- Testing node trajectory publisher -->
   <node name="test_dual_arm_capturing_obj3D"
       pkg="ros_pybullet_interface"
-      type="test_dual_arm_capturing_obj3D.py"
+      type="test_dual_arm_capturing_prediction.py"
       output="screen">
 
 <!--      <param-->

@@ -66,7 +66,7 @@ class SimCmdToandFromROSSmartServo(object):
             self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, JointPosition, queue_size=1)
 
             # Setup subscriber that reads commanded robot state
-            subscr_sim_cmd_topic_name =  f"{robot_name}/{SIM_CMD_JOINT_STATE_TOPIC}"
+            subscr_sim_cmd_topic_name =  f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
             rospy.Subscriber(subscr_sim_cmd_topic_name, JointState, self.republishCmds)
 
 

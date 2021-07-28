@@ -39,3 +39,4 @@ communication:
 
   listener:
       topic: 'yin/ros_pybullet_interface/end_effector/traj'
+      # topic: 'yin_visual/ros_pybullet_interface/end_effector/traj'
