@@ -9,9 +9,9 @@ object:
   maxObjPos: [2, 2, 2, 6.28, 6.28, 6.28]
   finObjVel: [0., 0., 0., 0., 0., 0.]
   maxObjVel: [1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
-  slackObjPos: [0.51, 0.51, 0.51, 0.51, 0.51, 0.51]
+  slackObjPos: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
   slackObjVel: [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-  reducedNode: 60
+  reducedNode: 120
 
 robotYin:
   workspace: 1.0
