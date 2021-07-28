@@ -190,10 +190,10 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos1, self.minArmEEPos1, self.maxArmEEPos1,
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
-        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
-        # with open(self.initFile, 'wb') as f:
-        #     np.save(f, np.array(xSolution))
-        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+        with open(self.initFile, 'wb') as f:
+            np.save(f, np.array(xSolution))
+        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
         # decode solution
         if (solFlag):
@@ -500,8 +500,8 @@ if __name__=='__main__':
     print('solFlag =', solFlag, 'commandFlag =',commandFlag)
 
     # Visualize the planning result for capturing swinging object
-    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2,
-    #                                        forLimb2, animateFlag=False)
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2,
+                                           forLimb2, animateFlag=False)
 
     if commandFlag == True:
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
