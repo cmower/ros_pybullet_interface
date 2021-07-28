@@ -22,8 +22,8 @@ from py_pack import hybridto_dac_v2
 # ROS message types
 from nav_msgs.msg import Odometry
 
-NEW_TRAJ_Yang_TOPIC = 'yang/ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
-NEW_TRAJ_Yin_TOPIC = 'yin/ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+NEW_TRAJ_Yang_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
@@ -66,8 +66,8 @@ def rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, time, posBody, 
 
 class PlanInterpWithTO:
 
-    def __init__(self, initBaseYang, initBaseYin, initEEYang, initEEYin, paramFilePath = 'configs/config_prediction.yaml',
-                 initFilePath = 'data/init_trajopt.npy'):
+    def __init__(self, initBaseYang, initBaseYin, initEEYang, initEEYin, robot1_name, robot2_name, \
+                 paramFilePath = 'configs/config_prediction.yaml', initFilePath = 'data/init_trajopt.npy'):
 
         # Name of node
         self.name = rospy.get_name()
@@ -79,8 +79,8 @@ class PlanInterpWithTO:
         self.trajYinPlan = np.empty(0)
 
         # start punlishers
-        self.new_Yangtraj_publisher = rospy.Publisher(NEW_TRAJ_Yang_TOPIC, Float64MultiArray, queue_size=1)
-        self.new_Yintraj_publisher = rospy.Publisher(NEW_TRAJ_Yin_TOPIC, Float64MultiArray, queue_size=1)
+        self.new_Yangtraj_publisher = rospy.Publisher(f"{robot1_name}/{NEW_TRAJ_Yang_TOPIC}", Float64MultiArray, queue_size=1)
+        self.new_Yintraj_publisher = rospy.Publisher(f"{robot2_name}/{NEW_TRAJ_Yin_TOPIC}", Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
 
         # get the path to this catkin ws
@@ -282,10 +282,10 @@ class PredictionWithTO():
         start_time = time.time()
 
         # solve problem
-        preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
+        # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
         # with open(self.initFile, 'wb') as f:
         #     np.save(f, np.array(xSolution))
-        # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
+        preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
         # decode solution
         if (preFlag):
@@ -416,6 +416,15 @@ if __name__=='__main__':
     rospy.init_node('test_dual_arm_capturing_obj3D', anonymous=True)
     rospy.logwarn("ATTENTION: This node will not run without the impact-TO library!")
 
+    # check if the name of the robot is provided
+    if rospy.has_param('~robot1_name') and rospy.has_param('~robot2_name'):
+        robot1_name = rospy.get_param('~robot1_name')
+        robot2_name = rospy.get_param('~robot2_name')
+    else:
+        rospy.logerr(f"The name of the robots is not set in {rospy.get_name()}")
+        sys.exit(0)
+
+
     freq = 100
 
     Initials = InitialsOfPrediciton()
@@ -426,7 +435,7 @@ if __name__=='__main__':
     print(basePosYang, basePosYin, endPosYang, endPosYin)
 
     PredictionWithTO = PredictionWithTO(basePosYang, basePosYin)
-    PlanInterpWithTO = PlanInterpWithTO(basePosYang, basePosYin, endPosYang, endPosYin)
+    PlanInterpWithTO = PlanInterpWithTO(basePosYang, basePosYin, endPosYang, endPosYin, robot1_name, robot2_name)
     rospy.loginfo("%s: node started.", PlanInterpWithTO.name)
 
     ''' ATTENTION: replace the following with parameter from ROS as:
@@ -461,7 +470,7 @@ if __name__=='__main__':
             pos = initObjPos[0:3]
             quat = initObjPos[3:7]
 
-        initObjVel = np.array([0.0, 0.5, 0.0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0.0, 0.3, 0.0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     if objectState == "Flying":
@@ -486,8 +495,11 @@ if __name__=='__main__':
     # get object and robot state from pybullet
     initObjPos, initObjVel = Initials.startEstimation()
     # initObjVel = np.array([0.0, 0.4, 0.0, 0.0, 0.0, 0.0])
-    print(initObjPos, type(initObjPos), initObjVel, type(initObjPos))
+    print("The estimated pose of the object is :", initObjPos)
+    print("The estimated velocity of the object is :", initObjVel)
+
     start_time = time.time()
+
 
     # solve the trajectory optimization for prediction
     initIndex, normVector, timePre, posBodyPre, velBodyPre = PredictionWithTO.solveTO(initObjPos, initObjVel)
@@ -528,4 +540,3 @@ if __name__=='__main__':
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
 
     rospy.spin()
-
