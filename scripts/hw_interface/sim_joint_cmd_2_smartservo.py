@@ -23,6 +23,9 @@ JOINT_NAMES = ["IIWA_Joint_0","IIWA_Joint_1","IIWA_Joint_2","IIWA_Joint_3","IIWA
 MIN_JOINT_LIMITS = [-169, -100, -169, -119, -169, -119, -173]
 MAX_JOINT_LIMITS = [ 169,  100,  169,  119,  169,  119, 173]
 
+MIN_DELTA_JOINT_LIMITS = [-4.95, -4.95, -4.95, -4.95, -4.95, -4.95, -4.95]
+MAX_DELTA_JOINT_LIMITS = [4.95, 4.95, 4.95, 4.95, 4.95, 4.95, 4.95]
+
 class SimCmdToandFromROSSmartServo(object):
     """docstring for ."""
 
@@ -43,13 +46,16 @@ class SimCmdToandFromROSSmartServo(object):
         node_name = "SimCmdToandFromROSSmartServo"
         self.name = f"{robot_name}_{node_name}"
 
+        # init the latest robot state
+        self.latest_robot_state = np.asarray([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.counter = 0
         # ----------------------------------------------------------------------
         # incoming messaging (update simulated robots)
         # ----------------------------------------------------------------------
 
         # Setup ros publisher to update simulated robots
         sim_state_publishers_topic_name = f"{robot_name}/{SIM_ROBOT_JOINT_STATE_TOPIC}"
-        self.sim_joint_state_command_publisher = rospy.Publisher(sim_state_publishers_topic_name, JointState, queue_size=1)
+        self.sim_joint_state_command_publisher = rospy.Publisher(sim_state_publishers_topic_name, JointState)
 
         # Setup subscriber that reads commanded robot state
         subscr_real_state_topic_name =  f"{robot_name}/{REAL_ROBOT_JOINT_STATE_TOPIC}"
@@ -63,7 +69,7 @@ class SimCmdToandFromROSSmartServo(object):
         if cmd_robot_flag:
             # Setup ros publisher to cmd real robots
             real_world_publishers_topic_name = f"{robot_name}/{REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC}"
-            self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, JointPosition, queue_size=1)
+            self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, JointPosition)
 
             # Setup subscriber that reads commanded robot state
             subscr_sim_cmd_topic_name =  f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
@@ -83,6 +89,9 @@ class SimCmdToandFromROSSmartServo(object):
                                              cur_joint_pos.a5,
                                              cur_joint_pos.a6,
                                              cur_joint_pos.a7])
+
+        # update the latest robot state
+        self.latest_robot_state = current_joint_position
 
         # ----------------------------------------------------------------------
         # update state of the simulated robot
@@ -107,6 +116,29 @@ class SimCmdToandFromROSSmartServo(object):
         # check if command is within the limits and clip
         cmd_q = np.zeros(len(joint_values))
         np.clip(joint_values, np.deg2rad(MIN_JOINT_LIMITS), np.deg2rad(MAX_JOINT_LIMITS), out=cmd_q)
+
+        #
+        if self.counter == 0:
+            print("Configuration ", np.rad2deg(self.latest_robot_state))
+            print("Commanded ", np.rad2deg(cmd_q))
+
+        dq = cmd_q - self.latest_robot_state
+
+        if self.name == "yang_SimCmdToandFromROSSmartServo":
+            print("-------------3333333333333333333--------------------")
+            print("self.counter ", self.counter)
+            print("Configuration ", np.rad2deg(self.latest_robot_state))
+            print("Commanded ", np.rad2deg(cmd_q))
+            print("Diff ", np.rad2deg(dq))
+            print("-------------44444444444444444444--------------------")
+
+        if (abs(dq) > np.deg2rad(5)).any():
+            print("---------------------------------------------------------------")
+            print(" BIG STEP IN COMMAND ")
+            print("---------------------------------------------------------------")
+            self.cleanShutdown()
+            # np.clip(joint_values, np.deg2rad(MIN_DELTA_JOINT_LIMITS), np.deg2rad(MAX_DELTA_JOINT_LIMITS), out=dq)
+            # cmd_q = self.latest_robot_state + dq
 
         # ----------------------------------------------------------------------
         # command the robot
@@ -133,6 +165,7 @@ class SimCmdToandFromROSSmartServo(object):
         # send to the robot
         self.real_world_target_joint_command_publisher.publish(ros_smservo_msg)
 
+        self.counter += 1
 
     def cleanShutdown(self):
         print('')
