@@ -24,7 +24,7 @@ motion_dimensions:
 interpolation:
   nochange_window_length: 1
   use_interpolation: True
-  interDt: 0.01
+  interDt: 0.005
 
 communication:
   publisher:

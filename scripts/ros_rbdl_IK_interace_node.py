@@ -26,7 +26,7 @@ import ros_pybullet_interface.utils as utils
 # Constants
 # ------------------------------------------------------
 
-FREQ = 100 # IK sampling frequency
+FREQ = 200 # IK sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # publishes  for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # listens joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
@@ -243,6 +243,11 @@ class PyRBDL4dIK:
 
         # compute null-space component
         dq_nullspace_motion = (np.eye(c)-Jpinv_arm @ J_arm) @ ((self.h_delta-qprev)*(1/self.h_norm**2))
+
+        if (abs(dq) > np.deg2rad(5)).any():
+            print("---------------------------------------------------------------")
+            print(" BIG STEP IN IK ")
+            print("---------------------------------------------------------------")
 
         # compute new configuration
         qnext = qprev + dq + self.alpha_null*dq_nullspace_motion
