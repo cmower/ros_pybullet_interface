@@ -6,11 +6,11 @@ import os
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
 
 VICON_WORLD_FRAME = '/vicon/world'
+PYBULLET_WORLD_FRAME = 'ros_pybullet_interface/world'
 
 class ViconTFOffset(object):
     """docstring for ."""
@@ -38,6 +38,9 @@ class ViconTFOffset(object):
         # Setup ros publisher to update simulated robots
         self.vicon_pose_offset_publishers_topic_name = f"vicon_offset/{object_name}/{object_name}"
         self.vicon_pose_offset_publisher = rospy.Publisher(self.vicon_pose_offset_publishers_topic_name, TransformStamped, queue_size=1)
+
+        # Setup tf2 broadcaster
+        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
 
         # Setup subscriber that reads commanded robot state
         subscr_real_state_topic_name =  f"vicon/{object_name}/{object_name}"
@@ -73,9 +76,13 @@ class ViconTFOffset(object):
         msg_transform.transform.rotation.z = new_quat[2]
         msg_transform.transform.rotation.w = new_quat[3]
 
-        msg_transform.header.frame_id = VICON_WORLD_FRAME
+        msg_transform.header.frame_id = PYBULLET_WORLD_FRAME
         msg_transform.header.stamp = rospy.Time.now()
+        # Publish in ofset topic
         self.vicon_pose_offset_publisher.publish(msg_transform)
+
+        # Publish in tf
+        self.tfBroadcaster.sendTransform(msg_transform)
 
 
     def cleanShutdown(self):
