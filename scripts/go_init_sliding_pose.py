@@ -57,18 +57,18 @@ class TestIK:
         # print(pusherRadious)
         # sys.exit()
 
-        # compute end-effector initial position
-        _L = sideLenght/2. + pusherRadious + 0.01
-        self.eePos_traj = np.zeros((1, 3))
-        self.eePos_traj[0,0] = obj_pos0[0] + np.cos(np.deg2rad(180.+obj_ori0[2]))*_L
-        self.eePos_traj[0,1] = obj_pos0[1] + np.sin(np.deg2rad(180.+obj_ori0[2]))*_L
-        self.eePos_traj[0,2] = 0.05
-
         # # compute end-effector initial position
+        # _L = sideLenght/2. + pusherRadious + 0.01
         # self.eePos_traj = np.zeros((1, 3))
-        # self.eePos_traj[0,0] = 0.5
-        # self.eePos_traj[0,1] = -0.15
+        # self.eePos_traj[0,0] = obj_pos0[0] + np.cos(np.deg2rad(180.+obj_ori0[2]))*_L
+        # self.eePos_traj[0,1] = obj_pos0[1] + np.sin(np.deg2rad(180.+obj_ori0[2]))*_L
         # self.eePos_traj[0,2] = 0.05
+
+        # compute end-effector initial position
+        self.eePos_traj = np.zeros((1, 3))
+        self.eePos_traj[0,0] = 0.3
+        self.eePos_traj[0,1] = -0.55
+        self.eePos_traj[0,2] = 0.07
 
 
 

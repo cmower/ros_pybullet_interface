@@ -22,7 +22,7 @@
         </rosparam>
         <param
             name="robot_name"
-            value="LWR"
+            value="LWR_visual"
             type="str"/>
 
         <param
