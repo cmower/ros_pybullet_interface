@@ -1,22 +1,22 @@
 <?xml version="1.0" ?>
 <robot name="kuka">
     <material name="DarkGrey">
-        <color rgba="0.3 0.3 0.3 1.0"/>
+        <color rgba="0.3 0.3 0.3 0.5"/>
     </material>
     <material name="Black">
-        <color rgba="0 0 0 1.0"/>
+        <color rgba="0 0 0 0.5"/>
     </material>
     <material name="Orange">
-        <color rgba="1.0 0.487 0 1.0"/>
+        <color rgba="1.0 0.487 0 0.5"/>
     </material>
     <material name="Silver">
-        <color rgba="1.0 1.0 1.0 1.0"/>
+        <color rgba="1.0 1.0 1.0 0.5"/>
     </material>
     <material name="Grey">
-        <color rgba="0.7 0.7 0.7 1.0"/>
+        <color rgba="0.7 0.7 0.7 0.5"/>
     </material>
     <material name="Blue">
-        <color rgba="0.0 0.0 0.8 1.0"/>
+        <color rgba="0.0 0.0 0.8 0.5"/>
     </material>
     <link name="lwr_world">
       <inertial>
@@ -44,12 +44,6 @@
             <material name="Grey"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.055"/>
-            <geometry>
-                <cylinder length="0.11" radius="0.07"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="lwr_arm_0_joint" type="revolute">
         <origin rpy="0 0 3.14159265359" xyz="0 0 0.11"/>
@@ -74,24 +68,6 @@
             <material name="Blue"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 -0.06 0.2"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0.291 0 0" xyz="0 -0.03 0.1"/>
-            <geometry>
-                <cylinder length="0.208" radius="0.07"/>
-            </geometry>
-        </collision>
     </link>
     <transmission name="lwr_arm_0_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_0_motor"/>
@@ -121,24 +97,6 @@
             <material name="Blue"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.2"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0.06 0.0"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0.291 0 0" xyz="0 0.03 0.1"/>
-            <geometry>
-                <cylinder length="0.208" radius="0.07"/>
-            </geometry>
-        </collision>
     </link>
     <transmission name="lwr_arm_1_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_1_motor"/>
@@ -168,24 +126,6 @@
             <material name="Blue"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0.06 0.2"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="-0.291 0 0" xyz="0 0.03 0.1"/>
-            <geometry>
-                <cylinder length="0.208" radius="0.07"/>
-            </geometry>
-        </collision>
     </link>
     <transmission name="lwr_arm_2_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_2_motor"/>
@@ -215,24 +155,6 @@
             <material name="Blue"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.2"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-            <collision>
-            <origin rpy="0 0 0" xyz="0 -0.06 0.0"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="-0.291 0 0" xyz="0 -0.03 0.1"/>
-            <geometry>
-                <cylinder length="0.208" radius="0.07"/>
-            </geometry>
-        </collision>
     </link>
     <transmission name="lwr_arm_3_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_3_motor"/>
@@ -262,24 +184,6 @@
             <material name="Blue"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 -0.04 0.19"/>
-            <geometry>
-                <sphere radius="0.07"/>
-            </geometry>
-        </collision>
-        <collision>
-            <origin rpy="0.207 0 0" xyz="0 -0.02 0.095"/>
-            <geometry>
-                <cylinder length="0.198" radius="0.07"/>
-            </geometry>
-        </collision>
     </link>
     <transmission name="lwr_arm_4_trans" type="SimpleTransmission">
         <actuator name="lwr_arm_4_motor"/>
@@ -344,12 +248,6 @@
             <material name="DarkGrey"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0"/>
-            <geometry>
-                <cylinder length="0.046" radius="0.04"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="lwr_arm_7_joint" type="fixed">
         <parent link="lwr_arm_7_link"/>
@@ -370,12 +268,6 @@
             <material name="Black"/>
         </visual>
 
-        <collision>
-            <origin rpy="0 3.1416 0" xyz="0 0 0"/>
-            <geometry>
-                <mesh filename="meshes/visual/adaptor_kuka.stl" scale="0.001 0.001 0.001"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="force_torque_sensor_mount" type="fixed">
         <origin rpy="0 0 0" xyz="0 0 0.0453"/>
@@ -396,12 +288,6 @@
             </geometry>
         </visual>
 
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 -0.0333"/>
-            <geometry>
-                <cylinder length="0.0333" radius="0.04"/>
-            </geometry>
-        </collision>
     </link>
     <joint name="end_effector_joint" type="fixed">
         <origin rpy="0 0 0.0" xyz="0 0 0.02"/>
@@ -450,11 +336,5 @@
         </geometry>
         <material name="Black"/>
     </visual>
-    <collision>
-        <origin rpy="0 0 0" xyz="0 0 0.0"/>
-        <geometry>
-            <sphere radius="0.015"/>
-        </geometry>
-    </collision>
     </link>
 </robot>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node
+      name="ros_vicon_offset"
+      pkg="ros_pybullet_interface"
+      type="vicon_tf_offset.py"
+      output="screen">
+
+    <param
+        name="object_name"
+        value="pushing_box_wood"
+        type="str"/>
+
+    <param
+        name="offset"
+        value="-0.02 -0.07 -0.035 -90.0 0.0 0.0"
+        type="str"/>
+
+  </node>
+ 
+</launch>

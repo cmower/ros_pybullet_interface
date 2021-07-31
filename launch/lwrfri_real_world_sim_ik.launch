@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- Launch ROS-PyBullet interface -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface_node.py"
+      clear_params="true"
+      output="screen">
+
+      <!-- Pybullet simulation config (required) -->
+      <!-- Flag to indicate how bullet simulation step is
+           synced with ROS control loop.
+           Options:
+                0:  pybullet executes all simulation steps in a fixed frequency
+                       This can be used to simulate real world
+                       ( use simulation freqency > 250 Hz)
+                1: pybullet executes every simulation step when commanded by ROS node
+                       This can be used to execute one simulation step after one control/interface step
+                       Useful for debugging, but not realistic
+                       (specially, if control loop freqency is < 250 Hz)
+                2: pybullet executes a simulation step when ROS srv manualPybulletSteps is called
+                   This can be used to execute one simulation step after one control/interface step
+                   Useful for debugging MPC-like algorithms, but not realistic
+                  -->
+    <param
+        name="pybullet_sim_self_loop"
+        value="0"
+        type="int"/>
+
+    <param
+       name="Z_gravity"
+       value="-9.81"
+       type="double"/>
+
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/kuka_push.yaml",
+      "{ros_pybullet_interface}/configs/kuka_push_visual.yaml",
+      ]
+    </rosparam>
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
+        type="str"/>
+
+    <!-- List collision objects (optional) -->
+    <rosparam param="collision_object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/table_lwr_sliding.yaml',
+      ]
+    </rosparam>
+
+    <!-- List visual objects (optional) -->
+    <rosparam param="visual_object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
+      '{ros_pybullet_interface}/configs/sliding_box_vicon.yaml',
+      ]
+    </rosparam>
+
+    <!-- List objects (optional) -->
+    <rosparam param="object_config_file_names">
+      [
+      <!-- '{ros_pybullet_interface}/configs/sliding_box.yaml', -->
+      ]
+    </rosparam>
+
+
+  </node>
+
+  <!-- Flag that activates forwarding of commands to the robots -->
+  <arg name="command_real_robots" default="false"/>
+
+  <node
+      name="sim_HW_republisher_lwr"
+      pkg="ros_pybullet_interface"
+      type="sim_joint_cmd_2_lwr_fri.py"
+      output="screen">
+    <param
+        name="robot_name"
+        value="LWR"
+        type="str"/>
+    <param
+        name="cmd_real_robot"
+        value="$(arg command_real_robots)"
+        type="bool"/>
+  </node>
+
+    <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+    <node
+        name="ros_PyRBDL4dIK_interface"
+        pkg="ros_pybullet_interface"
+        type="ros_rbdl_IK_interace_node.py"
+        output="screen">
+      <param
+          name="robot_config"
+          value="{ros_pybullet_interface}/configs/kuka_push_visual.yaml"
+          type="str"/>
+        <!-- remap such that the initial state of the IK comes from real world state -->
+      <remap from="LWR_visual/ros_pybullet_interface/joint_state/current"  to="LWR/ros_pybullet_interface/joint_state/target" />
+    </node>
+
+  <node
+      pkg="tf2_ros"
+      type="static_transform_publisher"
+      name="table_tf_broadcaster"
+      args="1.25 1.25 -0.02 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world ros_pybullet_interface/table_sliding"
+      /> 
+
+</launch>

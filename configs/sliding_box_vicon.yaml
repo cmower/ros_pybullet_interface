@@ -1,21 +1,22 @@
 file_name: '{ros_pybullet_interface}/objects/box_sliding.obj'
 
-name: 'visual_sliding_box'
+name: 'sliding_box'
 
 # Basic parameters
 mesh_scale: [0.09, 0.2, 0.07]
-rgba_color: [0.3, 0.3, 0.3, 0.5]
+rgba_color: [0.3, 0.8, 0.3, 1.0]
 base_mass: 0.0
 
 # Dynamic parameters
-lateral_friction: 1.0
-spinning_friction: 0.0
-rolling_friction: 0.0
+lateral_friction: 0.2
+spinning_friction: 0.
+rolling_friction: 0.
 restitution: 0.0
-linear_damping: 0.04
-angular_damping: 0.04
-contact_stiffness: 2000.0
+linear_damping: 0.
+angular_damping: 0.
+contact_stiffness: 10000.0
 contact_damping: 0.7
+localInertiaDiagonal: [0.0125, 0.0125, 0.0125]
 
 link_state:
 
@@ -34,9 +35,11 @@ link_state:
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
   #
-  position: [0.5, 0.0, -0.055]
-  # position: [0.0, 0.0, 0.0]
-  orientation_eulerXYZ: [0., 0., 90.]
+  # position: [0, -0.6, -0.055]
+  # position: [0.5, 0.0, -0.055]
+  position: [0.5, 0.0, 0.]
+  # orientation_eulerXYZ: [0., 0., 1.5707]
+  # orientation_eulerXYZ: [0., 0., 70.]
+  orientation_eulerXYZ: [0., 0., 110.]
 
-
-  tf_frame_id: "ros_pybullet_interface/visual_sliding_box"
+  tf_frame_id: "vicon_offset/pushing_box_wood/pushing_box_wood"

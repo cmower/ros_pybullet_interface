@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <include file="$(find vicon_bridge)/launch/vicon.launch"/>
+    <include file="$(find ros_pybullet_interface)/launch/vicon_tf_offset_republish_kuka_push.launch"/>
+</launch>

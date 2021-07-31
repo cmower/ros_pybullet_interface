@@ -2,7 +2,7 @@
 # Configuration file for tracking using sliding
 # 
 
-sideLenght: 0.17 #  [meter]
+sideLenght: 0.09 #  [meter]
 pusherRadious: 0.015 #  [meter]
 pusherFricCoef: 0.2
 pusherForceLim:  0.6
