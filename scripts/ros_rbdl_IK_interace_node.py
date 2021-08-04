@@ -41,8 +41,8 @@ EEBodyPointPosition = np.array([0.0, 0.0, -0.0]) #np.zeros(3)
 # CURRENT_JOINT_STATE_TOPIC = 'joint_states' # publishes joint states on this topic
 # test on robot and compare with commit:
 # https://github.com/cmower/ros_pybullet_interface/commit/e3ce90b58998ea3078abda3f5733db883448bb6e
-NDOF = 7
-REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'sim/PositionController/command' # commands joint states on this topic
+# NDOF = 7
+# REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'sim/PositionController/command' # commands joint states on this topic
 
 
 class PyRBDLRobot:
@@ -290,8 +290,8 @@ class ROSdIKInterface(object):
         self.target_EE_orientation = np.transpose(curOri.as_matrix())
 
         # Setup ros publishers
-        real_world_publishers_topic_name = f"{self.robot_name}/{REAL_ROBOT_TARGET_JOINT_STATE_TOPIC}"
-        self.real_world_target_joint_state_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
+        # real_world_publishers_topic_name = f"{self.robot_name}/{REAL_ROBOT_TARGET_JOINT_STATE_TOPIC}"
+        # self.real_world_target_joint_state_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
 
 
 
@@ -343,21 +343,21 @@ class ROSdIKInterface(object):
         msg.header.stamp = rospy.Time.now()
         self.target_joint_state_publisher.publish(msg)
 
-    def publishdIKJointStateToROS2RealWorld(self, event):
-        # Pack trajectory msg
-        msg = Float64MultiArray()
-        msg.layout.dim.append(MultiArrayDimension())
-        # info for reconstruction of the 2D array
-        msg.layout.dim[0].label  = "columns"
-        msg.layout.dim[0].size   = NDOF
-
-        position =  self.robotIK.robot.getJointConfig()
-
-        # add data as flattened numpy array
-        msg.data = position.flatten('C') # row major flattening
-
-        # msg.header.stamp = rospy.Time.now()
-        self.real_world_target_joint_state_publisher.publish(msg)
+    # def publishdIKJointStateToROS2RealWorld(self, event):
+    #     # Pack trajectory msg
+    #     msg = Float64MultiArray()
+    #     msg.layout.dim.append(MultiArrayDimension())
+    #     # info for reconstruction of the 2D array
+    #     msg.layout.dim[0].label  = "columns"
+    #     msg.layout.dim[0].size   = NDOF
+    #
+    #     position =  self.robotIK.robot.getJointConfig()
+    #
+    #     # add data as flattened numpy array
+    #     msg.data = position.flatten('C') # row major flattening
+    #
+    #     # msg.header.stamp = rospy.Time.now()
+    #     self.real_world_target_joint_state_publisher.publish(msg)
 
     def startListening2EETargets(self):
         # Subscribe target end-effector callback
@@ -412,7 +412,7 @@ if __name__ == '__main__':
 
         # --------------------------------------------------
         # start the callback for the real world
-        ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, ROSdIKinterface.publishdIKJointStateToROS2RealWorld)
+        # ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, ROSdIKinterface.publishdIKJointStateToROS2RealWorld)
 
         # Ctrl-C will stop the script
         rospy.on_shutdown(ROSdIKinterface.cleanShutdown)
