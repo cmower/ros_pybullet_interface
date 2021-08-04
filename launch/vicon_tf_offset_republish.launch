@@ -8,12 +8,12 @@
 
     <param
         name="object_name"
-        value="white_box_iiwas"
+        value="Box_IIWAs"
         type="str"/>
 
     <param
         name="offset"
-        value="-0.01772 0.01112 -0.220 0.0 0.0 0.0"
+        value="0.0 0.0 -0.15 0.0 0.0 0.0"
         type="str"/>
 
   </node>
@@ -54,5 +54,5 @@
 
   </node>
 
- 
+
 </launch>
