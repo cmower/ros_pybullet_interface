@@ -178,7 +178,7 @@ class PlanInterpWithTO:
         self.HybProb_warmstart = self.HybOpt_DAC.buildProblem(warmStart=True)
 
         # get initial guess
-        # self.xInit = self.HybOpt_DAC.buildInitialGuess()
+        self.xInit = self.HybOpt_DAC.buildInitialGuess()
         with open(self.initFile, 'rb') as f:
             self.xInit = np.load(f)
 
@@ -198,7 +198,7 @@ class PlanInterpWithTO:
         # decode solution
         if (solFlag):
             timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array, forLimb1Array,\
-            posLimb2Array, velLimb2Array, forLimb2Array = self.HybOpt_DAC.decodeSol(xSolution)
+            posLimb2Array, velLimb2Array, forLimb2Array, alphaArray = self.HybOpt_DAC.decodeSol(xSolution)
 
             # self.HybOpt_DAC.plotResult(timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array,
             #                            forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, animateFlag=False)
@@ -221,7 +221,8 @@ class PlanInterpWithTO:
 
             pose, velocity = Initials.getPosVel()
 
-            dist = LA.norm(pose-posInitTraj)
+            # compute Euclidean distance, to see if object is in the expected location
+            dist = LA.norm(pose[0:3]-posInitTraj[0:3])
             if dist <= 0.05:
                 commandFlag = True
                 break
@@ -354,11 +355,18 @@ class InitialsOfPrediciton():
 
     def getPosVel(self):
 
-        eulerAngle = R.from_quat(self.objectState[3:7]).as_euler('ZYX')
+        ROT = R.from_quat(self.objectState[3:7])
+        eulerAngle = ROT.as_euler('ZYX')
         pose = np.hstack((self.objectState[0:3], eulerAngle))
-        velocity = self.objectState[7:13]
 
-        return pose, velocity
+        velocity = self.objectState[7:13]
+        #  transform local velocity to gloabal frame
+        global_lin_vel = ROT.as_matrix().dot(velocity[0:3])
+        global_ang_vel = ROT.as_matrix().dot(velocity[3:])
+
+        global_velocity = np.hstack((global_lin_vel.T, global_ang_vel.T))
+
+        return pose, global_velocity
 
     def readInitials(self, robot_name):
 
@@ -401,7 +409,7 @@ class InitialsOfPrediciton():
             pose, velocity= self.getPosVel()
 
             initY = pose[1]
-            if initY >= self.condition:
+            if initY <= self.condition:
                 break
 
         return pose, velocity
@@ -461,7 +469,10 @@ if __name__=='__main__':
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, -1.45, 0.3, 0 / 180 * np.pi, 0, 0])
+            # initObjPos = np.array([0.0, -1.25, 0.3, 0 / 180 * np.pi, 0, 0])
+            #  real
+            initObjPos = np.array([0.188, 1.06, 0.90, 90 / 180 * np.pi, 0, 0])
+
             pos = initObjPos[0:3]
             quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
         elif ori_representation == "quaternion":
@@ -470,7 +481,9 @@ if __name__=='__main__':
             pos = initObjPos[0:3]
             quat = initObjPos[3:7]
 
-        initObjVel = np.array([0.0, 0.3, 0.0, 0.0, 0.0, 0.0])
+        # initObjVel = np.array([0.0, 0.2, 0.0, 0.0, 0.0, 0.0])
+        #  real
+        initObjVel = np.array([0.0, -0.3, 0.0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     if objectState == "Flying":
@@ -489,7 +502,7 @@ if __name__=='__main__':
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     set_object_state_client.setObjState(pos, quat, lin_vel*0, ang_vel*0, 'target')
-    rospy.sleep(1.2)
+    rospy.sleep(2)
     set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target')
 
     # get object and robot state from pybullet
@@ -498,6 +511,13 @@ if __name__=='__main__':
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
 
+    # initObjVel[0] *= 0.
+    # initObjVel[1] *= -1
+    initObjVel[3:6] *= 0.
+    initObjPos[3] = 3.14
+
+    if (initObjVel[1] < -0.37 or initObjVel[1] > -0.23):
+        exit()
     start_time = time.time()
 
 
@@ -508,12 +528,13 @@ if __name__=='__main__':
     solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector)
 
+
     commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
     print('solFlag =', solFlag, 'commandFlag =',commandFlag)
 
     # Visualize the planning result for capturing swinging object
-    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2,
-                                           forLimb2, animateFlag=False)
+    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+
 
     if commandFlag == True:
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
