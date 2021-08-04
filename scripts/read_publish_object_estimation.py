@@ -24,15 +24,17 @@ TARGET_FRAME_ID_SIM = "ros_pybullet_interface/target"
 # ------------------------------------------------------------------------------
 #  Real data from vicon
 # ------------------------------------------------------------------------------
-WORLD_FRAME_ID_REAL = "vicon/world"
-TARGET_FRAME_ID_REAL = "vicon/white_box_iiwas/white_box_iiwas"
+# WORLD_FRAME_ID_REAL = "vicon/world"
+WORLD_FRAME_ID_REAL = 'ros_pybullet_interface/world'
+TARGET_FRAME_ID_REAL = "vicon_offset/Box_IIWAs/Box_IIWAs"
+
 
 
 class ObjectRepublisher():
 
     def __init__(self):
 
-        # Subscribe target end-effector callback
+        # Subscribe in the tf
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
 
