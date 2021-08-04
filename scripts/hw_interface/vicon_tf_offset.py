@@ -10,7 +10,9 @@ from scipy.spatial.transform import Rotation as R
 import tf2_ros
 from geometry_msgs.msg import TransformStamped
 
-VICON_WORLD_FRAME = '/vicon/world'
+# WORLD_FRAME = '/vicon/world'
+WORLD_FRAME = '/ros_pybullet_interface/world'
+
 
 class ViconTFOffset(object):
     """docstring for ."""
@@ -35,6 +37,9 @@ class ViconTFOffset(object):
         node_name = "ViconRepublishOffset"
         self.name = f"{object_name}_{node_name}"
 
+        # to publish in the tf
+        self.tfBroadcaster = tf2_ros.TransformBroadcaster()
+
         # Setup ros publisher to update simulated robots
         self.vicon_pose_offset_publishers_topic_name = f"vicon_offset/{object_name}/{object_name}"
         self.vicon_pose_offset_publisher = rospy.Publisher(self.vicon_pose_offset_publishers_topic_name, TransformStamped, queue_size=1)
@@ -57,25 +62,34 @@ class ViconTFOffset(object):
         msg_transform = TransformStamped()
         msg_transform.child_frame_id = self.vicon_pose_offset_publishers_topic_name
 
-        # apply translation offset
-        msg_transform.transform.translation.x = obj_transform.translation.x + self.offset[0]
-        msg_transform.transform.translation.y = obj_transform.translation.y + self.offset[1]
-        msg_transform.transform.translation.z = obj_transform.translation.z + self.offset[2]
-
         # apply rot offset
         rot_offset = R.from_euler('ZYX', self.offset[3:6], degrees=True)
-        new_quat = (R.from_quat(np.array([obj_transform.rotation.x,\
+        init_rot = (R.from_quat(np.array([obj_transform.rotation.x,\
                                           obj_transform.rotation.y,\
                                           obj_transform.rotation.z,\
-                                          obj_transform.rotation.w] ))*rot_offset).as_quat()
+                                          obj_transform.rotation.w])))
+
+
+        new_rot = init_rot*rot_offset
+        new_quat = new_rot.as_quat()
         msg_transform.transform.rotation.x = new_quat[0]
         msg_transform.transform.rotation.y = new_quat[1]
         msg_transform.transform.rotation.z = new_quat[2]
         msg_transform.transform.rotation.w = new_quat[3]
 
-        msg_transform.header.frame_id = VICON_WORLD_FRAME
+        self.local_offset = init_rot.as_matrix().dot(self.offset[0:3])
+        # apply translation offset
+        msg_transform.transform.translation.x = obj_transform.translation.x + self.local_offset[0]
+        msg_transform.transform.translation.y = obj_transform.translation.y + self.local_offset[1]
+        msg_transform.transform.translation.z = obj_transform.translation.z + self.local_offset[2]
+
+        msg_transform.header.frame_id = WORLD_FRAME
         msg_transform.header.stamp = rospy.Time.now()
         self.vicon_pose_offset_publisher.publish(msg_transform)
+
+        # Publish msg_transform in tf
+        self.tfBroadcaster.sendTransform(msg_transform)
+
 
 
     def cleanShutdown(self):
