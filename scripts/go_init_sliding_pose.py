@@ -49,28 +49,29 @@ class TestIK:
         # load object dynamics
         sliding_dyn_file_name = rospy.get_param('~sliding_param_dyn', [])[0]
         dyn_config = loadYAMLConfig(sliding_dyn_file_name)
-        sideLenght = dyn_config['sideLenght']
         pusherRadious = dyn_config['pusherRadious']
         print(obj_pos0)
         print(obj_ori0)
-        # print(sideLenght)
         # print(pusherRadious)
         # sys.exit()
 
         # # compute end-effector initial position
-        # _L = sideLenght/2. + pusherRadious + 0.01
         # self.eePos_traj = np.zeros((1, 3))
         # self.eePos_traj[0,0] = obj_pos0[0] + np.cos(np.deg2rad(180.+obj_ori0[2]))*_L
         # self.eePos_traj[0,1] = obj_pos0[1] + np.sin(np.deg2rad(180.+obj_ori0[2]))*_L
         # self.eePos_traj[0,2] = 0.05
 
+        # # compute end-effector initial position
+        # self.eePos_traj = np.zeros((1, 3))
+        # self.eePos_traj[0,0] = 0.0
+        # self.eePos_traj[0,1] = -0.6
+        # self.eePos_traj[0,2] = 0.17 
+
         # compute end-effector initial position
         self.eePos_traj = np.zeros((1, 3))
-        self.eePos_traj[0,0] = 0.3
-        self.eePos_traj[0,1] = -0.55
-        self.eePos_traj[0,2] = 0.07
-
-
+        self.eePos_traj[0,0] = 0.0
+        self.eePos_traj[0,1] = -0.625
+        self.eePos_traj[0,2] = 0.07 
 
         # ------------------Orientation ---------------------------
 
@@ -120,6 +121,9 @@ class TestIK:
         # Publish msg
         self.tf_broadcaster.sendTransform(msg)
 
+        msg.child_frame_id = f'LWR/{END_EFFECTOR_TARGET_FRAME_ID}'
+        # Publish msg
+        self.tf_broadcaster.sendTransform(msg)
         # self.updateTrajIndex()
 
         # service stuff
