@@ -6,6 +6,7 @@ from scipy.spatial.transform import Rotation as R
 import tf2_ros
 import casadi as cs
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
+np.set_printoptions(precision=3)
 
 import rospy
 
@@ -24,21 +25,21 @@ GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 1., 0.],
                           [0., 0., -1.]])
 ROBOT_HEIGHT = 0.07
-TABLE_HEIGHT = 0.02
-OBJECT_NAME = "ros_pybullet_interface/sliding_box"  # real box
-# OBJECT_NAME = "ros_pybullet_interface/visual_sliding_box"  # real box
+VISUAL_OBJ_HEIGHT = 0.02 + 0.035
 OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
-
-ROBOT_NAME = "LWR/ros_pybullet_interface/robot/end_effector_ball"
 WORLD_FRAME = "ros_pybullet_interface/world"
-END_EFFECTOR_TARGET_FRAME_ID = 'LWR/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
 SHOW_NOM_FLAG = False
 RUN_FREQ = 50
 
 REAL_SETUP = True
-ROBOT_NAME = "LWR_visual/ros_pybullet_interface/robot/end_effector_ball"
-END_EFFECTOR_TARGET_FRAME_ID = 'LWR_visual/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
-OBJECT_NAME = "vicon_offset/pushing_box_wood/pushing_box_wood"
+
+OBJECT_NAME_SIM = "ros_pybullet_interface/sliding_box"  # real box
+ROBOT_NAME_SIM = "LWR/ros_pybullet_interface/robot/end_effector_ball"
+END_EFFECTOR_TARGET_FRAME_ID_SIM = 'LWR/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
+
+OBJECT_NAME_REAL = "vicon_offset/pushing_box_wood/pushing_box_wood"
+ROBOT_NAME_REAL = "LWR_visual/ros_pybullet_interface/robot/end_effector_ball"
+END_EFFECTOR_TARGET_FRAME_ID_REAL = 'LWR_visual/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this
 
 class ROSSlidingMPC:
 
@@ -60,24 +61,35 @@ class ROSSlidingMPC:
         # Nominal trajectory indexing 
         self.idx_nom = 0
 
-        if REAL_SETUP:
-            # Loop till the pos and ori of the object has been read.
-            while 1:
-                try:
-                    # Read the position and orientation of the robot from the /tf topic
-                    trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{OBJECT_NAME}", rospy.Time())
-                    # replaces base_position = config['base_position']
-                    obj_pos0 = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
-
-                    break
-                except:
-                    rospy.logwarn(f"{self.name}: /tf topic does NOT have {OBJECT_NAME}")
+        self.real_setup=False
+        # check if the real_setup param exists
+        if rospy.has_param('~real_setup'):
+            self.real_setup = rospy.get_param('~real_setup')
         else:
-            # load visual object initial position
-            obj_file_name = rospy.get_param('~object_config_file_name', [])[0]
-            obj_config = loadYAMLConfig(obj_file_name)
-            obj_pos0 = obj_config['link_state']['position']
+            rospy.logerr(f"The real_setup parameter is not set in {rospy.get_name()}")
+            sys.exit(0)
 
+        if self.real_setup:
+            self.robot_name = ROBOT_NAME_REAL
+            self.end_effector_target_frame_id = END_EFFECTOR_TARGET_FRAME_ID_REAL
+            self.object_name = OBJECT_NAME_REAL
+
+        else:
+            self.robot_name = ROBOT_NAME_SIM
+            self.end_effector_target_frame_id = END_EFFECTOR_TARGET_FRAME_ID_SIM
+            self.object_name = OBJECT_NAME_SIM
+
+        # Loop till the pos and ori of the object has been read.
+        while 1:
+            try:
+                # Read the position and orientation of the robot from the /tf topic
+                trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{self.object_name}", rospy.Time())
+                # replaces base_position = config['base_position']
+                obj_pos0 = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+
+                break
+            except:
+                rospy.logwarn(f"{self.name}: /tf topic does NOT have {self.object_name}")
 
         # Get config files
         #  -------------------------------------------------------------------
@@ -98,9 +110,9 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        T = 25  # time of the simulation is seconds
+        T = 120  # time of the simulation is seconds
         freq = RUN_FREQ  # number of increments per second
-        N_MPC = 20  # time horizon for the MPC controller
+        N_MPC = 25  # time horizon for the MPC controller
         #  -------------------------------------------------------------------
         # Computing Problem constants
         #  -------------------------------------------------------------------
@@ -118,10 +130,10 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # Generate Nominal Trajectory
         #  -------------------------------------------------------------------
-        x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(-0.5, 0., N, N_MPC)
+        x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0., N, N_MPC)
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(-np.pi/2, 3*np.pi/2, 0.1, N, N_MPC)
-        # x1_nom, x0_nom = sliding_pack.traj.generate_traj_eight(0.3, N, N_MPC)
+        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.1, N, N_MPC)
         #  -------------------------------------------------------------------
         x0_nom = x0_nom + obj_pos0[0]
         x1_nom = x1_nom + obj_pos0[1]
@@ -161,14 +173,14 @@ class ROSSlidingMPC:
 
     def publishRobotObjectPose(self, event):
 
-        self.publishPose(self._cmd_robot_pose, END_EFFECTOR_TARGET_FRAME_ID)
+        self.publishPose(self._cmd_robot_pose, self.end_effector_target_frame_id)
         self.publishPose(self._cmd_visual_obj_pose, OBJECT_TARGET_FRAME_ID)
 
     def readTFs(self, event):
         """ Read robot and object pose periodically """
 
-        self._obj_pose = self.readPose(OBJECT_NAME)
-        self._robot_pose = self.readPose(ROBOT_NAME)
+        self._obj_pose = self.readPose(self.object_name)
+        self._robot_pose = self.readPose(self.robot_name)
 
     def readPose(self, frame_id_string):
 
@@ -199,17 +211,25 @@ class ROSSlidingMPC:
             robot_pos_2d_read).elements()[0]
         # build initial state for optimizer: TODO: get this from dyn function
 
-        # print('pos obj: ', obj_pos_2d_read)
-        # print('pos robot: ', robot_pos_2d_read)
+        print('*******************')
+        print('nom pos: ', self.X_nom_val[:, self.idx_nom])
+        print('curr ori obj: ', np.rad2deg(obj_ori_2d_read))
+        print('curr pos obj: ', obj_pos_2d_read)
+        print('curr pos robot: ', robot_pos_2d_read)
+        print('delta pos: ', np.linalg.norm(obj_pos_2d_read-robot_pos_2d_read))
         # print('ori obj: ', obj_ori_2d_read)
         print('psi: ', np.rad2deg(psi0))
         # sys.exit()
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
+        print('***********************')
+        print(solFlag)
         self.idx_nom += 1
         x_next = x_opt[:, 1]
         print('x_next: ', x_next)
+        print('x_opt pos: ', x_opt[:2, :])
+        print('x_opt ori: ', np.rad2deg(x_opt[2:, :]))
 
         # decode solution
         # compute object pose
@@ -226,17 +246,19 @@ class ROSSlidingMPC:
         # set visula object pose
         # TODO: later replace with call of func from dyn class
         visual_obj_pose_2d = np.array(self.X_nom_val[:, self.idx_nom].T)[0]
-        visual_obj_pos = np.hstack((visual_obj_pose_2d[0:2], TABLE_HEIGHT))
+        visual_obj_pos = np.hstack((visual_obj_pose_2d[0:2], VISUAL_OBJ_HEIGHT))
         visual_obj_ori = np.array([0., 0., visual_obj_pose_2d[2]])
         visual_obj_ori = R.from_rotvec(visual_obj_ori)
         visual_obj_ori_quat = visual_obj_ori.as_quat()
         self._cmd_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
-        # compute robot pose
-        robot_pos_2d = np.array(self.optObj.dyn.p(x_next).elements())
-        robot_pos = np.hstack((robot_pos_2d, ROBOT_HEIGHT))
-        robot_ori = R.from_matrix(GLB_ORI_ROBOT)
-        robot_ori_quat = robot_ori.as_quat()
-        self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
+        if solFlag:
+            # compute robot pose
+            robot_pos_2d = np.array(self.optObj.dyn.p(x_next).elements())
+            robot_pos = np.hstack((robot_pos_2d, ROBOT_HEIGHT))
+            robot_ori = R.from_matrix(GLB_ORI_ROBOT)
+            robot_ori_quat = robot_ori.as_quat()
+            self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
+            print('cmd robot pos: ', robot_pos_2d)
         print('count down: ', self.idx_nom, '/', self.Nidx)
         if self.idx_nom > self.Nidx:
             rospy.signal_shutdown("End of nominal trajectory")
@@ -244,8 +266,9 @@ class ROSSlidingMPC:
             # input()
             pass
 
-        # service stuff
-        # make_manual_pybullet_steps.makeStep(int(100./RUN_FREQ))
+        if not self.real_setup:
+            # service stuff
+            make_manual_pybullet_steps.makeStep(int(100./RUN_FREQ))
 
         return solFlag
 
