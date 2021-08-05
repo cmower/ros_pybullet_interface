@@ -57,15 +57,15 @@
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-      <!-- '{ros_pybullet_interface}/configs/visual_sliding_box.yaml', -->
-      '{ros_pybullet_interface}/configs/sliding_box_vicon.yaml',
+      '{ros_pybullet_interface}/configs/sphere_sliding_sim.yaml',
+      '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
     <rosparam param="object_config_file_names">
       [
-      <!-- '{ros_pybullet_interface}/configs/sliding_box.yaml', -->
+      '{ros_pybullet_interface}/configs/sliding_box.yaml',
       ]
     </rosparam>
 
@@ -84,12 +84,13 @@
           name="robot_config"
           value="{ros_pybullet_interface}/configs/kuka_push.yaml"
           type="str"/>
+
     </node>
 
   <node
       pkg="tf2_ros"
       type="static_transform_publisher"
       name="table_tf_broadcaster"
-      args="1.25 1.25 -0.02 -1.5707963267948966 0.0 3.141592653589793 ros_pybullet_interface/world ros_pybullet_interface/table_sliding"
+      args="0.0 -0.6 0.01 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/table_sliding"
       /> 
 </launch>
