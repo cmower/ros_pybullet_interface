@@ -178,12 +178,12 @@ class PlanInterpWithTO:
         self.HybProb_warmstart = self.HybOpt_DAC.buildProblem(warmStart=True)
 
         # get initial guess
-        self.xInit = self.HybOpt_DAC.buildInitialGuess()
+        # self.xInit = self.HybOpt_DAC.buildInitialGuess()
         with open(self.initFile, 'rb') as f:
             self.xInit = np.load(f)
 
 
-    def solveTO(self, initObjPos, initObjVel, normVector):
+    def solveTO(self, initObjPos, initObjVel, normVector, initEEAttYang_Quat, initEEAttYin_Quat):
 
         lbx, ubx, lbg, ubg, cf, gf = self.HybOpt_DAC.buildBounds(initObjPos, self.finObjPos, self.maxObjPos, self.slackObjPos,
                                                           initObjVel,  self.finObjVel,  self.maxObjVel,  self.slackObjVel,
@@ -191,8 +191,8 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
         solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
-        with open(self.initFile, 'wb') as f:
-            np.save(f, np.array(xSolution))
+        # with open(self.initFile, 'wb') as f:
+        #     np.save(f, np.array(xSolution))
         # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
         # decode solution
@@ -206,8 +206,10 @@ class PlanInterpWithTO:
             # for i in range(n):
             #     posLimb1Array[3:, i] = endAttYang_Quat
             #     posLimb2Array[3:, i] = endAttYin_Quat
-            posLimb1Array[3:7, 0] = endAttYang_Quat
-            posLimb2Array[3:7, 0] = endAttYin_Quat
+            np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
+            posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat, np_initEEAttYang_Quat)).T
+            np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
+            posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat,np_initEEAttYin_Quat)).T
             # posLimb1Array[3:6, 0] = endAttYang
             # posLimb2Array[3:6, 0] = endAttYin
 
@@ -299,7 +301,9 @@ class PredictionWithTO():
             print("#---Index for the initial state for TO: %s ---#" % (initIndex))
             print("#---Normal vector of contact surface for TO: %s ---#" % (normVector))
 
-            initIndex = initIndex-self.reducedNode
+            #  clamp reduce index
+            reduce = max(0, min(self.reducedNode, initIndex))
+            initIndex = initIndex-reduce
 
             return initIndex, normVector, timePre, posBodyPre, velBodyPre
 
@@ -471,7 +475,7 @@ if __name__=='__main__':
             # euler representation initialization #
             # initObjPos = np.array([0.0, -1.25, 0.3, 0 / 180 * np.pi, 0, 0])
             #  real
-            initObjPos = np.array([0.188, 1.06, 0.90, 90 / 180 * np.pi, 0, 0])
+            initObjPos = np.array([0.188, 1.06, 0.90, 100 / 180 * np.pi, 0, 0])
 
             pos = initObjPos[0:3]
             quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
@@ -511,12 +515,23 @@ if __name__=='__main__':
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
 
-    # initObjVel[0] *= 0.
+    initObjVel[0] *= 0.
     # initObjVel[1] *= -1
-    initObjVel[3:6] *= 0.
-    initObjPos[3] = 3.14
+    initObjVel[2:6] *= 0.
+    uncertainty = 1.57-initObjPos[3]
+    if abs(uncertainty) >= np.deg2rad(20.):
+        print('uncertainty:', np.rad2deg(uncertainty))
+        exit()
 
-    if (initObjVel[1] < -0.37 or initObjVel[1] > -0.23):
+    if abs(uncertainty) >= np.deg2rad(10.):
+        print('uncertainty:', np.rad2deg(uncertainty))
+        uncertainty = max(np.deg2rad(10.), min(uncertainty, np.deg2rad(-10.)))
+
+
+    initObjPos[3] = 3.14 - uncertainty
+
+    if (initObjVel[1] < -0.37 or initObjVel[1] > -0.20):
+        print('initObjVel:', initObjVel)
         exit()
     start_time = time.time()
 
@@ -526,11 +541,12 @@ if __name__=='__main__':
 
     # solve the TO problem
     solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
-        PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector)
+        PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector, endAttYang_Quat, endAttYin_Quat)
 
 
     commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
     print('solFlag =', solFlag, 'commandFlag =',commandFlag)
+    # commandFlag = True
 
     # Visualize the planning result for capturing swinging object
     # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
