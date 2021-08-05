@@ -4,7 +4,7 @@ import numpy as np
 
 #  spline interpolation
 import scipy.interpolate as spintpl
-from scipy.spatial.transform import Slerp
+from scipy.spatial.transform import Slerp, RotationSpline
 from scipy.spatial.transform import Rotation as R
 
 
@@ -24,6 +24,26 @@ def interpolateLinearlyQuaternions(timeSeq, QuatSeq, sampleFreq = 100):
     intertimeSeq = np.linspace(0, timeSeq[-1], num_samples)
     # generating interpolated trajectory
     interRotSeq = slerp(intertimeSeq)
+    interQuatSeq = interRotSeq.as_quat()
+
+    return intertimeSeq, interQuatSeq
+
+def interpolateCubiQuaternions(timeSeq, QuatSeq, sampleFreq = 100):
+    """
+    Interpolate trajectory from the knot points of an initial trajectory
+    Doing a cubic inetrpolation of the quaternions to the given waypoints, while respecting value and timing
+    Using scipy RotationSpline function
+    """
+
+    # Create the quaternion interpolator object
+    quat_spline = RotationSpline(timeSeq, R.from_quat(QuatSeq.T))
+
+    # compute the number of samples, given the duration of the trajectory and desired control frequency
+    num_samples = int(np.floor(timeSeq[-1]*sampleFreq))
+    # generating the time vector of samples
+    intertimeSeq = np.linspace(0, timeSeq[-1], num_samples)
+    # generating interpolated trajectory
+    interRotSeq = quat_spline(intertimeSeq)
     interQuatSeq = interRotSeq.as_quat()
 
     return intertimeSeq, interQuatSeq
