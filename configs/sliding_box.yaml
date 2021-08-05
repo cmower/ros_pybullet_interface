@@ -3,8 +3,8 @@ file_name: '{ros_pybullet_interface}/objects/box_sliding.obj'
 name: 'sliding_box'
 
 # Basic parameters
-mesh_scale: [0.2, 0.2, 0.1]
-rgba_color: [0.3, 0.8, 0.3, 1.0]
+mesh_scale: [0.09, 0.198, 0.07]
+rgba_color: [0.3, 0.3, 0.8, 1.0]
 base_mass: 1.0
 
 # Dynamic parameters
@@ -37,9 +37,9 @@ link_state:
   #
   # position: [0, -0.6, -0.055]
   # position: [0.5, 0.0, -0.055]
-  position: [0.5, 0.0, 0.]
+  position: [-0.24, -0.55, 0.06]
   # orientation_eulerXYZ: [0., 0., 1.5707]
   # orientation_eulerXYZ: [0., 0., 70.]
-  orientation_eulerXYZ: [0., 0., 110.]
+  orientation_eulerXYZ: [0., 0., 0.]
 
   tf_frame_id: "ros_pybullet_interface/sliding_box"
