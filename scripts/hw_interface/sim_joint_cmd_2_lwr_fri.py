@@ -26,6 +26,8 @@ MAX_JOINT_LIMITS = [ 169,  100,  169,  119,  169,  119, 173]
 MIN_DELTA_JOINT_LIMITS = [-4.95, -4.95, -4.95, -4.95, -4.95, -4.95, -4.95]
 MAX_DELTA_JOINT_LIMITS = [4.95, 4.95, 4.95, 4.95, 4.95, 4.95, 4.95]
 
+GLOBAL_OFFSET = [2.5, 0., 0., 0., 0., 0., 0.]
+
 class SimCmdToandFromROSLWRFRI(object):
     """docstring for ."""
 
@@ -91,7 +93,7 @@ class SimCmdToandFromROSLWRFRI(object):
         # ----------------------------------------------------------------------
         sim_msg = JointState(
             name = JOINT_NAMES,
-            position = current_joint_position,
+            position = current_joint_position + np.deg2rad(GLOBAL_OFFSET),
             # velocity = ,
             # effort = ,
         )
@@ -120,8 +122,7 @@ class SimCmdToandFromROSLWRFRI(object):
 
         ros_smservo_msg.header.stamp = rospy.Time.now()
 
-        ros_smservo_msg.jointPosition = cmd_q
-
+        ros_smservo_msg.jointPosition = cmd_q - np.deg2rad(GLOBAL_OFFSET)
         # send to the robot
         self.real_world_target_joint_command_publisher.publish(ros_smservo_msg)
 

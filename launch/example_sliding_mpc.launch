@@ -9,6 +9,10 @@
         type="test_ros_mpc_sliding.py"
         required="true"
         output="screen">
+        <param
+            name="real_setup"
+            value="true"
+            type="bool"/>
         <!-- List visual objects (optional) -->
         <rosparam param="object_config_file_name">
           [
