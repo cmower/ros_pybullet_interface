@@ -198,7 +198,7 @@ class TrajManager:
 
         # interpolate
         if self.use_interp:
-            self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan )
+            self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan)
         else:
             self.timeInterpPlan = timevector
             self.motionInterpPlan = trajPlan
@@ -257,7 +257,8 @@ class TrajManager:
             elif rot_repr == 'Quat':
                 # we need to do slerp
                 rot_idx = self.mot_dim['rotation']['rotationvec_index']
-                interSeqTime, interSeq_I = interpol.interpolateLinearlyQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]:rot_idx[1],:], sampleFreq=self.interFreq)
+                # interSeqTime, interSeq_I = interpol.interpolateLinearlyQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]:rot_idx[1],:], sampleFreq=self.interFreq)
+                interSeqTime, interSeq_I = interpol.interpolateCubiQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]:rot_idx[1],:], sampleFreq=self.interFreq)
                 for i in range(interSeq_I.shape[1]):
                     tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I[:,i], axis=0)
                 row_len += 4
