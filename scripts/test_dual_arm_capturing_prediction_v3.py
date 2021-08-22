@@ -191,8 +191,8 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
         solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector, cntPntVector)
-        with open(self.initFile, 'wb') as f:
-            np.save(f, np.array(xSolution))
+        # with open(self.initFile, 'wb') as f:
+        #     np.save(f, np.array(xSolution))
         # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
         # decode solution
@@ -473,7 +473,7 @@ if __name__=='__main__':
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, -1.25, 0.3, 20 / 180 * np.pi, 0, 0])
+            initObjPos = np.array([0.0, -1.25, 0.3, 0 / 180 * np.pi, 0, 0])
             #  real
             # initObjPos = np.array([0.188, 1.06, 0.90, 100 / 180 * np.pi, 0, 0])
 
