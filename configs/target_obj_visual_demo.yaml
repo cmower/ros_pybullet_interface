@@ -5,7 +5,7 @@ name: 'target_visual'
 
 # Basic parameters
 mesh_scale: [0.41, 0.31, 0.29]
-rgba_color: [0.5, 0.5, 0.5, 0.5]
+rgba_color: [0.5, 0.2, 0.3, 1.]
 base_mass: 0
 
 # Dynamic parameters
