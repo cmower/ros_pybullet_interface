@@ -1,0 +1,46 @@
+#
+# PyBullet KUKA configuration file
+#
+name: "human"
+file_name: "{ros_pybullet_interface}/robots/human_model/humanSubject02_48dof.urdf"
+end_effector: ""
+use_fixed_base: True
+base_position: [0.45, 0.75, 0.1]
+base_orient_eulerXYZ: [0.0, 0.0, -75.0]
+
+# body + neck
+# right arm
+# left arm
+# right leg
+# left leg
+init_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+               0.0, 0.0, 30.0, 90.0, 0.0, 60.0, 0.0, 0.0,
+               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+sensors:
+
+  #
+  # You can have multiple sensors on the robot, each attribute label should be
+  # specified as follows
+  #
+  #     SENSOR_TYPE__LABEL
+  #
+  # where SENSOR_TYPE is one of the following
+  #
+  #  - joint_force_torque_sensor
+  #
+  # and LABEL is some unique label. Each sensor type requires certain arguments
+  # to be set, see below.
+  #
+  #  - joint_force_torque_sensor
+  #    - joint_index (int, joint index where F/T sensor is attached on the robot)
+  #
+  # If the robot has no additional sensors then do not specify the sensors
+  # attribute.
+
+  # joint_force_torque_sensor__end_effector:
+    # joint_index: 8
+  pelvis_joint:
+    joint_index: 0
