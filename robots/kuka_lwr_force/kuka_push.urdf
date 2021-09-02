@@ -453,7 +453,7 @@
     <collision>
         <origin rpy="0 0 0" xyz="0 0 0.0"/>
         <geometry>
-            <sphere radius="0.015"/>
+            <sphere radius="0.013"/>
         </geometry>
     </collision>
     </link>
