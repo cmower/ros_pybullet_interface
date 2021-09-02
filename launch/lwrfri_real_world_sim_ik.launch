@@ -52,6 +52,7 @@
     <rosparam param="collision_object_config_file_names">
       [
       '{ros_pybullet_interface}/configs/table_lwr_sliding.yaml',
+      '{ros_pybullet_interface}/configs/table_lwr.yaml',
       ]
     </rosparam>
 
@@ -61,6 +62,7 @@
       '{ros_pybullet_interface}/configs/visual_sliding_box.yaml',
       '{ros_pybullet_interface}/configs/sliding_box_vicon.yaml',
       '{ros_pybullet_interface}/configs/sphere_sliding.yaml',
+      '{ros_pybullet_interface}/configs/sliding_obs.yaml',
       ]
     </rosparam>
 
@@ -111,6 +113,13 @@
       type="static_transform_publisher"
       name="table_tf_broadcaster"
       args="0.0 -0.6 0.01 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/table_sliding"
+      /> 
+
+  <node
+      pkg="tf2_ros"
+      type="static_transform_publisher"
+      name="table_lwr_base_tf_broadcaster"
+      args="0. 0. -0.02 0.0 0.0 0.0 ros_pybullet_interface/world ros_pybullet_interface/table_lwr_base"
       /> 
 
 </launch>

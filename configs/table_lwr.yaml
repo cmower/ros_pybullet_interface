@@ -1,0 +1,37 @@
+file_name: '{ros_pybullet_interface}/objects/box_sliding.obj'
+
+# Basic parameters
+mesh_scale: [0.7, 0.748, 0.04]
+rgba_color: [0.52, 0.36, 0.25, 1]
+# rgba_color: [0.6, 0.55, 0., 1]
+base_mass: -1.0
+
+# Dynamic parameters
+lateral_friction: 0.3
+spinning_friction: 0.
+rolling_friction: 0.
+restitution: 0.0
+linear_damping: 0.
+angular_damping: 0.
+contact_stiffness: 10000.0
+contact_damping: 0.7
+
+link_state:
+
+  # Specifying the link state
+  #
+  # You can set the collision object to be static or dynamic.
+  #
+  # state collision object
+  #   You must specify here a position attribute and orientation attribute.
+  #
+  # dynamic object
+  #
+  #   You must specify an attribute tf_frame_id. The position/orientation of the
+  #   collision object in PyBullet will be updated according to the
+  #   position/orientation of the respective tf frame. In ROS, you must ensure
+  #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
+  #   world frame is called 'ros_pybullet_interface/world'.
+  #
+
+  tf_frame_id: "ros_pybullet_interface/table_lwr_base"
