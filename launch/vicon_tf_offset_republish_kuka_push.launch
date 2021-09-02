@@ -15,9 +15,28 @@
 
     <param
         name="offset"
-        value="-0.02225 0.06225 0.01 0.0 0.0 0.0"
+        value="-0.008 0. -0.025 0.0 0.0 0.0"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_vicon_obs"
+      pkg="ros_pybullet_interface"
+      type="vicon_tf_offset.py"
+      output="screen">
+
+    <param
+        name="object_name"
+        value="pushing_obs_cyl_1"
+        type="str"/>
+
+    <param
+        name="offset"
+        value="0. 0. -0.035 0. 0. 0."
         type="str"/>
 
   </node>
  
 </launch>
+        <!-- value="-0.02225 0.06225 0.01 0.0 0.0 0.0" -->
