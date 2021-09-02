@@ -5,7 +5,7 @@ name: "LWR_visual"
 file_name: "{ros_pybullet_interface}/robots/kuka_lwr_force/kuka_push_visual.urdf"
 end_effector: "end_effector_ball"
 use_fixed_base: True
-base_position: [0.0, 0.0, 0.0]
+base_position: [0.011, -0.003, 0.0]
 base_orient_eulerXYZ: [0.0, 0.0, 0.0]
 init_position: [-30.11280589, -49.83176737, -7.65876425, 71.40585079, 7.81488752, -44.31203921, -8.3018490]
 
