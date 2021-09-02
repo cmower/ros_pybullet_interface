@@ -26,7 +26,8 @@ MAX_JOINT_LIMITS = [ 169,  100,  169,  119,  169,  119, 173]
 MIN_DELTA_JOINT_LIMITS = [-4.95, -4.95, -4.95, -4.95, -4.95, -4.95, -4.95]
 MAX_DELTA_JOINT_LIMITS = [4.95, 4.95, 4.95, 4.95, 4.95, 4.95, 4.95]
 
-GLOBAL_OFFSET = [2.5, 0., 0., 0., 0., 0., 0.]
+GLOBAL_OFFSET = [0., 0., 0., 0., 0., 0., 0.]
+# GLOBAL_OFFSET = [2.5, 0., 0., 0., 0., 0., 0.]
 
 class SimCmdToandFromROSLWRFRI(object):
     """docstring for ."""

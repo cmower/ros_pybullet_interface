@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import time
+import math
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import tf2_ros
@@ -24,7 +25,7 @@ CMD_DOF = 7
 GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 1., 0.],
                           [0., 0., -1.]])
-ROBOT_HEIGHT = 0.07
+ROBOT_HEIGHT = 0.06
 VISUAL_OBJ_HEIGHT = 0.02 + 0.035
 OBJECT_TARGET_FRAME_ID = "ros_pybullet_interface/visual_sliding_box"  # visual box
 WORLD_FRAME = "ros_pybullet_interface/world"
@@ -110,7 +111,7 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        T = 120  # time of the simulation is seconds
+        T = 50  # time of the simulation is seconds
         freq = RUN_FREQ  # number of increments per second
         N_MPC = 25  # time horizon for the MPC controller
         #  -------------------------------------------------------------------
@@ -130,10 +131,11 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         # Generate Nominal Trajectory
         #  -------------------------------------------------------------------
-        x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0., N, N_MPC)
+        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0., N, N_MPC)
+        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0., 0.3, N, N_MPC)
         # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(-np.pi/2, 3*np.pi/2, 0.1, N, N_MPC)
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.1, N, N_MPC)
+        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.11, N, N_MPC)
+        x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(0., -2*np.pi, 0.1, N, N_MPC)
         #  -------------------------------------------------------------------
         x0_nom = x0_nom + obj_pos0[0]
         x1_nom = x1_nom + obj_pos0[1]
@@ -201,7 +203,15 @@ class ROSSlidingMPC:
 
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
+        # hack to adjust read orientation around the 180 - -180 angle flipping
+        _target_ori = self.X_nom_val[2, self.idx_nom]
+        if obj_ori_2d_read < (_target_ori - np.pi/2.):
+            obj_ori_2d_read += 2.*np.pi
+        elif obj_ori_2d_read > (_target_ori + np.pi/2.):
+            obj_ori_2d_read -= 2.*np.pi
         robot_pos_2d_read = self._robot_pose[0:2]
+        # print('**************************')
+        # print(np.rad2deg(obj_ori_2d_read))
         # compute relative angle between pusher (robot) and slider (object)
         psi0 = self.optObj.dyn.psi(np.array([
             obj_pos_2d_read[0],
@@ -220,16 +230,16 @@ class ROSSlidingMPC:
         # print('ori obj: ', obj_ori_2d_read)
         print('psi: ', np.rad2deg(psi0))
         # sys.exit()
-        x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], obj_ori_2d_read, psi0]
+        x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], float(obj_ori_2d_read), psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
         print('***********************')
         print(solFlag)
         self.idx_nom += 1
         x_next = x_opt[:, 1]
-        print('x_next: ', x_next)
-        print('x_opt pos: ', x_opt[:2, :])
-        print('x_opt ori: ', np.rad2deg(x_opt[2:, :]))
+        # print('x_next: ', x_next)
+        # print('x_opt pos: ', x_opt[:2, :])
+        # print('x_opt ori: ', np.rad2deg(x_opt[2:, :]))
 
         # decode solution
         # compute object pose
