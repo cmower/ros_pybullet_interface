@@ -299,7 +299,7 @@
 			<!--box origin wrt jRightShoulder. RPY rotated of pi/2.-->
             <origin xyz="0     -0.1369           0" rpy="1.5708 0 0" />
             <geometry>
-                <cylinder length="0.27379" radius="0.030014"/>
+                <cylinder length="0.27379" radius="0.0300014"/>
             </geometry>
             <material name="color"/>
         </visual>
@@ -308,7 +308,7 @@
 			<!--box origin wrt jRightShoulder. RPY rotated of pi/2.-->
             <origin xyz="0     -0.1369           0" rpy="1.5708 0 0" />
             <geometry>
-                <cylinder length="0.27379" radius="0.030014"/>
+                <cylinder length="0.27379" radius="0.025014"/>
             </geometry>
         </collision>
 
@@ -379,6 +379,7 @@
         </collision>
 
     </link>
+
 	<!--Chain from (12) to (15)-->
 	<link name="LeftShoulder">
         <inertial>
@@ -920,7 +921,7 @@
         <parent link="RightShoulder"/>
         <child link="RightUpperArm_f1"/>
         <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-2.35619" upper="1.5708" />
+        <limit effort="30" velocity="0.2" lower="-2.35619" upper="1.5708" />
         <axis xyz="1 0 0" />
     </joint>
 	<joint name="jRightShoulder_roty" type="revolute">
@@ -928,8 +929,12 @@
         <parent link="RightUpperArm_f1"/>
         <child link="RightUpperArm_f2"/>
         <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-1.5708" upper="1.5708" />
+        <limit effort="30" velocity="0.2" lower="-1.5708" upper="1.5708" />
         <axis xyz="0 1 0" />
+
+        <!-- <limit effort="30" velocity="0.2" lower="-0.785398" upper="3.14159" />
+        <axis xyz="0 0 1" /> -->
+
     </joint>
     <joint name="jRightShoulder_rotz" type="revolute">
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -938,6 +943,9 @@
         <dynamics damping="0.1" friction="0.0"/>
         <limit effort="30" velocity="1.0" lower="-0.785398" upper="3.14159" />
         <axis xyz="0 0 1" />
+
+        <!-- <limit effort="30" velocity="0.2" lower="-1.5708" upper="1.5708" />
+        <axis xyz="0 1 0" /> -->
     </joint>
 	<joint name="jRightElbow_roty" type="revolute">
         <origin xyz="0    -0.27379           0" rpy="0 0 0"/>

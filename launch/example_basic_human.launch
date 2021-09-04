@@ -28,11 +28,17 @@
           value="0"
           type="int"/>
 
+      <param
+         name="Z_gravity"
+         value="-9.81"
+         type="double"/>
+
     <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
       [
       "{ros_pybullet_interface}/configs/yin_human.yaml",
       "{ros_pybullet_interface}/configs/human.yaml",
+      <!-- "{ros_pybullet_interface}/configs/cloth.yaml", -->
       ]
     </rosparam>
 
@@ -47,6 +53,14 @@
       [
       ]
     </rosparam>
+
+    <!-- List objects (optional) -->
+    <rosparam param="object_config_file_names">
+      [
+      <!-- '{ros_pybullet_interface}/configs/torus.yaml', -->
+      ]
+    </rosparam>
+
 
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
