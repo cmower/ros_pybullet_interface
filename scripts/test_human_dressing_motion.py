@@ -163,7 +163,7 @@ if __name__ == '__main__':
     initpose = np.hstack((endPos, endAtt_Quat))
 
     # offset from human hand
-    z_offset = np.array([0., 0., 0.1])
+    z_offset = np.array([0., 0., 0.15])
 
     wrist_z = -np.asarray(wrist_position) + np.asarray(pelvis_position)
     wrist_mat = orth_space_vecs(wrist_z)

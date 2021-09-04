@@ -26,14 +26,17 @@ import ros_pybullet_interface.utils as utils
 # Constants
 # ------------------------------------------------------
 
-FREQ = 200 # IK sampling frequency
-TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # publishes  for joint states on this topic
-CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # listens joint states on this topic
+FREQ = 200  # IK sampling frequency
+# publishes  for joint states on this topic
+TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
+# listens joint states on this topic
+CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
-END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
-ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base" # listen for the pose of the robot base
+# listens for end-effector poses on this topic
+END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
+ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base"  # listen for the pose of the robot base
 
-EEBodyPointPosition = np.array([0.0, 0.0, -0.0]) #np.zeros(3)
+EEBodyPointPosition = np.array([0.0, 0.0, -0.0])  # np.zeros(3)
 
 # ------------------------------------------------------------
 #  REAL ROBOT
@@ -51,7 +54,8 @@ class PyRBDLRobot:
 
         # Load Robot rbdl model
         file_name = utils.replacePackage(file_name)
-        self.rbdlModel = rbdl.loadModel(file_name.encode('utf-8'), verbose = False, floating_base = True)
+        self.rbdlModel = rbdl.loadModel(file_name.encode(
+            'utf-8'), verbose=False, floating_base=True)
 
         # Get end-effector body for rbdl
         self.rbdlEndEffectorID = rbdl.Model.GetBodyId(self.rbdlModel, end_effector_name)
@@ -128,13 +132,16 @@ class PyRBDLRobot:
         # define a local point w.r.t to a body
         point_local = np.array([0, 0., 0.])
         print(" Local position of the point ", point_local)
-        global_point_base = rbdl.CalcBodyToBaseCoordinates (self.rbdlModel, self.q, body_base, point_local)
+        global_point_base = rbdl.CalcBodyToBaseCoordinates(
+            self.rbdlModel, self.q, body_base, point_local)
         print(" Global position of the point ", global_point_base)
+
 
 class PyRBDL4dIK:
 
     def __init__(self, time_step, file_name, end_effector_name, base_position, base_orientation_quat, q0, ik_info):
-        self.robot = PyRBDLRobot(file_name, end_effector_name, base_position, base_orientation_quat, q0)
+        self.robot = PyRBDLRobot(file_name, end_effector_name,
+                                 base_position, base_orientation_quat, q0)
         self.dt = time_step
 
         # task indexes to switch from full 6D to only position or orienation
@@ -144,11 +151,12 @@ class PyRBDL4dIK:
         # weights for tracking between orientation axes
         self.ori_axis_weights = ik_info['ori_axis_weights']
         # Find the unique elements of an array
-        unique, index, counts = np.unique(np.array(self.ori_axis_weights), return_index=True, return_counts=True)
+        unique, index, counts = np.unique(
+            np.array(self.ori_axis_weights), return_index=True, return_counts=True)
         # get the index of the elemnt that is 1, if it exist
         self.axis_idx = -1
-        if (counts[unique==1.0]==1.0):
-            self.axis_idx = index[unique==1.0][0]
+        if (counts[unique == 1.0] == 1.0):
+            self.axis_idx = index[unique == 1.0][0]
 
         # set the function that computes the orienation error
         # error based on frames matching
@@ -166,21 +174,22 @@ class PyRBDL4dIK:
         self.h_delta = np.deg2rad(np.array(ik_info['h_delta']))
         self.h_norm = np.deg2rad(np.array(ik_info['h_norm']))
 
-
     def fullDiffIKStep(self, globalTargetPos3D, globalTargetOri3D):
         delta = self.computeDelta(globalTargetPos3D, globalTargetOri3D)
         JG = self.computeGlobalJacobian()
         self.fullDiffIK(JG, delta)
 
     """ --------------- Functions made for self use -------------------------"""
+
     def computeOrientationDelta3D(self, orientA, orientB):
         # least square error between two frames
-        error = R.align_vectors(np.transpose(orientA.as_matrix()), orientB.as_matrix(), self.ori_axis_weights)[0]
+        error = R.align_vectors(np.transpose(orientA.as_matrix()),
+                                orientB.as_matrix(), self.ori_axis_weights)[0]
         return error.as_rotvec()
 
     def computeOrientationDelta1axis(self, orientA, orientB):
         # compute error only between a pair fo vectors
-        zAxisTarget = orientA.as_matrix()[:,self.axis_idx] # get target axis vector
+        zAxisTarget = orientA.as_matrix()[:, self.axis_idx]  # get target axis vector
         zAxisCurrent = orientB.as_matrix()[2, :]           # get current Z axis vector
         axis = np.cross(zAxisCurrent, zAxisTarget)
         vectdot_align = zAxisTarget.dot(zAxisCurrent)
@@ -191,7 +200,7 @@ class PyRBDL4dIK:
         if np.isnan(angle).any():
             rospy.logerr(" The is something wrong with orientantion of the IK.")
 
-        return  axis*angle
+        return axis*angle
 
     def computeDelta(self, globalTargetPos3D, globalTargetOri3D):
         # retrieve global position of the end-effector
@@ -221,19 +230,20 @@ class PyRBDL4dIK:
         return delta
 
     def computeGlobalJacobian(self):
-         # Compute Jacobian
+        # Compute Jacobian
         JG = np.zeros([6, self.robot.numJoints])
-        rbdl.CalcPointJacobian6D(self.robot.rbdlModel, self.robot.q, self.robot.rbdlEndEffectorID, self.robot.rbdlEEBodyPointPosition, JG, update_kinematics=True)
+        rbdl.CalcPointJacobian6D(self.robot.rbdlModel, self.robot.q, self.robot.rbdlEndEffectorID,
+                                 self.robot.rbdlEEBodyPointPosition, JG, update_kinematics=True)
         return JG
 
     def fullDiffIK(self, J, delta):
 
-         # Compute Jacobian pseudo-inverse
+        # Compute Jacobian pseudo-inverse
         Jpinv = np.linalg.pinv(J)
 
         # select joints and dimensions
-        J_arm = J[self.f_indx:self.l_indx,6:self.robot.numJoints]
-        Jpinv_arm = Jpinv[6:self.robot.numJoints,self.f_indx:self.l_indx]
+        J_arm = J[self.f_indx:self.l_indx, 6:self.robot.numJoints]
+        Jpinv_arm = Jpinv[6:self.robot.numJoints, self.f_indx:self.l_indx]
         # Compute differential kinematics
         dq = Jpinv_arm.dot(delta[self.f_indx:self.l_indx])
 
@@ -242,7 +252,8 @@ class PyRBDL4dIK:
         qprev = self.robot.getJointConfig()
 
         # compute null-space component
-        dq_nullspace_motion = (np.eye(c)-Jpinv_arm @ J_arm) @ ((self.h_delta-qprev)*(1/self.h_norm**2))
+        dq_nullspace_motion = (np.eye(c)-Jpinv_arm @
+                               J_arm) @ ((self.h_delta-qprev)*(1/self.h_norm**2))
 
         if (abs(dq) > np.deg2rad(5)).any():
             print("---------------------------------------------------------------")
@@ -282,7 +293,8 @@ class ROSdIKInterface(object):
 
         # Setup ros publishers
         publishers_topic_name = f"{self.robot_name}/{TARGET_JOINT_STATE_TOPIC}"
-        self.target_joint_state_publisher = rospy.Publisher(publishers_topic_name, JointState, queue_size=1)
+        self.target_joint_state_publisher = rospy.Publisher(
+            publishers_topic_name, JointState, queue_size=1)
 
         # initialization of the Forward Kinematics
         self.target_EE_position = self.robotIK.robot.getCurEEPos()
@@ -292,8 +304,6 @@ class ROSdIKInterface(object):
         # Setup ros publishers
         # real_world_publishers_topic_name = f"{self.robot_name}/{REAL_ROBOT_TARGET_JOINT_STATE_TOPIC}"
         # self.real_world_target_joint_state_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
-
-
 
     def setupPyRBDLRobot(self, config_file_name):
 
@@ -308,35 +318,42 @@ class ROSdIKInterface(object):
         ik_info = config['IK']
 
         # Establish connection with Robot in PyBullet/Real world via ROS
-        rospy.loginfo(f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic, to read the curent configuration of the robot.")
-        msgRobotState = rospy.wait_for_message(f"{robot_name}/{CURRENT_JOINT_STATE_TOPIC}", JointState)
+        rospy.loginfo(
+            f"{self.name}: Waiting for {robot_name}/{CURRENT_JOINT_STATE_TOPIC} topic, to read the curent configuration of the robot.")
+        msgRobotState = rospy.wait_for_message(
+            f"{robot_name}/{CURRENT_JOINT_STATE_TOPIC}", JointState)
         # set robot to the curent configuration obtained from ros topic
         init_joint_position = list(msgRobotState.position)
 
-        rospy.loginfo(f"{self.name}: Reading for /tf topic the position and orientation of the robot")
+        rospy.loginfo(
+            f"{self.name}: Reading for /tf topic the position and orientation of the robot")
         # Loop till the position and orientation of the base the robots has been read.
         while 1:
             try:
                 # Read the position and orientation of the robot from the /tf topic
-                trans = self.IK_listen_buff.lookup_transform(WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
+                trans = self.IK_listen_buff.lookup_transform(
+                    WORLD_FRAME_ID, f"{robot_name}/{ROBOT_BASE_ID}", rospy.Time())
                 break
-            except:
+            except Exception:
                 rospy.logwarn(f"{self.name}: /tf topic does NOT have {robot_name}/{ROBOT_BASE_ID}")
         # replaces base_position = config['base_position']
-        base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+        base_position = [trans.transform.translation.x,
+                         trans.transform.translation.y, trans.transform.translation.z]
         # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-        base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w]
+        base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y,
+                            trans.transform.rotation.z, trans.transform.rotation.w]
         # base_orient_eulerXYZ = config['base_orient_eulerXYZ']
 
         # Create pybullet robot instance
-        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name, base_position, base_orient_quat, init_joint_position, ik_info)
+        self.robotIK = PyRBDL4dIK(self.dt, file_name, end_effector_name,
+                                  base_position, base_orient_quat, init_joint_position, ik_info)
 
         return robot_name
 
     def publishdIKJointStateToROS(self, event):
         msg = JointState(
-            name = self.robotIK.robot.getJointName(),
-            position =  self.robotIK.robot.getJointConfig(),
+            name=self.robotIK.robot.getJointName(),
+            position=self.robotIK.robot.getJointConfig(),
             # velocity = self.robotIK.robot.getJointConfig(),
             # effort = self.robotIK.robot.getJointConfig(),
         )
@@ -367,11 +384,14 @@ class ROSdIKInterface(object):
 
     def readTargetEEStateFromTF(self, event):
         try:
-            tf = self.tfBuffer.lookup_transform(WORLD_FRAME_ID, f"{self.robot_name}/{END_EFFECTOR_TARGET_FRAME_ID}", rospy.Time())
+            tf = self.tfBuffer.lookup_transform(
+                WORLD_FRAME_ID, f"{self.robot_name}/{END_EFFECTOR_TARGET_FRAME_ID}", rospy.Time())
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             return
-        self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
-        target_EE_ori = R.from_quat(np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w]))
+        self.target_EE_position = np.asarray(
+            [tf.transform.translation.x, tf.transform.translation.y, tf.transform.translation.z])
+        target_EE_ori = R.from_quat(np.asarray(
+            [tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w]))
         self.target_EE_orientation = target_EE_ori.as_matrix()
 
     def updateRBDL(self, event):
@@ -384,10 +404,10 @@ class ROSdIKInterface(object):
         self.writeCallbackTimer.shutdown()
         # Send to current configuration
         msg = JointState(
-            name = self.robotIK.robot.getJointName(),
-            position =  self.robotIK.robot.getJointConfig(),
-            velocity = self.robotIK.robot.getJointConfig()*0,
-            effort = self.robotIK.robot.getJointConfig()*0,
+            name=self.robotIK.robot.getJointName(),
+            position=self.robotIK.robot.getJointConfig(),
+            velocity=self.robotIK.robot.getJointConfig()*0,
+            effort=self.robotIK.robot.getJointConfig()*0,
         )
         msg.header.stamp = rospy.Time.now()
         self.target_joint_state_publisher.publish(msg)
@@ -408,7 +428,8 @@ if __name__ == '__main__':
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSdIKinterface.dt)
         rospy.Timer(dur, ROSdIKinterface.updateRBDL)
-        ROSdIKinterface.writeCallbackTimer = rospy.Timer(dur, ROSdIKinterface.publishdIKJointStateToROS)
+        ROSdIKinterface.writeCallbackTimer = rospy.Timer(
+            dur, ROSdIKinterface.publishdIKJointStateToROS)
 
         # --------------------------------------------------
         # start the callback for the real world
