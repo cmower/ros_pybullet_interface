@@ -21,12 +21,13 @@ from ros_pybullet_interface.srv import ManualPybulletSteps, ManualPybulletStepsR
 
 ROS_FREQ = 100       # ROS loop sampling frequency
 ROS_DT = 1.0/float(ROS_FREQ)
-PYBULLET_FREQ = ROS_FREQ #256 # PyBullet simulation loop sampling frequency
+PYBULLET_FREQ = ROS_FREQ  # 256 # PyBullet simulation loop sampling frequency
 PYBULLET_DT = 1.0/float(PYBULLET_FREQ)
-TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'  # listens for joint states on this topic
-CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publishes joint states on this topic
+# listens for joint states on this topic
+TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
+# publishes joint states on this topic
+CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
-
 
 
 # ------------------------------------------------------------
@@ -109,7 +110,7 @@ class ROSPyBulletInterface:
         # to these setup functions
 
         # Initialise pybullet
-        pybullet_interface.initPyBullet(ROS_DT, gravity = grav)
+        pybullet_interface.initPyBullet(ROS_DT, gravity=grav)
         self.setupPyBulletCamera(camera_config_file_name)
 
         for file_name in robot_file_names:
@@ -157,6 +158,20 @@ class ROSPyBulletInterface:
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
+        # -----------------------------------------------------------------------------------------------------
+        # local hack!!!! for cloth
+        bb_id = self.robots[0]['robot'].ID
+        hh_id = self.robots[0]['robot'].link_ids[8]
+
+        self.p = pybullet_interface.getPybulletObject_hack()
+        c_id = self.p.loadURDF(
+            "/home/theo/software/pybullet/py3bullet-ROS-ws/src/ros_pybullet_interface/robots/cloth/cloth.urdf", 0.4, 0.22, 0.45)
+        self.cid = self.p.createConstraint(bb_id, hh_id, c_id, -1, self.p.JOINT_POINT2POINT,
+                                           [0, 0, 0], [0, 0, 0.1], [0, 0, -0.0])
+
+        self.p.changeConstraint(self.cid, erp=0.5, maxForce=1)
+        # -----------------------------------------------------------------------------------------------------
+
     def _null(self, *args, **kwargs):
         pass
 
@@ -188,7 +203,7 @@ class ROSPyBulletInterface:
         robot = pybullet_interface.PyBulletRobot(config['file_name'])
         self.robots.append({"robot": robot,
                             "robot_name": robot_name}
-                            )
+                           )
 
         robot.setBasePositionAndOrientation(
             config['base_position'],
@@ -201,12 +216,15 @@ class ROSPyBulletInterface:
         for _ in range(2):
             try:
                 # Read the position and orientation of the robot from the topic
-                trans = rospy.wait_for_message(f"vicon_offset/{robot_name}_frame/{robot_name}_frame", TransformStamped, timeout=2)
+                trans = rospy.wait_for_message(
+                    f"vicon_offset/{robot_name}_frame/{robot_name}_frame", TransformStamped, timeout=2)
 
                 # replaces base_position = config['base_position']
-                base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+                base_position = [trans.transform.translation.x,
+                                 trans.transform.translation.y, trans.transform.translation.z]
                 # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
-                base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w]
+                base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y,
+                                    trans.transform.rotation.z, trans.transform.rotation.w]
 
                 robot.setBasePositionAndOrientation(
                     base_position,
@@ -214,14 +232,14 @@ class ROSPyBulletInterface:
                 )
                 break
             except:
-                rospy.logwarn(f"{self.name}: /tf topic does NOT have vicon/<subject_name>/<segment_name>_{robot_name}")
-
+                rospy.logwarn(
+                    f"{self.name}: /tf topic does NOT have vicon/<subject_name>/<segment_name>_{robot_name}")
 
         # Specify target joint position
         self.robots_target_joint_position.append(qinit)
 
         # Setup ros publishers
-        publishers_topic_name = os.path.join(robot_name,CURRENT_JOINT_STATE_TOPIC)
+        publishers_topic_name = os.path.join(robot_name, CURRENT_JOINT_STATE_TOPIC)
         self.robots_joint_state_pubs.append(
             rospy.Publisher(
                 publishers_topic_name,
@@ -243,7 +261,6 @@ class ROSPyBulletInterface:
         # Setup sensors
         if 'sensors' in config:
 
-
             # Setup sensors in PyBullet and their respective ROS publishers
             for label, sensor_parameters in config['sensors'].items():
 
@@ -252,7 +269,7 @@ class ROSPyBulletInterface:
 
                     # Extract info
                     joint_index = sensor_parameters['joint_index']
-                    label = label.split('__')[1] # remove joint_force_torque_sensor__
+                    label = label.split('__')[1]  # remove joint_force_torque_sensor__
 
                     # Setup sensor
                     robot.setupJointForceTorqueSensor(label, joint_index)
@@ -363,59 +380,59 @@ class ROSPyBulletInterface:
 
     def setupPyBulletObject(self, file_name):
 
-            # Load config
-            config = loadYAMLConfig(file_name)
+        # Load config
+        config = loadYAMLConfig(file_name)
 
-            if 'urdf' in config.keys():
-                obj= pybullet_interface.PyBulletObject(
-                    config['file_name'],
-                    config['mesh_scale'],
-                    config['rgba_color'],
-                    config['base_mass'],
-                    loadURDF=config['urdf'])
-            else:
-                # Setup visual object
-                obj = pybullet_interface.PyBulletObject(
-                    config['file_name'],
-                    config['mesh_scale'],
-                    config['rgba_color'],
-                    config['base_mass'],
-                )
-
-            obj.changeDynamics(
-                -1, # which is the link index
-                config['lateral_friction'],
-                config['spinning_friction'],
-                config['rolling_friction'],
-                config['restitution'],
-                config['linear_damping'],
-                config['angular_damping'],
-                config['contact_stiffness'],
-                config['contact_damping'],
-                config['localInertiaDiagonal']
+        if 'urdf' in config.keys():
+            obj = pybullet_interface.PyBulletObject(
+                config['file_name'],
+                config['mesh_scale'],
+                config['rgba_color'],
+                config['base_mass'],
+                loadURDF=config['urdf'])
+        else:
+            # Setup visual object
+            obj = pybullet_interface.PyBulletObject(
+                config['file_name'],
+                config['mesh_scale'],
+                config['rgba_color'],
+                config['base_mass'],
             )
 
-            obj.setBasePositionAndOrientation(
-                config['link_state']['position'],
-                config['link_state']['orientation_eulerXYZ'],
-            )
+        obj.changeDynamics(
+            -1,  # which is the link index
+            config['lateral_friction'],
+            config['spinning_friction'],
+            config['rolling_friction'],
+            config['restitution'],
+            config['linear_damping'],
+            config['angular_damping'],
+            config['contact_stiffness'],
+            config['contact_damping'],
+            config['localInertiaDiagonal']
+        )
 
-            # book-keeping object names and ids
-            if 'name' in config:
-                name = config['name']
-            else:
-                name = 'obj' + str(len(self.objects))
+        obj.setBasePositionAndOrientation(
+            config['link_state']['position'],
+            config['link_state']['orientation_eulerXYZ'],
+        )
 
-            self.objects.append({
-                'object_id': obj.getObjectID(),
-                'object_name': name
-            })
+        # book-keeping object names and ids
+        if 'name' in config:
+            name = config['name']
+        else:
+            name = 'obj' + str(len(self.objects))
 
+        self.objects.append({
+            'object_id': obj.getObjectID(),
+            'object_name': name
+        })
 
     def setPyBulletCollisionVisualObjectPositionAndOrientation(self):
         for obj in self.dynamic_collisionvisual_objects:
             tf = self.tfs[obj['tf_frame_id']]
-            if not tf['received']: continue
+            if not tf['received']:
+                continue
             obj['object'].setBasePositionAndOrientation(
                 tf['position'], tf['orientation']
             )
@@ -514,13 +531,13 @@ class ROSPyBulletInterface:
         for obj in self.objects:
             pos, orient = pybullet_interface.getObjectPosOrient(obj['object_id'])
             self.tf_broadcaster.sendTransform(
-                    packTransformStamped(
-                        WORLD_FRAME_ID,
-                        f"ros_pybullet_interface/{obj['object_name']}",
-                        pos,
-                        orient
-                    )
+                packTransformStamped(
+                    WORLD_FRAME_ID,
+                    f"ros_pybullet_interface/{obj['object_name']}",
+                    pos,
+                    orient
                 )
+            )
 
     def visualizeLinks(self):
         for linkid in self.visframes:
@@ -534,10 +551,10 @@ class ROSPyBulletInterface:
 
         obj_id = None
         for obj in self.objects:
-            if obj['object_name']==req.obj_name:
+            if obj['object_name'] == req.obj_name:
                 obj_id = obj['object_id']
 
-        if obj_id==None:
+        if obj_id == None:
             rospy.logwarn(f"{obj_name} was not found... in setObjState()")
             return
 
@@ -545,10 +562,10 @@ class ROSPyBulletInterface:
         pybullet_interface.setObjectVelLinAng(obj_id, req.lin_vel, req.ang_vel)
         rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
         rospy.loginfo(f"Returning object linear and angular velocity: {req.lin_vel}, {req.ang_vel}")
-        rospy.loginfo(f"Returning object dynamics info: {pybullet_interface.getObjectDynamicsInfo(obj_id)}")
+        rospy.loginfo(
+            f"Returning object dynamics info: {pybullet_interface.getObjectDynamicsInfo(obj_id)}")
 
         return setObjectStateResponse("True: Set the state of the object successfully")
-
 
     def setObjectStateServer(self):
 
@@ -570,15 +587,12 @@ class ROSPyBulletInterface:
             srv_success = False
             srv_info = f"PyBullet stepping FAILED: {error}"
 
-        return ManualPybulletStepsResponse(success = srv_success, info = srv_info)
-
-
+        return ManualPybulletStepsResponse(success=srv_success, info=srv_info)
 
     def makePybulletStepsServer(self):
 
         s = rospy.Service('manual_pybullet_steps', ManualPybulletSteps, self.manualPybulletSteps)
         rospy.loginfo("Server is ready to perform manual pybullet steps.")
-
 
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
@@ -595,11 +609,14 @@ class ROSPyBulletInterface:
         self.publishStaticTransformsToROS()
         self.publishObjectStateTransToROS()
 
+        self.p.changeConstraint(self.cid, erp=0.5, maxForce=20)
+        sensedForce = self.p.getConstraintState(self.cid)
+        print("sensedForce ", sensedForce)
+
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
         # or (as we might want to manually control the rate of steps)
         self.step()
-
 
     def spin(self):
         try:
