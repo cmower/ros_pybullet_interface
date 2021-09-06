@@ -5,7 +5,8 @@ name: "yin_human"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [-0.0, 0.0, 0.0]
+# base_position: [-0.0, 0.0, 0.0]
+base_position: [-0.2, 0.2, 0.0]
 base_orient_eulerXYZ: [0.0, 0.0, 0.0]
 # init_position: [0., -30., 0., -80., 0., 10., 90.]
 init_position: [30., 5., 0., -80., 0., 90., 90.]

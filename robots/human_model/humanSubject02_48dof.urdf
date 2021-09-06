@@ -222,7 +222,7 @@
     </link>
 	<link name="Head">
         <inertial>
-            <mass value="2.8584"/>
+            <mass value="0.8584"/>
 			<!--COM origin wrt jC1Head-->
             <origin xyz="0           0     0.11223" rpy="0 0 0" />
             <inertia ixx="0.0144" iyy="0.0144" izz="0.0144" ixy="0" ixz="0" iyz="0"/>
@@ -308,17 +308,28 @@
 			<!--box origin wrt jRightShoulder. RPY rotated of pi/2.-->
             <origin xyz="0     -0.1369           0" rpy="1.5708 0 0" />
             <geometry>
-                <cylinder length="0.27379" radius="0.025014"/>
+                <cylinder length="0.27379" radius="0.02014"/>
             </geometry>
         </collision>
 
     </link>
 	<link name="RightForeArm_f1">
+    <contact>
+      <lateral_friction value="0.0"/>
+      <rolling_friction value="0.0"/>
+   </contact>
+
         <inertial>
             <mass value="0"/>
             <origin xyz="0 0 0" rpy="0 0 0" />
             <inertia ixx="0" iyy="0" izz="0" ixy="0" ixz="0" iyz="0"/>
         </inertial>
+        <collision>
+      <!--box origin wrt jRightElbow. RPY rotated of pi/2.-->
+            <geometry>
+                <sphere radius="0.023"/>
+            </geometry>
+        </collision>
     </link>
 	<link name="RightForeArm">
         <inertial>
@@ -799,8 +810,8 @@
         <origin xyz="-0.000525           0      0.1223" rpy="0 0 0"/>
         <parent link="Pelvis"/>
         <child link="L5_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.610865" upper="0.610865" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.610865" upper="0.610865" />
         <axis xyz="1 0 0" />
     </joint>
 	<joint name="jL5S1_roty" type="revolute">
@@ -808,39 +819,39 @@
         <parent link="L5_f1"/>
         <child link="L5"/>
         <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.523599" upper="1.309" />
+        <limit effort="500" velocity="1.0" lower="-0.523599" upper="1.309" />
         <axis xyz="0 1 0" />
     </joint>
 	<joint name="jL4L3_rotx" type="revolute">
         <origin xyz="0.000953           0     0.08793" rpy="0 0 0"/>
         <parent link="L5"/>
         <child link="L3_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.610865" upper="0.610865" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.610865" upper="0.610865" />
         <axis xyz="1 0 0" />
     </joint>
 	<joint name="jL4L3_roty" type="revolute">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="L3_f1"/>
         <child link="L3"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.523599" upper="1.309" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.523599" upper="1.309" />
         <axis xyz="0 1 0" />
     </joint>
 	<joint name="jL1T12_rotx" type="revolute">
         <origin xyz="0           0    0.079417" rpy="0 0 0"/>
         <parent link="L3"/>
         <child link="T12_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.610865" upper="0.610865" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.610865" upper="0.610865" />
         <axis xyz="1 0 0" />
     </joint>
 	<joint name="jL1T12_roty" type="revolute">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="T12_f1"/>
         <child link="T12"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.523599" upper="1.309" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.523599" upper="1.309" />
         <axis xyz="0 1 0" />
     </joint>
 	<joint name="jT9T8_rotx" type="revolute">
@@ -848,15 +859,15 @@
         <parent link="T12"/>
         <child link="T8_f1"/>
         <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.349066" upper="0.349066" />
+        <limit effort="500" velocity="1.0" lower="-0.349066" upper="0.349066" />
         <axis xyz="1 0 0" />
     </joint>
 	<joint name="jT9T8_roty" type="revolute">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="T8_f1"/>
         <child link="T8_f2"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.261799" upper="0.698132" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.261799" upper="0.698132" />
         <axis xyz="0 1 0" />
     </joint>
     <joint name="jT9T8_rotz" type="revolute">
@@ -864,14 +875,14 @@
         <parent link="T8_f2"/>
         <child link="T8"/>
         <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.610865" upper="0.610865" />
+        <limit effort="500" velocity="1.0" lower="-0.610865" upper="0.610865" />
         <axis xyz="0 0 1" />
     </joint>
 	<joint name="jT1C7_rotx" type="revolute">
         <origin xyz="0           0     0.11227" rpy="0 0 0"/>
         <parent link="T8"/>
         <child link="Neck_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="0.5" friction="1.0"/>
         <limit effort="30" velocity="1.0" lower="-0.610865" upper="0.610865" />
         <axis xyz="1 0 0" />
     </joint>
@@ -880,31 +891,31 @@
         <parent link="Neck_f1"/>
         <child link="Neck_f2"/>
         <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.959931" upper="1.5708" />
+        <limit effort="500" velocity="1.0" lower="-0.959931" upper="1.5708" />
         <axis xyz="0 1 0" />
     </joint>
     <joint name="jT1C7_rotz" type="revolute">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="Neck_f2"/>
         <child link="Neck"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-1.22173" upper="1.22173" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-1.22173" upper="1.22173" />
         <axis xyz="0 0 1" />
     </joint>
 	<joint name="jC1Head_rotx" type="revolute">
         <origin xyz="-0.000154           0     0.10427" rpy="0 0 0"/>
         <parent link="Neck"/>
         <child link="Head_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.610865" upper="0.610865" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.610865" upper="0.610865" />
         <axis xyz="1 0 0" />
     </joint>
 	<joint name="jC1Head_roty" type="revolute">
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="Head_f1"/>
         <child link="Head"/>
-        <dynamics damping="0.1" friction="0.0"/>
-        <limit effort="30" velocity="1.0" lower="-0.436332" upper="0.174533" />
+        <dynamics damping="0.5" friction="1.0"/>
+        <limit effort="500" velocity="1.0" lower="-0.436332" upper="0.174533" />
         <axis xyz="0 1 0" />
     </joint>
 	<!--Chain from (8) to (11)-->
@@ -912,7 +923,7 @@
         <origin xyz="0   -0.027586    0.063241" rpy="0 0 0"/>
         <parent link="T8"/>
         <child link="RightShoulder"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="10.1" friction="10.0"/>
         <limit effort="30" velocity="1.0" lower="-0.785398" upper="0.0872665" />
         <axis xyz="1 0 0" />
     </joint>
@@ -920,7 +931,7 @@
         <origin xyz="0    -0.14666           0" rpy="0 0 0"/>
         <parent link="RightShoulder"/>
         <child link="RightUpperArm_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="10.1" friction="10.0"/>
         <limit effort="30" velocity="0.2" lower="-2.35619" upper="1.5708" />
         <axis xyz="1 0 0" />
     </joint>
@@ -928,7 +939,7 @@
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="RightUpperArm_f1"/>
         <child link="RightUpperArm_f2"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="10.1" friction="10.0"/>
         <limit effort="30" velocity="0.2" lower="-1.5708" upper="1.5708" />
         <axis xyz="0 1 0" />
 
@@ -940,7 +951,7 @@
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="RightUpperArm_f2"/>
         <child link="RightUpperArm"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="10.1" friction="10.0"/>
         <limit effort="30" velocity="1.0" lower="-0.785398" upper="3.14159" />
         <axis xyz="0 0 1" />
 
@@ -951,7 +962,7 @@
         <origin xyz="0    -0.27379           0" rpy="0 0 0"/>
         <parent link="RightUpperArm"/>
         <child link="RightForeArm_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="10.1" friction="10.0"/>
         <limit effort="30" velocity="1.0" lower="-1.5708" upper="1.48353" />
         <axis xyz="0 1 0" />
     </joint>
@@ -959,7 +970,7 @@
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <parent link="RightForeArm_f1"/>
         <child link="RightForeArm"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="10.1" friction="10.0"/>
         <limit effort="30" velocity="1.0" lower="0" upper="2.53073" />
         <axis xyz="0 0 1" />
     </joint>
@@ -967,7 +978,7 @@
         <origin xyz="0.000133    -0.22718           0" rpy="0 0 0"/>
         <parent link="RightForeArm"/>
         <child link="RightHand_f1"/>
-        <dynamics damping="0.1" friction="0.0"/>
+        <dynamics damping="0.1" friction="10.0"/>
         <limit effort="30" velocity="1.0" lower="-0.872665" upper="1.0472" />
         <axis xyz="1 0 0" />
     </joint>

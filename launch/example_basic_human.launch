@@ -106,6 +106,13 @@
 
   </node>
 
+  <!-- Passive human -->
+  <!-- <node name="passive_human"
+      pkg="ros_pybullet_interface"
+      type="make_human_passive.py"
+      output="screen">
+  </node> -->
+
 
   <!-- Testing node trajectory publisher -->
   <node name="test_human_dressing_motion"
