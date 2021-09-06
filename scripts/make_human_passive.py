@@ -6,8 +6,6 @@ import numpy as np
 # ROS message types
 from sensor_msgs.msg import JointState
 
-NDOF = 7
-
 SIM_HUMAN_JOINT_STATE_TOPIC = 'human/ros_pybullet_interface/joint_state/current'
 SIM_HUMAN_JOINT_COMMAND_TOPIC = 'human/ros_pybullet_interface/joint_state/target'
 
