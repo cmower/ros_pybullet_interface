@@ -17,12 +17,14 @@ VISUAL_FRAME_LINE_WIDTH = 2
 # Methods
 # ------------------------------------------------------
 
+
 def initPyBullet(time_step, gravity=[0, 0, -9.81]):
     pybullet.connect(pybullet.GUI)
     pybullet.resetSimulation()
-    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
+    pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)  # this removes the side menus
     pybullet.setTimeStep(time_step)
-    pybullet.setGravity(gravity[0],gravity[1],gravity[2])
+    pybullet.setGravity(gravity[0], gravity[1], gravity[2])
+
 
 def setupPyBulletCamera(distance, yaw, pitch, target_position):
     pybullet.resetDebugVisualizerCamera(
@@ -32,21 +34,27 @@ def setupPyBulletCamera(distance, yaw, pitch, target_position):
         cameraTargetPosition=target_position
     )
 
+
 def stepPyBullet():
     pybullet.stepSimulation()
+
 
 def runPyBullet():
     pybullet.setRealTimeSimulation(1)
 
+
 def stopPyBullet():
     pybullet.setRealTimeSimulation(0)
+
 
 def isPyBulletConnected():
     return pybullet.isConnected()
 
+
 def closePyBullet():
     if pybullet.isConnected():
         pybullet.disconnect()
+
 
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
@@ -60,32 +68,38 @@ def getPybulletObject_hack():
     """
     return pybullet
 
+
 def setObjectPosOrient(obj_id, pos3D=None, quat=None):
 
-    if pos3D!=None:
+    if pos3D != None:
         p3D, orient4D = pybullet.getBasePositionAndOrientation(obj_id)
         pybullet.resetBasePositionAndOrientation(obj_id, pos3D, orient4D)
 
-    if quat!=None:
+    if quat != None:
         p3D, orient4D = pybullet.getBasePositionAndOrientation(obj_id)
         pybullet.resetBasePositionAndOrientation(obj_id, p3D, quat)
 
+
 def setObjectVelLinAng(obj_id, lin_vel3D, ang_vel3D):
 
-    if lin_vel3D!=None:
+    if lin_vel3D != None:
         pybullet.resetBaseVelocity(obj_id, linearVelocity=lin_vel3D)
 
-    if ang_vel3D!=None:
+    if ang_vel3D != None:
         pybullet.resetBaseVelocity(obj_id, angularVelocity=ang_vel3D)
+
 
 def getObjectPosOrient(obj_id):
     return pybullet.getBasePositionAndOrientation(obj_id)
 
+
 def getObjectDynamicsInfo(obj_id):
     return pybullet.getDynamicsInfo(obj_id, -1)
 
+
 def getObjectLinAngVel(obj_id):
     return pybullet.getBaseVelocity(obj_id)
+
 
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
@@ -96,6 +110,7 @@ def asQuaternion(orientation):
             orientation[2]
         )
     return orientation
+
 
 def visualizeFrameInWorld(position, orientation, scale=1.0):
     """Visualize frame, assumes position/orientation defined wrt world."""
@@ -113,16 +128,37 @@ def visualizeFrameInWorld(position, orientation, scale=1.0):
         p, p+R[:3, 2], [0, 0, 1], lineWidth=VISUAL_FRAME_LINE_WIDTH
     )
 
+
+# ------------------------------------------------------
+# cloth specific functions --- not for general use
+def loadCloathAndsetClothConstr(robot_body_id, robot_link_id, path2cloth):
+
+    obj_body_id = pybullet.loadURDF(path2cloth, 0.4, 0.22, 0.5, -0.7071, 0., 0., 0.7071)
+    pybullet.changeDynamics(obj_body_id, -1, linearDamping=10.)
+    constraint_id = pybullet.createConstraint(robot_body_id, robot_link_id, obj_body_id, -1, pybullet.JOINT_POINT2POINT,
+                                              [0, 0, 0], [0, 0, 0.0], [0, -0.1, 0.0])
+
+    pybullet.changeConstraint(constraint_id, erp=0.5, maxForce=1)
+
+    return constraint_id
+
+
+def setClothConstrParams(constraint_id, ChildPivotPt, erp, maxForce):
+
+    pybullet.changeConstraint(constraint_id, jointChildPivot=ChildPivotPt,
+                              erp=erp, maxForce=maxForce)
+
 # ------------------------------------------------------
 #
 # Classes
 # ------------------------------------------------------
 
+
 class PyBulletObject:
 
     def __init__(self, file_name, mesh_scale, rgba_color, base_mass, loadURDF=None):
 
-        if loadURDF==None:
+        if loadURDF == None:
             file_name = replacePackage(file_name)
             self.loadMeshVisual(file_name, mesh_scale, rgba_color)
             self.loadMeshCollision(file_name, mesh_scale)
@@ -130,7 +166,6 @@ class PyBulletObject:
         else:
             file_name = replacePackage(loadURDF)
             self.loadURDF(file_name, fixed_base=False)
-
 
     def setBasePositionAndOrientation(self, position, orientation):
         '''Note: if len(orientation) is 3 then it is treated as euler angles, otherwise
@@ -146,25 +181,25 @@ class PyBulletObject:
 
     def visualizeLink(self, link_index, scale=1.0):
         pybullet.addUserDebugLine(
-            [0,0,0],
-            [scale,0,0],
-            [1,0,0],
+            [0, 0, 0],
+            [scale, 0, 0],
+            [1, 0, 0],
             parentObjectUniqueId=self.ID,
             lineWidth=2,
             parentLinkIndex=link_index
         )
         pybullet.addUserDebugLine(
-            [0,0,0],
-            [0,scale,0],
-            [0,1,0],
+            [0, 0, 0],
+            [0, scale, 0],
+            [0, 1, 0],
             parentObjectUniqueId=self.ID,
             lineWidth=2,
             parentLinkIndex=link_index
         )
         pybullet.addUserDebugLine(
-            [0,0,0],
-            [0,0,scale],
-            [0,0,1],
+            [0, 0, 0],
+            [0, 0, scale],
+            [0, 0, 1],
             parentObjectUniqueId=self.ID,
             lineWidth=2,
             parentLinkIndex=link_index
@@ -197,7 +232,8 @@ class PyBulletObject:
 
     def loadURDF(self, file_name, fixed_base=True):
         file_name = replacePackage(file_name)
-        self.ID = pybullet.loadURDF(file_name, useFixedBase=fixed_base) # only support fixed base robots
+        # only support fixed base robots
+        self.ID = pybullet.loadURDF(file_name, useFixedBase=fixed_base)
 
     def loadMeshVisual(self, file_name, mesh_scale, rgba_color):
         file_name = replacePackage(file_name)
@@ -253,6 +289,7 @@ class PyBulletVisualSphere(PyBulletObject):
             baseVisualShapeIndex=visual_id
         )
 
+
 class PyBulletCollisionObject(PyBulletObject):
 
     def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
@@ -267,6 +304,7 @@ class PyBulletCollisionObject(PyBulletObject):
     def getOrientation(self):
         return pybullet.getLinkState(self.ID, -1, computeForwardKinematics=1)[5]
 
+
 class PyBulletVisualObject(PyBulletObject):
 
     def __init__(self, file_name, mesh_scale, rgba_color):
@@ -279,6 +317,7 @@ class PyBulletVisualObject(PyBulletObject):
 
     def getOrientation(self):
         return pybullet.getLinkState(self.ID, -1, computeForwardKinematics=1)[5]
+
 
 class PyBulletRobot(PyBulletObject):
 

@@ -16,6 +16,7 @@ add_service_files(
   FILES
   setObjectState.srv
   ManualPybulletSteps.srv
+  setClothConstraintParams.srv
 )
 
 generate_messages(

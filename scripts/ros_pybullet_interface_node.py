@@ -13,7 +13,7 @@ from ros_pybullet_interface import pybullet_interface
 from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
 from ros_pybullet_interface.srv import setObjectState, setObjectStateResponse
 from ros_pybullet_interface.srv import ManualPybulletSteps, ManualPybulletStepsResponse
-
+from ros_pybullet_interface.srv import setClothConstraintParams, setClothConstraintParamsResponse
 # ------------------------------------------------------
 #
 # Constants
@@ -158,19 +158,17 @@ class ROSPyBulletInterface:
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
-        # -----------------------------------------------------------------------------------------------------
-        # local hack!!!! for cloth
-        bb_id = self.robots[0]['robot'].ID
-        hh_id = self.robots[0]['robot'].link_ids[8]
+        # ----------------------------------------------------------------------
+        # load cloth and set constraint between robot and cloth
+        robot_body_id = self.robots[0]['robot'].ID
+        robot_link_id = self.robots[0]['robot'].link_ids[-1]
 
-        self.p = pybullet_interface.getPybulletObject_hack()
-        c_id = self.p.loadURDF(
-            "/home/theo/software/pybullet/py3bullet-ROS-ws/src/ros_pybullet_interface/robots/cloth/cloth.urdf", 0.4, 0.22, 0.45)
-        self.cid = self.p.createConstraint(bb_id, hh_id, c_id, -1, self.p.JOINT_POINT2POINT,
-                                           [0, 0, 0], [0, 0, 0.1], [0, 0, -0.0])
+        path2cloth = f"{self.current_dir}/robots/cloth/cloth.urdf"
+        self.cid = pybullet_interface.loadCloathAndsetClothConstr(
+            robot_body_id, robot_link_id, path2cloth)
 
-        self.p.changeConstraint(self.cid, erp=0.5, maxForce=1)
-        # -----------------------------------------------------------------------------------------------------
+        # initiate server for changing params of cloth constraint
+        self.setClothConstrParamServer()
 
     def _null(self, *args, **kwargs):
         pass
@@ -594,6 +592,29 @@ class ROSPyBulletInterface:
         s = rospy.Service('manual_pybullet_steps', ManualPybulletSteps, self.manualPybulletSteps)
         rospy.loginfo("Server is ready to perform manual pybullet steps.")
 
+    def setClothConstrParams(self, req):
+
+        try:
+            if len(req.ChildPivotPt) != 3:
+                rospy.loginfo(
+                    "The length of the vector given to the set_cloth_params srv shoudl be 3")
+                raise Exception
+            # update the parameters of the cloth constraint
+            pybullet_interface.setClothConstrParams(
+                self.cid, ChildPivotPt=req.ChildPivotPt, erp=req.erp, maxForce=req.maxForce)
+            srv_success = True
+            srv_info = "Successfully updated the parameters of the cloth constraint."
+
+        except Exception as error:
+            srv_success = False
+            srv_info = f"Update of the parameters of the cloth constraint FAILED: {error}"
+        return setClothConstraintParamsResponse(success=srv_success, info=srv_info)
+
+    def setClothConstrParamServer(self):
+        s = rospy.Service('set_cloth_constraint_parameters',
+                          setClothConstraintParams, self.setClothConstrParams)
+        rospy.loginfo("Server is ready to set the parameters of the cloth constraint.")
+
     def updatePyBullet(self, event):
         if not pybullet_interface.isPyBulletConnected():
             raise RuntimeError(f"{self.name}: PyBullet disconnected")
@@ -608,10 +629,6 @@ class ROSPyBulletInterface:
         self.publishPyBulletAllRobotLinkStateToROS()
         self.publishStaticTransformsToROS()
         self.publishObjectStateTransToROS()
-
-        self.p.changeConstraint(self.cid, erp=0.5, maxForce=20)
-        sensedForce = self.p.getConstraintState(self.cid)
-        print("sensedForce ", sensedForce)
 
         # run simulation step by step or do nothing
         # (as bullet can run the simulation steps automatically from within)
