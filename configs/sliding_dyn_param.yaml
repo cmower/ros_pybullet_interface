@@ -5,8 +5,8 @@
 xLenght: 0.09 # [meter]
 yLenght: 0.198 # [meter]
 pusherRadious: 0.016 #  [meter]
-pusherFricCoef: 0.3
-pusherForceLim:  0.6
-pusherAngleVelLim: 4.0
+pusherFricCoef: 0.05
+pusherForceLim:  2.5
+pusherAngleVelLim: 5.0
 Kz_max: 50
 Kz_min: 0.1

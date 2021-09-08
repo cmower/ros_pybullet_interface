@@ -69,8 +69,8 @@ class TestIK:
 
         # compute end-effector initial position
         self.eePos_traj = np.zeros((1, 3))
-        self.eePos_traj[0,0] = 0.0
-        self.eePos_traj[0,1] = -0.525
+        self.eePos_traj[0,0] = 0.4
+        self.eePos_traj[0,1] = -0.45
         self.eePos_traj[0,2] = 0.06 
 
         # ------------------Orientation ---------------------------

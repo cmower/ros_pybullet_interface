@@ -37,10 +37,13 @@ REAL_SETUP = True
 OBJECT_NAME_SIM = "ros_pybullet_interface/sliding_box"  # real box
 ROBOT_NAME_SIM = "LWR/ros_pybullet_interface/robot/end_effector_ball"
 END_EFFECTOR_TARGET_FRAME_ID_SIM = 'LWR/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
+OBSTACLE_NAME_SIM = "ros_pybullet_interface/sliding_obs"
 
 OBJECT_NAME_REAL = "vicon_offset/pushing_box_wood/pushing_box_wood"
 ROBOT_NAME_REAL = "LWR_visual/ros_pybullet_interface/robot/end_effector_ball"
 END_EFFECTOR_TARGET_FRAME_ID_REAL = 'LWR_visual/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this
+OBSTACLE_NAME_REAL = "vicon_offset/pushing_obs_cyl_1/pushing_obs_cyl_1"
+
 
 class ROSSlidingMPC:
 
@@ -61,6 +64,9 @@ class ROSSlidingMPC:
 
         # Nominal trajectory indexing 
         self.idx_nom = 0
+        
+        # Save variable for time
+        self.comp_time_plot = []
 
         self.real_setup=False
         # check if the real_setup param exists
@@ -74,11 +80,13 @@ class ROSSlidingMPC:
             self.robot_name = ROBOT_NAME_REAL
             self.end_effector_target_frame_id = END_EFFECTOR_TARGET_FRAME_ID_REAL
             self.object_name = OBJECT_NAME_REAL
+            self.obstacle_name = OBSTACLE_NAME_REAL
 
         else:
             self.robot_name = ROBOT_NAME_SIM
             self.end_effector_target_frame_id = END_EFFECTOR_TARGET_FRAME_ID_SIM
             self.object_name = OBJECT_NAME_SIM
+            self.obstacle_name = OBSTACLE_NAME_SIM
 
         # Loop till the pos and ori of the object has been read.
         while 1:
@@ -98,8 +106,6 @@ class ROSSlidingMPC:
         dyn_config = loadYAMLConfig(sliding_dyn_file_name)
         tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
         tracking_config = loadYAMLConfig(tracking_traj_file_name)
-        # nom_traj_file_name = rospy.get_param('~sliding_param_nom_traj', [])[0]
-        # nom_config = loadYAMLConfig(nom_traj_file_name)
         #  -------------------------------------------------------------------
 
         # Initialize internal variables
@@ -107,12 +113,14 @@ class ROSSlidingMPC:
         self._cmd_obj_pose = None
         self._cmd_visual_obj_pose = None
         self._obj_pose = None
+        self._obs_pose = None
         self._robot_pose = None
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        T = 50  # time of the simulation is seconds
-        freq = RUN_FREQ  # number of increments per second
+        T = 22  # time of the simulation is seconds
+        # T = 10  # time of the simulation is seconds
+        freq = 25  # number of increments per second
         N_MPC = 25  # time horizon for the MPC controller
         #  -------------------------------------------------------------------
         # Computing Problem constants
@@ -128,19 +136,80 @@ class ROSSlidingMPC:
                 dyn_config, 
                 tracking_config['contactMode']
         )
-        #  -------------------------------------------------------------------
-        # Generate Nominal Trajectory
-        #  -------------------------------------------------------------------
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0., N, N_MPC)
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0., 0.3, N, N_MPC)
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
-        # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.11, N, N_MPC)
-        x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(0., -2*np.pi, 0.1, N, N_MPC)
-        #  -------------------------------------------------------------------
-        x0_nom = x0_nom + obj_pos0[0]
-        x1_nom = x1_nom + obj_pos0[1]
-        # stack state and derivative of state
-        self.X_nom_val, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
+
+        planning_flag = True
+        if planning_flag:
+            print('I am planning.')
+            while 1:
+                try:
+                    # Read the position and orientation of the robot from the /tf topic
+                    trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{self.obstacle_name}", rospy.Time())
+                    # replaces base_position = config['base_position']
+                    obs_pos0 = [trans.transform.translation.x, trans.transform.translation.y]
+                    break
+                except:
+                    rospy.logwarn(f"{self.name}: /tf topic does NOT have {self.object_name}")
+            print('I received info.')
+            # nom traj file for planning
+            nom_traj_file_name = rospy.get_param('~sliding_param_nom_traj', [])[0]
+            nom_config = loadYAMLConfig(nom_traj_file_name)
+            X_goal = nom_config['X_goal']
+            x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], N, N_MPC)
+            x0_nom = x0_nom + obj_pos0[0]
+            x1_nom = x1_nom + obj_pos0[1]
+            X_nom_val_temp, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
+            # Compute nominal actions for sticking contact
+            #  ------------------------------------------------------------------
+            print('i am going to build')
+            optObj = sliding_pack.to.buildOptObj(
+                    self.dyn, N+N_MPC, nom_config, X_nom_val_temp, dt=self.dt)
+            print('i built')
+            # read obstacle position
+            if optObj.numObs == 0:
+                obsCentre = None
+                obsRadius = None
+            elif optObj.numObs == 1:
+                obsCentre = [obs_pos0]
+                obsRadius = [0.065]
+            print('about to start planning')
+            resultFlag, X_nom_val, U_nom_val, other_opt, _, t_opt = optObj.solveProblem(
+                    0, X_nom_val_temp[:, 0].elements(),
+                    obsCentre=obsCentre, obsRadius=obsRadius)
+            #  ---------------------------------------------------------------
+            fig, ax = sliding_pack.plots.plot_nominal_traj(
+                        cs.DM(x0_nom), cs.DM(x1_nom))
+            # add computed nominal trajectory
+            X_nom_val_plot = np.array(X_nom_val)
+            ax.plot(X_nom_val_plot[0, :], X_nom_val_plot[1, :], color='blue',
+                    linewidth=2.0, linestyle='dashed')
+            # add obstacles
+            import matplotlib.pyplot as plt
+            if optObj.numObs > 0:
+                for i in range(len(obsCentre)):
+                    circle_i = plt.Circle(obsCentre[i], obsRadius[i], color='b')
+                    ax.add_patch(circle_i)
+            ax.set_xlim((-0.5, 0.5))
+            ax.set_ylim((-1.0, -0.3))
+            plt.show()
+            self.X_nom_val = X_nom_val
+        else:
+            #  -------------------------------------------------------------------
+            # Generate Nominal Trajectory
+            #  -------------------------------------------------------------------
+            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0., N, N_MPC)
+            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0., 0.3, N, N_MPC)
+            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
+            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.11, N, N_MPC)
+            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(0., -2*np.pi, 0.1, N, N_MPC)
+            x0_nom, x1_nom = sliding_pack.traj.generate_traj_ellipse(0., -2*np.pi, 0.3, 0.09, N, N_MPC)
+            #  -------------------------------------------------------------------
+            x0_nom = x0_nom + obj_pos0[0]
+            x1_nom = x1_nom + obj_pos0[1]
+            # stack state and derivative of state
+            self.X_nom_val, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
+
+
+
         #  ------------------------------------------------------------------
         # define optimization problem
         #  -------------------------------------------------------------------
@@ -182,6 +251,7 @@ class ROSSlidingMPC:
         """ Read robot and object pose periodically """
 
         self._obj_pose = self.readPose(self.object_name)
+        self._obs_pose = self.readPose(self.obstacle_name)
         self._robot_pose = self.readPose(self.robot_name)
 
     def readPose(self, frame_id_string):
@@ -201,6 +271,7 @@ class ROSSlidingMPC:
         if self._obj_pose is None or self._robot_pose is None:
             return -1
 
+        # read object position and orientation
         obj_pos_2d_read = self._obj_pose[0:2]
         obj_ori_2d_read = R.from_quat(self._obj_pose[3:]).as_euler('xyz', degrees=False)[2]
         # hack to adjust read orientation around the 180 - -180 angle flipping
@@ -210,8 +281,6 @@ class ROSSlidingMPC:
         elif obj_ori_2d_read > (_target_ori + np.pi/2.):
             obj_ori_2d_read -= 2.*np.pi
         robot_pos_2d_read = self._robot_pose[0:2]
-        # print('**************************')
-        # print(np.rad2deg(obj_ori_2d_read))
         # compute relative angle between pusher (robot) and slider (object)
         psi0 = self.optObj.dyn.psi(np.array([
             obj_pos_2d_read[0],
@@ -219,22 +288,34 @@ class ROSSlidingMPC:
             obj_ori_2d_read,
             0.]),
             robot_pos_2d_read).elements()[0]
+        # read obstacle position
+        if self.optObj.numObs == 0:
+            obsCentre = None
+            obsRadius = None
+        elif self.optObj.numObs == 1:
+            obsCentre = [self._obs_pose[0:2]]
+            obsRadius = [0.065]
+        
         # build initial state for optimizer: TODO: get this from dyn function
 
-        print('*******************')
-        print('nom pos: ', self.X_nom_val[:, self.idx_nom])
-        print('curr ori obj: ', np.rad2deg(obj_ori_2d_read))
-        print('curr pos obj: ', obj_pos_2d_read)
-        print('curr pos robot: ', robot_pos_2d_read)
-        print('delta pos: ', np.linalg.norm(obj_pos_2d_read-robot_pos_2d_read))
+        # print('*******************')
+        # print('nom pos: ', self.X_nom_val[:, self.idx_nom])
+        # print('curr ori obj: ', np.rad2deg(obj_ori_2d_read))
+        # print('curr pos obj: ', obj_pos_2d_read)
+        # print('curr pos robot: ', robot_pos_2d_read)
+        # print('delta pos: ', np.linalg.norm(obj_pos_2d_read-robot_pos_2d_read))
+        # print('obs pos: ', obsCentre)
         # print('ori obj: ', obj_ori_2d_read)
-        print('psi: ', np.rad2deg(psi0))
+        # print('psi: ', np.rad2deg(psi0))
         # sys.exit()
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], float(obj_ori_2d_read), psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
-        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0)
-        print('***********************')
-        print(solFlag)
+        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0,
+                obsCentre=obsCentre, obsRadius=obsRadius)
+        # saving computation times
+        self.comp_time_plot.append(t_opt)
+        # print('***********************')
+        # print(solFlag)
         self.idx_nom += 1
         x_next = x_opt[:, 1]
         # print('x_next: ', x_next)
@@ -268,9 +349,11 @@ class ROSSlidingMPC:
             robot_ori = R.from_matrix(GLB_ORI_ROBOT)
             robot_ori_quat = robot_ori.as_quat()
             self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
-            print('cmd robot pos: ', robot_pos_2d)
-        print('count down: ', self.idx_nom, '/', self.Nidx)
+            # print('cmd robot pos: ', robot_pos_2d)
+        # print('count down: ', self.idx_nom, '/', self.Nidx)
         if self.idx_nom > self.Nidx:
+            np.save('/home/kuka-lwr/pybullet_ws/files/comp_time', np.asarray(self.comp_time_plot))
+            np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
             rospy.signal_shutdown("End of nominal trajectory")
         else:
             # input()
