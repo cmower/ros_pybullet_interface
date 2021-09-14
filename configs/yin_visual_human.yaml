@@ -1,8 +1,8 @@
 #
 # PyBullet KUKA configuration file
 #
-name: "yin"
-file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
+name: "yin_visual"
+file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14_visual.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
 # base_position: [-0.0, 0.0, 0.0]

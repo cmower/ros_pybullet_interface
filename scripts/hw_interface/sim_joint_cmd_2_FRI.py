@@ -15,16 +15,16 @@ from std_msgs.msg import MultiArrayDimension
 NDOF = 7
 
 SIM_CMD_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
-REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC = 'PositionController/command' # commands joint states on this topic
+REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC = 'PositionController/command'  # commands joint states on this topic
 
 REAL_ROBOT_JOINT_STATE_TOPIC = 'joint_states'
 SIM_ROBOT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
 
-JOINT_NAMES = ["IIWA_Joint_0","IIWA_Joint_1","IIWA_Joint_2","IIWA_Joint_3","IIWA_Joint_4",\
-                "IIWA_Joint_5","IIWA_Joint_6"]
+JOINT_NAMES = ["IIWA_Joint_0", "IIWA_Joint_1", "IIWA_Joint_2", "IIWA_Joint_3", "IIWA_Joint_4",
+               "IIWA_Joint_5", "IIWA_Joint_6"]
 
 MIN_JOINT_LIMITS = [-169, -100, -169, -119, -169, -119, -173]
-MAX_JOINT_LIMITS = [ 169,  100,  169,  119,  169,  119, 173]
+MAX_JOINT_LIMITS = [169,  100,  169,  119,  169,  119, 173]
 
 
 class SimCmdToandFromROSFRI(object):
@@ -56,10 +56,11 @@ class SimCmdToandFromROSFRI(object):
 
         # Setup ros publisher to update simulated robots
         sim_state_publishers_topic_name = f"{robot_name}/{SIM_ROBOT_JOINT_STATE_TOPIC}"
-        self.sim_joint_state_command_publisher = rospy.Publisher(sim_state_publishers_topic_name, JointState)
+        self.sim_joint_state_command_publisher = rospy.Publisher(
+            sim_state_publishers_topic_name, JointState)
 
         # Setup subscriber that reads commanded robot state
-        subscr_real_state_topic_name =  f"{robot_name}/{REAL_ROBOT_JOINT_STATE_TOPIC}"
+        subscr_real_state_topic_name = f"{robot_name}/{REAL_ROBOT_JOINT_STATE_TOPIC}"
         rospy.Subscriber(subscr_real_state_topic_name, JointState, self.republishStates)
 
         # ----------------------------------------------------------------------
@@ -70,12 +71,12 @@ class SimCmdToandFromROSFRI(object):
         if cmd_robot_flag:
             # Setup ros publisher to cmd real robots
             real_world_publishers_topic_name = f"{robot_name}/{REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC}"
-            self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray)
+            self.real_world_target_joint_command_publisher = rospy.Publisher(
+                real_world_publishers_topic_name, Float64MultiArray)
 
             # Setup subscriber that reads commanded robot state
-            subscr_sim_cmd_topic_name =  f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
+            subscr_sim_cmd_topic_name = f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
             rospy.Subscriber(subscr_sim_cmd_topic_name, JointState, self.republishCmds)
-
 
     def republishStates(self, msg):
 
@@ -103,7 +104,6 @@ class SimCmdToandFromROSFRI(object):
         sim_msg = msg
         self.sim_joint_state_command_publisher.publish(sim_msg)
 
-
     def republishCmds(self, msg):
 
         # ----------------------------------------------------------------------
@@ -123,8 +123,8 @@ class SimCmdToandFromROSFRI(object):
         msg = Float64MultiArray()
         msg.layout.dim.append(MultiArrayDimension())
         # info for reconstruction of the 2D array
-        msg.layout.dim[0].label  = "columns"
-        msg.layout.dim[0].size   = NDOF
+        msg.layout.dim[0].label = "columns"
+        msg.layout.dim[0].size = NDOF
 
         #  fill in positions of the robot
         msg.data = list(cmd_q)
