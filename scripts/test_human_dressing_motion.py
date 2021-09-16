@@ -177,8 +177,8 @@ if __name__ == '__main__':
     a = -np.asarray(wrist_position) + np.asarray(elbow_position)
     b = -np.asarray(shoulder_position) + np.asarray(elbow_position)
     c = -1*np.cross(a, b)
-    c = np.array([0., 0., -1.])
-    c = np.array([0.7, 0., -0.7])
+    # c = np.array([0.7, 0., -0.7])
+    c = np.array([0.5, 0.4, -0.9])
     c_mat = orth_space_vecs(c/np.linalg.norm(c))
     c_orient = R.from_matrix(c_mat).as_quat()
 
@@ -187,7 +187,9 @@ if __name__ == '__main__':
     # wrist_orient = R.from_matrix(wrist_mat).as_quat()
     # wristpose = np.hstack((wrist_position + z_offset, wrist_orient))
 
-    wristpose = np.hstack((wrist_position + z_offset, c_orient))
+    # wristpose = np.hstack((wrist_position + z_offset, c_orient))
+    wristpose = np.hstack((wrist_position + z_offset, endAtt_Quat))
+
 
     # elbow_z = -np.asarray(elbow_position) + np.asarray(pelvis_position)
     # elbow_mat = orth_space_vecs(elbow_z)
@@ -195,13 +197,16 @@ if __name__ == '__main__':
     # elbowpose = np.hstack((elbow_position + z_offset, elbow_orient))
 
     elbowpose = np.hstack((elbow_position + z_offset, c_orient))
+    # elbowpose = np.hstack((elbow_position + z_offset, endAtt_Quat))
 
     # shoulder_z = -np.asarray(shoulder_position) + np.asarray(pelvis_position)
     # shoulder_mat = orth_space_vecs(shoulder_z)
     # shoulder_orient = R.from_matrix(shoulder_mat).as_quat()
     # shoulderpose = np.hstack((shoulder_position + z_offset, shoulder_orient))
 
-    shoulderpose = np.hstack((shoulder_position + z_offset, c_orient))
+    # shoulder_offset = np.array([0.02, 0.05, -0.05])
+    shoulder_offset = np.array([0.0, 0.1, 0.0])
+    shoulderpose = np.hstack((shoulder_position + z_offset + shoulder_offset, c_orient))
 
     # position waypoints
     posBody = np.vstack((initpose, wristpose))

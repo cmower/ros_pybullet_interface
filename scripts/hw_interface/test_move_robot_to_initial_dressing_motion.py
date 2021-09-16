@@ -135,7 +135,8 @@ if __name__ == '__main__':
         rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
         sys.exit(0)
 
-    pos_initial = np.array([0.3, 0.0, 0.6221])
+    # pos_initial = np.array([0.3, 0.0, 0.6221])
+    pos_initial = np.array([0.15, 0.45, 0.6221])
     orient_initial = np.array([0.866, -0.497, 0.022, -0.0377])
 
     freq = 100
@@ -148,7 +149,7 @@ if __name__ == '__main__':
         robot_name)
 
     # make the plan
-    timeSeq = np.array([0.0, 5.0])
+    timeSeq = np.array([0.0, 2.0, 10.0])
 
     # initial position of the robot
     initpose = np.hstack((endPos, endAtt_Quat))
@@ -156,7 +157,10 @@ if __name__ == '__main__':
     preset_initial_pose_Cartesian = np.hstack((pos_initial, orient_initial))
 
     # position waypoints
-    posBody = np.vstack((initpose, preset_initial_pose_Cartesian)).T
+    initial_delta_pos = 0.1*(preset_initial_pose_Cartesian[0:3]-initpose[0:3]) + initpose[0:3]
+    initial_delta = np.hstack((initial_delta_pos, endAtt_Quat))
+    posBody = np.vstack((initpose, initial_delta))
+    posBody = np.vstack((posBody, preset_initial_pose_Cartesian)).T
 
     # velocity waypoints
     diff = np.diff(posBody, axis=1)
