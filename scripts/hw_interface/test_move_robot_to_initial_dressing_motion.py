@@ -83,6 +83,14 @@ class readStateRobotHumanPubPlan():
         if message is not None:
             self.new_traj_publisher.publish(message)
 
+    def publishTrajectoryOnce(self):
+
+        message = self.np2DtoROSmsg(self.trajPlan)
+
+        if message is not None:
+            self.new_traj_publisher.publish(message)
+
+
     def np2DtoROSmsg(self, data2Darray):
 
         # check if there is nothing to publish
@@ -113,23 +121,12 @@ class readStateRobotHumanPubPlan():
         return msg
 
 
-def orth_space_vecs(z_vec):
-    z = z_vec/np.linalg.norm(z_vec)
-    x = np.array([0.866, 0.0, 0.5])   # take a random vector
-    x -= x.dot(z) * z               # make it orthogonal to k
-    x /= np.linalg.norm(x)          # normalize it
-    y = np.cross(z, x)              # cross product with k
-
-    rot_mat = np.vstack((np.vstack((x, y)), z)).T
-    return rot_mat
-
-
 if __name__ == '__main__':
 
-    # rospy.sleep(5.0)
+    rospy.sleep(2.0)
 
     # --- setup the ros interface --- #
-    rospy.init_node('test_human_dressing_motion', anonymous=True)
+    rospy.init_node('move_robot_to_initial', anonymous=True)
 
     # check if the name of the robot is provided
     if rospy.has_param('~robot_name'):
@@ -138,7 +135,8 @@ if __name__ == '__main__':
         rospy.logerr(f"The name of the robot is not set in {rospy.get_name()}")
         sys.exit(0)
 
-    input(" ------------------ Waiting for ENTER to start the dressing motion ------------------")
+    pos_initial = np.array([0.3, 0.0, 0.6221])
+    orient_initial = np.array([0.866, -0.497, 0.022, -0.0377])
 
     freq = 100
 
@@ -149,72 +147,20 @@ if __name__ == '__main__':
     _, _, _, endPos, endAtt, endAtt_Quat = stateReaderPlanPubl.readRobotInitials(
         robot_name)
 
-    pelvis_position, pelvis__orient_quat, pelvis_orient_euler = stateReaderPlanPubl.readObjectState(
-        "human/ros_pybullet_interface/robot/L5_f1")
-    # wrist_position, wrist_orient_quat, wrist_orient_euler = stateReaderPlanPubl.readObjectState(
-    #     "human/ros_pybullet_interface/robot/RightHand")
-    # elbow_position, elbow_orient_quat, elbow_orient_euler = stateReaderPlanPubl.readObjectState(
-    #     "human/ros_pybullet_interface/robot/RightForeArm_f1")
-    # shoulder_position, shoulder_orient_quat, shoulder_orient_euler = stateReaderPlanPubl.readObjectState(
-    #     "human/ros_pybullet_interface/robot/RightUpperArm_f1")
-
-    wrist_position, wrist_orient_quat, wrist_orient_euler = stateReaderPlanPubl.readObjectState(
-        "kolias/RightHand")
-    elbow_position, elbow_orient_quat, elbow_orient_euler = stateReaderPlanPubl.readObjectState(
-        "kolias/RightArm")
-    shoulder_position, shoulder_orient_quat, shoulder_orient_euler = stateReaderPlanPubl.readObjectState(
-        "human/ros_pybullet_interface/robot/RightUpperArm_f1")
-
     # make the plan
-    timeSeq = np.array([0.0, 5.0, 10.0, 17.5, 30.0])
+    timeSeq = np.array([0.0, 5.0])
 
     # initial position of the robot
     initpose = np.hstack((endPos, endAtt_Quat))
 
-    # offset from human hand
-    z_offset = np.array([-0.05, 0., 0.15])
-
-    a = -np.asarray(wrist_position) + np.asarray(elbow_position)
-    b = -np.asarray(shoulder_position) + np.asarray(elbow_position)
-    c = -1*np.cross(a, b)
-    c = np.array([0., 0., -1.])
-    c = np.array([0.7, 0., -0.7])
-    c_mat = orth_space_vecs(c/np.linalg.norm(c))
-    c_orient = R.from_matrix(c_mat).as_quat()
-
-    # wrist_z = -np.asarray(wrist_position) + np.asarray(pelvis_position)
-    # wrist_mat = orth_space_vecs(wrist_z)
-    # wrist_orient = R.from_matrix(wrist_mat).as_quat()
-    # wristpose = np.hstack((wrist_position + z_offset, wrist_orient))
-
-    wristpose = np.hstack((wrist_position + z_offset, c_orient))
-
-    # elbow_z = -np.asarray(elbow_position) + np.asarray(pelvis_position)
-    # elbow_mat = orth_space_vecs(elbow_z)
-    # elbow_orient = R.from_matrix(elbow_mat).as_quat()
-    # elbowpose = np.hstack((elbow_position + z_offset, elbow_orient))
-
-    elbowpose = np.hstack((elbow_position + z_offset, c_orient))
-
-    # shoulder_z = -np.asarray(shoulder_position) + np.asarray(pelvis_position)
-    # shoulder_mat = orth_space_vecs(shoulder_z)
-    # shoulder_orient = R.from_matrix(shoulder_mat).as_quat()
-    # shoulderpose = np.hstack((shoulder_position + z_offset, shoulder_orient))
-
-    shoulderpose = np.hstack((shoulder_position + z_offset, c_orient))
+    preset_initial_pose_Cartesian = np.hstack((pos_initial, orient_initial))
 
     # position waypoints
-    posBody = np.vstack((initpose, wristpose))
-    posBody = np.vstack((posBody, wristpose))
-    posBody = np.vstack((posBody, elbowpose))
-    posBody = np.vstack((posBody, shoulderpose)).T
+    posBody = np.vstack((initpose, preset_initial_pose_Cartesian)).T
 
     # velocity waypoints
     diff = np.diff(posBody, axis=1)
-    av_vel = np.sum(diff[:, -2:], axis=1)/2.
     velBody = posBody*0.0
-    scale = 0.1
-    velBody[:, -2] = scale*av_vel
 
     trajPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
     stateReaderPlanPubl.trajPlan = trajPlan
@@ -222,6 +168,6 @@ if __name__ == '__main__':
     stateReaderPlanPubl.writeCallbackTimer = rospy.Timer(
         rospy.Duration(1.0/float(freq)), stateReaderPlanPubl.publishTrajectory)
 
-    rospy.loginfo("Plan was published!")
+    rospy.loginfo("Plan to initial was published!")
 
     rospy.spin()

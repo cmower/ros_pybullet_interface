@@ -5,7 +5,7 @@ name: "human"
 file_name: "{ros_pybullet_interface}/robots/human_model/humanSubject02_48dof.urdf"
 end_effector: ""
 use_fixed_base: True
-base_position: [0.45, 0.75, 0.1]
+base_position: [0.55, 0.55, 0.2]
 base_orient_eulerXYZ: [0.0, 0.0, -75.0]
 
 # body + neck
