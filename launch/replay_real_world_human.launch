@@ -1,0 +1,79 @@
+<launch>
+
+  <!-- Launch ROS-PyBullet interface node -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface_node.py"
+      clear_params="true"
+      output="screen">
+
+      <!-- Pybullet simulation config (required) -->
+      <!-- Flag to indicate how bullet simulation step is
+           synced with ROS control loop.
+           Options:
+                0:  pybullet executes all simulation steps in a fixed frequency
+                       This can be used to simulate real world
+                       ( use simulation freqency > 250 Hz)
+                1: pybullet executes every simulation step when commanded by ROS node
+                       This can be used to execute one simulation step after one control/interface step
+                       Useful for debugging, but not realistic
+                       (specially, if control loop freqency is < 250 Hz)
+                2: pybullet executes a simulation step when ROS srv manualPybulletSteps is called
+                   This can be used to execute one simulation step after one control/interface step
+                   Useful for debugging MPC-like algorithms, but not realistic
+                  -->
+      <param
+          name="pybullet_sim_self_loop"
+          value="0"
+          type="int"/>
+
+      <param
+         name="Z_gravity"
+         value="-9.81"
+         type="double"/>
+
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/yin_human.yaml",
+      "{ros_pybullet_interface}/configs/yin_visual_human.yaml",
+      "{ros_pybullet_interface}/configs/human.yaml",
+      ]
+    </rosparam>
+
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
+        type="str"/>
+
+    <!-- List collision objects (optional) -->
+    <rosparam param="collision_object_config_file_names">
+      [
+      ]
+    </rosparam>
+
+    <!-- List objects (optional) -->
+    <rosparam param="object_config_file_names">
+      [
+      <!-- '{ros_pybullet_interface}/configs/torus.yaml', -->
+      ]
+    </rosparam>
+
+
+    <!-- List visual objects (optional) -->
+    <rosparam param="visual_object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/sphere_human_wrist.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_elbow.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_shoulder.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_wrist_xsens.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_elbow_xsens.yaml',
+      ]
+    </rosparam>
+
+  </node>
+
+
+</launch>
