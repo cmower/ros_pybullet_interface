@@ -113,9 +113,11 @@ class TrajManager:
 
         # if we use interpolation, we use the interpolated one
         # if self.use_interp:
+        if self.motionInterpPlan.shape[0] == 0:
+            return None
 
         if self.motionInterpPlan.shape[1] == 0:
-            rospy.logerr("All the trajectory data has been consumed")
+            rospy.logwarn("All the trajectory data has been consumed")
             return None
 
         nextWaypt = self.motionInterpPlan[:, 0]
@@ -308,6 +310,7 @@ class ROSTrajInterface(object):
         # single update of trajectory
         # To be used for play-back motion plans
         self.readInitialTrajFromROS(msgTraj)
+        # rospy.Subscriber(self.current_traj_topic, Float64MultiArray, self.readInitialTrajFromROS)
 
         # Subscribe target trajectory callback
         # repetitive update of trajectory

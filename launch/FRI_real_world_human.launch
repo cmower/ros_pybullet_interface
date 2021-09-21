@@ -112,42 +112,8 @@
         value="{ros_pybullet_interface}/configs/yin_visual_human.yaml"
         type="str"/>
 
-
       <!-- remap such that the initial state of the IK comes from real world state -->
       <remap from="$(arg remap_robot_name)/ros_pybullet_interface/joint_state/current"  to="yin/ros_pybullet_interface/joint_state/target" />
-
-  </node>
-
-
-  <node
-      name="ros_traj_consum_interpol_interface_Yin"
-      pkg="ros_pybullet_interface"
-      type="ros_traj_consum_interpol_interface_node.py"
-      output="screen">
-
-    <!-- Traj config (required) -->
-    <param
-        name="traj_config"
-        value="{ros_pybullet_interface}/configs/traj_yin.yaml"
-        type="str"/>
-
-    <param
-      name="robot_name"
-      value="yin_visual"
-      type="str"/>
-
-  </node>
-
-  <!-- Testing node trajectory publisher -->
-  <node name="test_human_dressing_motion"
-      pkg="ros_pybullet_interface"
-      type="test_human_dressing_motion.py"
-      output="screen">
-
-     <param
-        name="robot_name"
-        value="yin_visual"
-        type="str"/>
 
   </node>
 
