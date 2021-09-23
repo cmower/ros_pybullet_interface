@@ -1,6 +1,7 @@
 estimation:
 #  condition: 0.95 #0.85
-  condition: -1.0 # simulation
+  condition: -2.2 # simulation
+  uncertainty: 0.12
 
 object:
   hangPoint: [ 0, 0, 3.8 ]
@@ -8,12 +9,12 @@ object:
   startAngle: -20.0
   finObjPos: [0., 0.0, 0.7, -1.57, 0, 0]
 #  finObjPos: [0.2, 0.0, 1.4, 3.14, 0, 0]
-  maxObjPos: [2, 2, 2, 6.28, 6.28, 6.28]
+  maxObjPos: [5, 5, 5, 6.28, 6.28, 6.28]
   finObjVel: [0., 0., 0., 0., 0., 0.]
   maxObjVel: [1.5, 1.5, 1.5, 1.5, 1.5, 1.5]
   slackObjPos: [0.2, 0.2, 0.2, 3.14, 3.14, 3.14]
   slackObjVel: [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-  reducedNode: 150
+  reducedNode: 100
 
 robotYin:
   workspace: 1.0
