@@ -354,6 +354,8 @@ class PyBulletRobot(PyBulletObject):
             self.active_joint_ids,
             pybullet.POSITION_CONTROL,
             targetPositions=target_position,
+            positionGains = [0.8] * len(target_position),
+            velocityGains = [1.5] * len(target_position),
         )
 
     def setupJointForceTorqueSensor(self, label, joint_index):
