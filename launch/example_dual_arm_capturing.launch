@@ -44,8 +44,8 @@
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-<!--      '{ros_pybullet_interface}/configs/sphere.yaml',-->
-<!--      '{ros_pybullet_interface}/configs/sphere2.yaml',-->
+<!--      '{ros_pybullet_interface}/configs/sphere.yaml', -->
+<!--      '{ros_pybullet_interface}/configs/sphere2.yaml', -->
       '{ros_pybullet_interface}/configs/target_obj_visual_demo.yaml',
 <!--       '{ros_pybullet_interface}/configs/yang_workspace_visual.yaml', -->
 <!--       '{ros_pybullet_interface}/configs/yin_workspace_visual.yaml', -->

@@ -89,6 +89,9 @@ class PlanInterpWithTO:
         with open(paramFile, 'r') as ymlfile:
             params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 
+
+        self.uncertainty = np.array(params['estimation']['uncertainty'])
+
         self.finObjPos = np.array(params['object']['finObjPos'])
         self.maxObjPos = np.array(params['object']['maxObjPos'])
         self.finObjVel = np.array(params['object']['finObjVel'])
@@ -225,7 +228,7 @@ class PlanInterpWithTO:
 
             # compute Euclidean distance, to see if object is in the expected location
             dist = LA.norm(pose[0:3]-posInitTraj[0:3])
-            if dist <= 0.05:
+            if dist <= self.uncertainty:
                 commandFlag = True
                 break
 
@@ -272,9 +275,9 @@ class PredictionWithTO():
         self.HybProb_warmstart = self.HybOpt3D_SRB.buildProblem(warmStart=True)
 
         # initialize the optimization
-        # self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
-        with open(self.initFile, 'rb') as f:
-            self.xInit_SRB = np.load(f)
+        self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
+        # with open(self.initFile, 'rb') as f:
+        #     self.xInit_SRB = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel):
@@ -473,7 +476,7 @@ if __name__=='__main__':
         # get bounds of variables and constraints
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0.0, -1.25, 0.3, 90 / 180 * np.pi, 0, 0])
+            initObjPos = np.array([0.0, -2.5, 0.3, -90.0 / 180 * np.pi, 0, 0])
             #  real
             # initObjPos = np.array([0.188, 1.06, 0.90, 100 / 180 * np.pi, 0, 0])
 
@@ -485,7 +488,7 @@ if __name__=='__main__':
             pos = initObjPos[0:3]
             quat = initObjPos[3:7]
 
-        initObjVel = np.array([0.0, 0.2, 0.0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
         #  real
         # initObjVel = np.array([0.0, -0.3, 0.0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
@@ -549,7 +552,7 @@ if __name__=='__main__':
     # commandFlag = True
 
     # Visualize the planning result for capturing swinging object
-    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
 
 
     if commandFlag == True:
