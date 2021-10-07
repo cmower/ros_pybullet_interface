@@ -1,0 +1,5 @@
+name: "visual_sphere"
+tf_frame_id: "visual_object"
+object_type: "sphere"
+radius: 0.1
+rgba_color: [0.5, 0.5, 0.1, 0.75]

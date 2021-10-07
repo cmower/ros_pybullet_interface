@@ -1,0 +1,17 @@
+name: "collision_box"
+base_mass: 0.5
+init_position: [0.3, -0.3, 0.5]
+init_base_orient_eulerXYZ: [20, 30, 10]
+init_linear_velocity: [-0.01, -0.1, 0.01]
+init_angular_velocity: [0.2, 0.3, 15]
+object_type: 'box'
+half_extends: [0.1, 0.1, 0.2]
+rgba_color: [0.1, 0.54, 0.8, 1.0]
+lateral_friction: 1.0
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.0
+linear_damping: 0.04
+angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 0.7
