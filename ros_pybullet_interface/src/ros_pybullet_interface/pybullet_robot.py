@@ -151,7 +151,7 @@ class PybulletRobot(_PybulletRobotBase):
         self.init_robot()
 
         # Set initial joint state
-        init_position = numpy.deg2rad(self.config['init_position']).tolist()
+        init_position = numpy.deg2rad(self.config.get('init_position', [0.0]*len(self.active_joints))).tolist()
         for p, j in zip(init_position, self.active_joints):
             pybullet.resetJointState(self.body_unique_id, j.index, p)
 
