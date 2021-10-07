@@ -1,0 +1,59 @@
+<launch>
+
+  <!-- ROS-Pybullet interface node simulator -->
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py" output="screen">
+
+    <!-- Config file for Pybullet -->
+    <param name="pybullet_config" value="{ros_pybullet_interface_examples}/configs/pybullet_basic_example.yaml" type="str"/>
+
+    <!-- Node frequency -->
+    <param name="ros_node_freq" value="100" type="int"/>
+
+    <!-- Simulated robot -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/kuka.yaml",
+      ]
+    </rosparam>
+
+    <!-- Visual robot -->
+    <rosparam param="visual_robot_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/visual_kuka.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="dynamic_object_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/collision_box.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="collision_object_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/floor.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="visual_object_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/visual_sphere.yaml",
+      ]
+    </rosparam>
+
+  </node>
+
+  <!-- Example node -->
+  <node pkg="ros_pybullet_interface_examples" name="basic_example_node" type="basic_example_node.py"/>
+
+  <!-- Static tf frames -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
+	args="0.1 0.2 0.0 0 0 0 rpbi/world robot_base"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="visual_robot_base_tf_broadcaster"
+	args="-0.1 -0.2 0.0 0.5 0 0 rpbi/world visual_robot_base"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf_broadcaster"
+	args="0 0 0.0 0.0 0 0 rpbi/world floor"/>
+
+</launch>
