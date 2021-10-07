@@ -1,0 +1,23 @@
+string name
+float64 base_mass
+string object_type
+float64[4] rgba_color
+float64[3] mesh_scale    # Required when object_type is 'mesh'
+float64 radius           # Required when object_type is 'sphere'/'cylinder'
+float64 height           # Required when object_type is 'cylinder'
+float64[3] half_extends  # Required when object_type is 'box'
+float64[3] init_base_orient_eulerXYZ
+float64[3] init_position
+float64[3] init_linear_velocity
+float64[3] init_angular_velocity
+float64 lateral_friction
+float64 spinning_friction
+float64 rolling_friction
+float64 restitution
+float64 linear_damping
+float64 angular_damping
+float64 contact_stiffness
+float64 contact_damping
+---
+string info
+bool success

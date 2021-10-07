@@ -1,0 +1,6 @@
+int64 flag
+---
+string[] object_names
+int64[] body_unique_ids
+string info
+bool success
