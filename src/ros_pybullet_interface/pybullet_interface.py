@@ -259,11 +259,16 @@ class PyBulletObject:
             baseVisualShapeIndex=self.visual_ID
         )
 
-    def createVisualMultiBody(self):
-        self.ID = pybullet.createMultiBody(
-            baseMass=0,
-            baseVisualShapeIndex=self.visual_ID
-        )
+    def createVisualMultiBody(self, pos=None):
+        cmb_input = dict(baseVisualShapeIndex=self.visual_ID, baseMass=0)
+        if pos is not None:
+            cmb_input['basePosition'] = pos
+
+        self.ID = pybullet.createMultiBody(**cmb_input)
+        # self.ID = pybullet.createMultiBody(
+        #     baseMass=0,
+        #     baseVisualShapeIndex=self.visual_ID
+        # )
 
     def createMultiBody(self, base_mass):
         self.ID = pybullet.createMultiBody(
@@ -285,6 +290,7 @@ class PyBulletVisualSphere(PyBulletObject):
             radius=radius,
             rgbaColor=rgba_color
         )
+
         self.ID = pybullet.createMultiBody(
             baseVisualShapeIndex=visual_id
         )
@@ -307,10 +313,10 @@ class PyBulletCollisionObject(PyBulletObject):
 
 class PyBulletVisualObject(PyBulletObject):
 
-    def __init__(self, file_name, mesh_scale, rgba_color):
+    def __init__(self, file_name, mesh_scale, rgba_color, pos=None):
         file_name = replacePackage(file_name)
         self.loadMeshVisual(file_name, mesh_scale, rgba_color)
-        self.createVisualMultiBody()
+        self.createVisualMultiBody(pos)
 
     def getPosition(self):
         return pybullet.getLinkState(self.ID, -1, computeForwardKinematics=1)[4]

@@ -159,16 +159,43 @@ class ROSPyBulletInterface:
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
         # ----------------------------------------------------------------------
+        # control the avatar via the points on the right wrist and elbow
+        human_body_id = self.robots[-1]['robot'].ID
+        human_link_id_shoulder = self.robots[-1]['robot'].link_ids[17]
+        human_link_id_elbow = self.robots[-1]['robot'].link_ids[19]
+        human_link_id_hand = self.robots[-1]['robot'].link_ids[21]
+
+        shoulder = self.dynamic_collisionvisual_objects[-4]['object'].ID
+        elbow = self.dynamic_collisionvisual_objects[-3]['object'].ID
+        hand = self.dynamic_collisionvisual_objects[-2]['object'].ID
+
+        pp = pybullet_interface.getPybulletObject_hack()
+
+        constraint_id_shoulder = pp.createConstraint(human_body_id, human_link_id_shoulder, shoulder, -1, pp.JOINT_POINT2POINT,
+                                                     [0, 0, 0], [0, 0, 0.0], [0, -0.0, -0.0])
+        pp.changeConstraint(constraint_id_shoulder, erp=1.0, maxForce=1500)
+
+        offset = -0.025*0
+        constraint_id_elbow = pp.createConstraint(human_body_id, human_link_id_elbow, elbow, -1, pp.JOINT_POINT2POINT,
+                                                  [0, 0, 0], [0, 0, 0.0], [0, -0.0, offset])
+        pp.changeConstraint(constraint_id_elbow, erp=0.75, maxForce=750)
+        constraint_id_hand = pp.createConstraint(human_body_id, human_link_id_hand, hand, -1, pp.JOINT_POINT2POINT,
+                                                 [0, 0, 0], [0, 0, 0], [0, -0.0, offset])
+        pp.changeConstraint(constraint_id_hand, erp=0.75, maxForce=750)
+
+        rospy.Subscriber("ros_pybullet_interface/zono_info", WrenchStamped, self.moveAndRescaleObj)
+
+        # ----------------------------------------------------------------------
         # load cloth and set constraint between robot and cloth
-        robot_body_id = self.robots[0]['robot'].ID
-        robot_link_id = self.robots[0]['robot'].link_ids[-1]
-
-        path2cloth = f"{self.current_dir}/robots/cloth/cloth.urdf"
-        self.cid = pybullet_interface.loadCloathAndsetClothConstr(
-            robot_body_id, robot_link_id, path2cloth)
-
-        # initiate server for changing params of cloth constraint
-        self.setClothConstrParamServer()
+        # robot_body_id = self.robots[0]['robot'].ID
+        # robot_link_id = self.robots[0]['robot'].link_ids[-1]
+        #
+        # path2cloth = f"{self.current_dir}/robots/cloth/cloth.urdf"
+        # self.cid = pybullet_interface.loadCloathAndsetClothConstr(
+        #     robot_body_id, robot_link_id, path2cloth)
+        #
+        # # initiate server for changing params of cloth constraint
+        # self.setClothConstrParamServer()
 
     def _null(self, *args, **kwargs):
         pass
@@ -634,6 +661,89 @@ class ROSPyBulletInterface:
         # (as bullet can run the simulation steps automatically from within)
         # or (as we might want to manually control the rate of steps)
         self.step()
+
+    def moveAndRescaleObj(self, msg):
+
+        position = [msg.wrench.force.x, msg.wrench.force.y, msg.wrench.force.z]
+        width = [msg.wrench.torque.x, msg.wrench.torque.y, msg.wrench.torque.z]
+
+        pp = pybullet_interface.getPybulletObject_hack()
+        zono = self.dynamic_collisionvisual_objects[-1]['object'].ID
+
+        # pos = pybullet_interface.getObjectPosOrient(zono)[0]
+        self.setupPyBulletVisualObject2(
+            "/home/theo/software/pybullet/py3bullet-ROS-ws/src/ros_pybullet_interface/configs/zonotope.yaml", width, position)
+        pp.removeBody(zono)
+
+    def moveAndRescaleObjTest(self):
+
+        pp = pybullet_interface.getPybulletObject_hack()
+        zono = self.dynamic_collisionvisual_objects[-1]['object'].ID
+
+        self.counter = self.counter + 1
+
+        scale = 0.1
+        if self.counter % 10 == 0:
+            pos = pybullet_interface.getObjectPosOrient(zono)[0]
+            pp.removeBody(zono)
+
+            if self.counter % 20 == 0:
+                scale = scale - 0.05
+            else:
+                scale = scale + 0.05
+
+            # scale = read from msg
+            # pos = read from msg
+
+            self.setupPyBulletVisualObject2(
+                "/home/theo/software/pybullet/py3bullet-ROS-ws/src/ros_pybullet_interface/configs/zonotope.yaml", [scale, scale, scale], list(pos))
+
+    def setupPyBulletVisualObject2(self, file_name, scale, pose):
+
+        # Load config
+        config = loadYAMLConfig(file_name)
+
+        # Setup visual object
+        obj = pybullet_interface.PyBulletVisualObject(
+            config['file_name'],
+            scale,
+            config['rgba_color'],
+            pos=pose
+        )
+        # pybullet_interface.setObjectPosOrient(obj.ID, pos3D=pose)
+
+        if 'tf_frame_id' in config['link_state']:
+            tf_frame_id = config['link_state']['tf_frame_id']
+            self.tfs[tf_frame_id] = {
+                'received': False, 'position': None, 'orientation': None
+            }
+            self.dynamic_collisionvisual_objects.append({
+                'object': obj,
+                'tf_frame_id': tf_frame_id,
+            })
+
+        else:
+            obj.setBasePositionAndOrientation(
+                config['link_state']['position'],
+                np.deg2rad(config['link_state']['orientation_eulerXYZ'])
+            )
+            self.static_collisionvisual_objects.append({
+                'object': obj,
+                'position': config['link_state']['position'],
+                'orientation': config['link_state']['orientation_eulerXYZ'],
+            })
+            static_col_obj = {}
+            if 'pub_tf' in config['link_state']:
+                static_col_obj['pub_tf'] = config['link_state']['pub_tf']
+            else:
+                static_col_obj['pub_tf'] = False
+
+            if 'name' in config:
+                name = config['name']
+            else:
+                name = 'obj' + str(len(self.static_collision_objects))
+            static_col_obj['name'] = name
+            self.static_collision_objects.append(static_col_obj)
 
     def spin(self):
         try:
