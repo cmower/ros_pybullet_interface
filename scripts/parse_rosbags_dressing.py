@@ -12,6 +12,9 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
 import message_filters
 
+
+ROBOT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'
+
 SIM_HUMAN_JOINT_STATE_TOPIC = 'human/ros_pybullet_interface/joint_state/current'
 
 # FORCE_TOPIC = 'yin_human/ros_pybullet_interface/joint_force_torque_sensor/end_effector'
@@ -30,6 +33,8 @@ WRIST_FRAME_ID = "kolias/RightHand"
 
 END_EFFECTOR_FRAME_ID = 'ros_pybullet_interface/end_effector/target'
 
+END_EFFECTOR_FRAME_ID = 'ros_pybullet_interface/robot/end_effector_sponge'
+
 
 class ParseROSbagtoMat(object):
     """docstring for ."""
@@ -43,11 +48,19 @@ class ParseROSbagtoMat(object):
         self.tf_buff = tf2_ros.Buffer()
         listener = tf2_ros.TransformListener(self.tf_buff)
 
+        self.robot_name = "yin"
+        # self.robot_name = "yin_visual"
+
         # Setup subscriber that reads current human state
         subscr_current_human_state_topic_name = f"{SIM_HUMAN_JOINT_STATE_TOPIC}"
         sub_joints = message_filters.Subscriber(subscr_current_human_state_topic_name,
                                                 JointState)
         # sub_joints.registerCallback(self.readJoints)
+
+        # Setup subscriber that reads current human state
+        subscr_current_robot_state_topic_name = f"{self.robot_name}/{ROBOT_JOINT_STATE_TOPIC}"
+        sub_joints_robot = message_filters.Subscriber(subscr_current_robot_state_topic_name,
+                                                      JointState)
 
         # Setup subscriber that reads force
         subscr_current_force_state_topic_name = f"{FORCE_TOPIC}"
@@ -55,11 +68,13 @@ class ParseROSbagtoMat(object):
                                                WrenchStamped)
         # sub_force.registerCallback(self.readForce)
 
-        ts = message_filters.ApproximateTimeSynchronizer([sub_joints, sub_force], 1, 1)
+        ts = message_filters.ApproximateTimeSynchronizer(
+            [sub_joints, sub_force, sub_joints_robot], 1, 1)
         ts.registerCallback(self.readJointsAndForce)
 
         # init storage lists
         self.human_joints = []
+        self.robot_joints = []
         self.hand = []
         self.elbow = []
         self.shoulder = []
@@ -70,17 +85,18 @@ class ParseROSbagtoMat(object):
         self.temp_time = rospy.Time.now()
         self.time_list = []
 
-    def readJointsAndForce(self, msgJoints, msgForce):
+    def readJointsAndForce(self, msgJoints, msgForce, msgJointsRobot):
 
         joints_array = np.array(msgJoints.position)
         q_human = [joints_array[15],
                    joints_array[17], joints_array[18], joints_array[19]]
         self.human_joints.append(q_human)
 
-        # robot_name = "yin_human"
-        robot_name = "yin_visual"
+        robot_joints_array = np.array(msgJointsRobot.position)
+        self.robot_joints.append(robot_joints_array)
 
-        robot_ee_pos, robot_ee_orient = self.readSpecificTF(f"{robot_name}/{END_EFFECTOR_FRAME_ID}")
+        robot_ee_pos, robot_ee_orient = self.readSpecificTF(
+            f"{self.robot_name}/{END_EFFECTOR_FRAME_ID}")
         self.robot_ee.append(robot_ee_pos)
 
         force = [msgForce.wrench.force.x,
@@ -135,6 +151,8 @@ class ParseROSbagtoMat(object):
         print("------------------------------------")
         joints_array = np.asarray(self.human_joints)
         print(joints_array.shape)
+        joints_robots_array = np.asarray(self.robot_joints)
+        print(joints_robots_array.shape)
         force_local_array = np.asarray(self.force_local)
         print(force_local_array.shape)
         force_global_array = np.asarray(self.force_global)
@@ -158,28 +176,40 @@ class ParseROSbagtoMat(object):
         out_loc_zeros = np.concatenate(loc_zeros).ravel()
         group_zeros_idx = consecutive(out_loc_zeros)
         print("len(group_zeros_idx) ", len(group_zeros_idx))
+        start_idx = 0
+        end_idx = -1
+        save = False
         if len(group_zeros_idx) == 3:
             print("-----------------Automatic cutting can be succesful--------------------------")
             start_idx = group_zeros_idx[1][-1] - 50
             end_idx = group_zeros_idx[2][1] + 50
             print("start_idx ", start_idx)
             print("end_idx ", end_idx)
+            save = True
+        start_idx = 750
+        end_idx = 1950
+        save = True
+
         plot_ee_vel(diff, norm_val_vel_raw, start_idx, end_idx, "raw")
         plot_ee_vel(velocity, norm_val_vel, start_idx, end_idx, "filtered")
 
-        path = "/home/theo/Documents/data_dressing/data_real_world/dressing_data/bend_45_extend_right_lower/traj2"
-        number_idx = "39_29"
+        path = "/home/theo/Documents/data_dressing/data_real_world/dressing_data_2/new_parsed_data/bend_45/traj2"
+        number_idx = "31_53"
+        type_robot_data = "real"
+        # type_robot_data = "sim"
         input_array = np.hstack(
             (hand_array[start_idx:end_idx-1, :], elbow_array[start_idx:end_idx-1, :]))
         input_array = np.hstack((input_array, shoulder_array[start_idx:end_idx-1, :]))
         input_array = np.hstack((input_array, joints_array[start_idx:end_idx-1, :]))
         input_array = np.hstack((input_array, robot_ee_array[start_idx:end_idx-1, :]))
+        input_array = np.hstack((input_array, joints_robots_array[start_idx:end_idx-1, :]))
 
         output_array = np.hstack(
             (hand_array[start_idx+1:end_idx, :], elbow_array[start_idx+1:end_idx, :]))
         output_array = np.hstack((output_array, shoulder_array[start_idx+1:end_idx, :]))
         output_array = np.hstack((output_array, joints_array[start_idx+1:end_idx, :]))
         output_array = np.hstack((output_array, robot_ee_array[start_idx+1:end_idx, :]))
+        output_array = np.hstack((output_array, joints_robots_array[start_idx+1:end_idx, :]))
 
         observation_array_raw = np.hstack(
             (force_local_array[start_idx:end_idx-1, :], force_global_array[start_idx:end_idx-1, :]))
@@ -192,9 +222,10 @@ class ParseROSbagtoMat(object):
         plot_forces(observation_array_raw, "raw")
         plot_forces(filtered_force, "filtered")
 
-        # np.save(f"{path}/input_array_{number_idx}", input_array)
-        # np.save(f"{path}/output_array_{number_idx}", output_array)
-        # np.save(f"{path}/observation_array_{number_idx}", observation_array_raw)
+        if save:
+            np.save(f"{path}/{type_robot_data}_input_array_{number_idx}", input_array)
+            np.save(f"{path}/{type_robot_data}_output_array_{number_idx}", output_array)
+            np.save(f"{path}/{type_robot_data}_observation_array_{number_idx}", observation_array_raw)
 
     def cleanShutdown(self):
         print('')
@@ -307,7 +338,7 @@ if __name__ == '__main__':
         rospy.loginfo("%s: Spawn republisher to make human passive", ParseROSbagtoMat.name)
 
         # Create timer for periodic publisher
-        dur = rospy.Duration(45)
+        dur = rospy.Duration(50)
         ParseROSbagtoMat.writeCallbackTimer = rospy.Timer(
             dur, ParseROSbagtoMat.parsingState)
 
