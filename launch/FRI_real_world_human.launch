@@ -68,8 +68,8 @@
       '{ros_pybullet_interface}/configs/sphere_human_wrist.yaml',
       '{ros_pybullet_interface}/configs/sphere_human_elbow.yaml',
       '{ros_pybullet_interface}/configs/sphere_human_shoulder.yaml',
-      '{ros_pybullet_interface}/configs/sphere_human_wrist_xsens.yaml',
       '{ros_pybullet_interface}/configs/sphere_human_elbow_xsens.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_wrist_xsens.yaml',
       ]
     </rosparam>
 

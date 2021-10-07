@@ -37,7 +37,7 @@
     <rosparam param="robot_config_file_names">
       [
       "{ros_pybullet_interface}/configs/yin_human.yaml",
-      "{ros_pybullet_interface}/configs/yin_visual_human.yaml",
+      <!-- "{ros_pybullet_interface}/configs/yin_visual_human.yaml", -->
       "{ros_pybullet_interface}/configs/human.yaml",
       ]
     </rosparam>
@@ -65,15 +65,38 @@
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/sphere_human_wrist.yaml',
+      <!-- '{ros_pybullet_interface}/configs/sphere_human_wrist.yaml',
       '{ros_pybullet_interface}/configs/sphere_human_elbow.yaml',
-      '{ros_pybullet_interface}/configs/sphere_human_shoulder.yaml',
-      '{ros_pybullet_interface}/configs/sphere_human_wrist_xsens.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_shoulder.yaml', -->
+      '{ros_pybullet_interface}/configs/table2.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_shoulder_xsens.yaml',
       '{ros_pybullet_interface}/configs/sphere_human_elbow_xsens.yaml',
+      '{ros_pybullet_interface}/configs/sphere_human_wrist_xsens.yaml',
+      '{ros_pybullet_interface}/configs/zonotope.yaml',
       ]
     </rosparam>
 
   </node>
+
+  <!-- <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="zonotope_tf_broadcaster"
+        args="0.45 0.2 0.5 0 0 0 ros_pybullet_interface/world ros_pybullet_interface/zono"/> -->
+
+    <node pkg="tf2_ros"
+          type="static_transform_publisher"
+          name="shoulder_tf_broadcaster"
+          args="0.3 0.53 0.625 0 0 0 ros_pybullet_interface/world kolias/RightShoulder"/>
+
+
+          <!-- args="0.355 0.47 0.525 0 0 0 ros_pybullet_interface/world kolias/RightShoulder"/> -->
+
+
+
+    <node pkg="tf2_ros"
+          type="static_transform_publisher"
+          name="table_tf_broadcaster"
+          args="-0.9 -1.6 0.0 0 0 0 ros_pybullet_interface/world table"/>
 
 
 </launch>

@@ -232,7 +232,7 @@
 			<!--boc origin wrt jC1Head-->
             <origin xyz="0           0     0.11223" rpy="0 0 0" />
             <geometry>
-                <sphere radius="0.11223"/>
+                <sphere radius="0.09223"/>
             </geometry>
             <material name="color"/>
         </visual>
@@ -241,7 +241,7 @@
 			<!--box origin wrt jC1Head-->
             <origin xyz="0           0     0.11223" rpy="0 0 0" />
             <geometry>
-                <sphere radius="0.11223"/>
+                <sphere radius="0.09223"/>
             </geometry>
         </collision>
 
@@ -376,7 +376,7 @@
 			<!--box origin wrt jRightWrist-->
             <origin xyz="0   -0.086009           0" rpy="0 0 0" />
             <geometry>
-                <box size="0.11468     0.17202    0.040019"/>
+                <box size="0.11468     0.11202    0.040019"/>
             </geometry>
             <material name="color"/>
         </visual>
@@ -385,7 +385,7 @@
 			<!--box origin wrt jRightWrist-->
             <origin xyz="0   -0.086009           0" rpy="0 0 0" />
             <geometry>
-                <box size="0.11468     0.17202    0.040019"/>
+                <box size="0.11468     0.11202    0.040019"/>
             </geometry>
         </collision>
 
@@ -510,7 +510,7 @@
 			<!--COM origin wrt jLeftWrist-->
             <origin xyz="0    0.086009           0" rpy="0 0 0" />
             <geometry>
-                <box size="0.11468     0.17202    0.040019"/>
+                <box size="0.11468     0.11202    0.040019"/>
             </geometry>
             <material name="color"/>
         </visual>
@@ -519,7 +519,7 @@
 			<!--COM origin wrt jLeftWrist-->
             <origin xyz="0    0.086009           0" rpy="0 0 0" />
             <geometry>
-                <box size="0.11468     0.17202    0.040019"/>
+                <box size="0.11468     0.11202    0.040019"/>
             </geometry>
         </collision>
 
@@ -975,7 +975,7 @@
         <axis xyz="0 0 1" />
     </joint>
 	<joint name="jRightWrist_rotx" type="revolute">
-        <origin xyz="0.000133    -0.22718           0" rpy="0 0 0"/>
+        <origin xyz="0.000133    -0.19718           0" rpy="0 0 0"/>
         <parent link="RightForeArm"/>
         <child link="RightHand_f1"/>
         <dynamics damping="0.1" friction="10.0"/>
@@ -1040,7 +1040,7 @@
         <axis xyz="0 0 1" />
     </joint>
 	<joint name="jLeftWrist_rotx" type="revolute">
-        <origin xyz="0.000133     0.22718           0" rpy="0 0 0"/>
+        <origin xyz="0.000133     0.19718           0" rpy="0 0 0"/>
         <parent link="LeftForeArm"/>
         <child link="LeftHand_f1"/>
         <dynamics damping="0.1" friction="0.0"/>
