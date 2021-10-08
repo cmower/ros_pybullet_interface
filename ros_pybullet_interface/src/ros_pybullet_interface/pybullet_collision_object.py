@@ -1,4 +1,3 @@
-import pybullet
 import numpy
 from .pybullet_object import PybulletObject
 
@@ -107,7 +106,7 @@ class PybulletCollisionObject(PybulletObject):
         self.init_collision_id()
 
         # Initialize body id
-        self.body_unique_id = pybullet.createMultiBody(
+        self.body_unique_id = self.pb.createMultiBody(
             baseMass=0.0,  # makes object static
             baseVisualShapeIndex=self.visual_id,
             baseCollisionShapeIndex=self.collision_id,
@@ -126,4 +125,4 @@ class PybulletCollisionObject(PybulletObject):
         if pos is None: return
 
         # Reset base position/orientation
-        pybullet.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)
+        self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)

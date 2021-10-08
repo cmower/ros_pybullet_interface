@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import rospy
+import pybullet
 from std_msgs.msg import Int64, Float64MultiArray
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
 
 from ros_pybullet_interface.config import load_config
 from ros_pybullet_interface.tf_interface import TfInterface
-from ros_pybullet_interface.pybullet_instance import Pybullet
+from ros_pybullet_interface.pybullet_instance import PybulletInstance
 from ros_pybullet_interface.pybullet_robot import PybulletRobot, PybulletVisualRobot
 from ros_pybullet_interface.pybullet_dynamic_object import PybulletDynamicObject
 from ros_pybullet_interface.pybullet_collision_object import PybulletCollisionObject
@@ -32,11 +33,14 @@ class Node:
         # Setup tf interface
         self.tf = TfInterface()
 
+        # Setup pybullet interface
+        self.pb = pybullet
+
         # Initialize pybullet
         config = load_config(rospy.get_param('~pybullet_config'))
-        self.pb = Pybullet(config)
-        if self.pb.configure_camera_from_ros:
-            rospy.Subscriber('rpbi/camera', Float64MultiArray, self.pb.reset_debug_visualizer_camera_callback)
+        self.pb_instance = PybulletInstance(config, self.pb)
+        if self.pb_instance.configure_camera_from_ros:
+            rospy.Subscriber('rpbi/camera', Float64MultiArray, self.pb_instance.reset_debug_visualizer_camera_callback)
 
         # Setup pybullet objects
         self.pb_objects = {}
@@ -55,7 +59,7 @@ class Node:
                 'joint_state_publisher': rospy.Publisher(f'rpbi/{name}/joint_state', JointState, queue_size=10),
                 'joint_states_to_ros_msg': self.joint_states_to_ros_msg,
             }
-            robot = PybulletRobot(config, self.tf, ros_api)
+            robot = PybulletRobot(config, self.tf, self.pb, ros_api)
 
             # Setup target joint state subscriber
             rospy.Subscriber(f'rpbi/{name}/joint_state/target', JointState, robot.target_joint_state_callback)
@@ -85,7 +89,7 @@ class Node:
             name = config['name']
 
             # Setup robot instance
-            robot = PybulletVisualRobot(config, self.tf)
+            robot = PybulletVisualRobot(config, self.tf, self.pb)
 
             # Setup target joint state subscriber
             rospy.Subscriber(f'rpbi/{name}/joint_state/target', JointState, robot.target_joint_state_callback)
@@ -97,21 +101,21 @@ class Node:
             #
             # Setup dynamic objects
             #
-            obj = PybulletDynamicObject(load_config(file_name), self.tf)
+            obj = PybulletDynamicObject(load_config(file_name), self.tf, self.pb)
             self.add_pb_object(obj.name, obj)
 
         for file_name in rospy.get_param('~collision_object_config_file_names', []):
             #
             # Setup collision objects
             #
-            obj = PybulletCollisionObject(load_config(file_name), self.tf)
+            obj = PybulletCollisionObject(load_config(file_name), self.tf, self.pb)
             self.add_pb_object(obj.name, obj)
 
         for file_name in rospy.get_param('~visual_object_config_file_names', []):
             #
             # Setup visual object
             #
-            obj = PybulletVisualObject(load_config(file_name), self.tf)
+            obj = PybulletVisualObject(load_config(file_name), self.tf, self.pb)
             self.add_pb_object(obj.name, obj)
 
         # Setup services
@@ -124,8 +128,8 @@ class Node:
         rospy.Service('pybullet_robot_joint_info', PybulletRobotJointInfo, self.service_pybullet_robot_joint_info)
 
         # Start simulation
-        if self.pb.enable_real_time_simulation:
-            self.pb.start_real_time_simulation()
+        if self.pb_instance.enable_real_time_simulation:
+            self.pb_instance.start_real_time_simulation()
 
         # Start nodes main loop
         rospy.Timer(rospy.Duration(1.0/float(rospy.get_param('~ros_node_freq'))), self.main_loop)
@@ -142,7 +146,7 @@ class Node:
         pb_objects = self.pb_objects.copy()  # prevents errors when self.pb_objects changes size during iterations
         for pb_obj in pb_objects.values():
             pb_obj.update()
-        self.status_pub.publish(Int64(data=int(self.pb.active)))
+        self.status_pub.publish(Int64(data=int(self.pb_instance.active)))
 
 
     def spin(self):
@@ -151,7 +155,7 @@ class Node:
         except KeyboardInterrupt:
             pass
         finally:
-            self.pb.shutdown()
+            self.pb_instance.shutdown()
 
     #
     # Convert to ros message methods
@@ -188,7 +192,7 @@ class Node:
         info = ''
         success = True
         try:
-            self.pb.start_real_time_simulation()
+            self.pb_instance.start_real_time_simulation()
             rospy.loginfo('Started Pybullet real time simulation.')
         except Exception as err:
             exception_type = type(err).__name__
@@ -202,10 +206,10 @@ class Node:
         """Manually step pybullet real time simulation"""
         info = ''
         success = True
-        hz = self.pb.hz if req.hz <= 0 else req.hz
+        hz = self.pb_instance.hz if req.hz <= 0 else req.hz
         rate = rospy.Rate(hz)
         try:
-            self.pb.step(req.num_steps, rate)
+            self.pb_instance.step(req.num_steps, rate)
             s = 's' if req.num_steps > 1 else ''
             rospy.loginfo('Successfully stepped pybullet %d time%s.', req.num_steps, s)
         except Exception as err:
@@ -221,7 +225,7 @@ class Node:
         info = ''
         success = True
         try:
-            self.pb.stop_real_time_simulation()
+            self.pb_instance.stop_real_time_simulation()
             rospy.loginfo('Stopped Pybullet real time simulation.')
         except Exception as err:
             exception_type = type(err).__name__
@@ -268,7 +272,7 @@ class Node:
             )
 
             # Create object
-            obj = PybulletDynamicObject(config, self.tf)
+            obj = PybulletDynamicObject(config, self.tf, self.pb)
 
             # Add pb object
             self.add_pb_object(name, obj)

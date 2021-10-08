@@ -1,4 +1,3 @@
-import pybullet
 from .pybullet_object import PybulletObject
 
 class PybulletVisualObject(PybulletObject):
@@ -75,7 +74,7 @@ class PybulletVisualObject(PybulletObject):
         self.init_visual_id()
 
         # Initialize body id
-        self.body_unique_id = pybullet.createMultiBody(baseVisualShapeIndex=self.visual_id)
+        self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.visual_id)
 
         # Get tf frame id
         self.tf_frame_id = self.config['tf_frame_id']
@@ -87,4 +86,4 @@ class PybulletVisualObject(PybulletObject):
         if pos is None: return
 
         # Reset base position/orientation
-        pybullet.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)
+        self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)

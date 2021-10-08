@@ -1,4 +1,3 @@
-import pybullet
 from .config import replace_package
 
 
@@ -19,14 +18,15 @@ class PybulletObject:
     # Config:
     # See sub-classes.
 
-    def __init__(self, config, tf_interface, ros_api=None):
+    def __init__(self, config, tf_interface, pybullet, ros_api=None):
 
         # Initial init
-        self.body_unique_id = None  # object unique id, as returned from pybullet.loadURDF or pybullet.createMultiBody
-        self.visual_id = None       # unique id from pybullet.createVisualShape, this isn't always required in sub-classes, when required use self.init_visual_id
+        self.body_unique_id = None  # object unique id, as returned from self.pb.loadURDF or self.pb.createMultiBody
+        self.visual_id = None       # unique id from self.pb.createVisualShape, this isn't always required in sub-classes, when required use self.init_visual_id
         self.collision_id = None    # unique id from createCollisionShape, this isn't always required in sub-classes, when required use self.init_collision_id
         self.config = config
         self.name = self.config['name']
+        self.pb = pybullet
         self.ros_api = ros_api
 
         # Init tf2 interface
@@ -98,10 +98,10 @@ class PybulletObject:
         # Init
         object_type = self.config['object_type']
 
-        # Setup input for pybullet.createVisualShape
+        # Setup input for self.pb.createVisualShape
         if object_type == 'mesh':
             create_visual_shape_input = dict(
-                shapeType=pybullet.GEOM_MESH,
+                shapeType=self.pb.GEOM_MESH,
                 fileName=replace_package(self.config['file_name']),
                 meshScale=self.config.get('mesh_scale', MESH_SCALE_DEFAULT),
                 rgbaColor=self.config.get('rgba_color', RGBA_COLOR_DEFAULT),
@@ -109,21 +109,21 @@ class PybulletObject:
 
         elif object_type == 'sphere':
             create_visual_shape_input = dict(
-                shapeType=pybullet.GEOM_SPHERE,
+                shapeType=self.pb.GEOM_SPHERE,
                 radius=self.config.get('radius', RADIUS_DEFAULT),
                 rgbaColor=self.config.get('rgba_color', RGBA_COLOR_DEFAULT),
             )
 
         elif object_type == 'box':
             create_visual_shape_input = dict(
-                shapeType=pybullet.GEOM_BOX,
+                shapeType=self.pb.GEOM_BOX,
                 halfExtents=self.config.get('half_extends', HALF_EXTENDS_DEFAULT),
                 rgbaColor=self.config.get('rgba_color', RGBA_COLOR_DEFAULT),
             )
 
         elif object_type == 'cylinder':
             create_visual_shape_input = dict(
-                shapetype=pybullet.GEOM_CYLINDER,
+                shapetype=self.pb.GEOM_CYLINDER,
                 radius=self.config.get('radius', RADIUS_DEFAULT),
                 height=self.config.get('height', HEIGHT_DEFAULT),
                 rgbaColor=self.config.get('rgba_color', RGBA_COLOR_DEFAULT),
@@ -131,7 +131,7 @@ class PybulletObject:
 
         elif object_type == 'plane':
             create_visual_shape_input = dict(
-                shapeType=pybullet.GEOM_PLANE,
+                shapeType=self.pb.GEOM_PLANE,
                 planeNormal=self.config.get('plane_normal', PLANE_NORMAL_DEFAULT),
                 rgbaColor=self.config.get('rgba_color', RGBA_COLOR_DEFAULT),
             )
@@ -140,7 +140,7 @@ class PybulletObject:
             raise ValueError(f'object type ({object_type}) not recognized!')
 
         # Create visual id
-        self.visual_id = pybullet.createVisualShape(**create_visual_shape_input)
+        self.visual_id = self.pb.createVisualShape(**create_visual_shape_input)
 
 
     def init_collision_id(self):
@@ -189,33 +189,33 @@ class PybulletObject:
         # Set input for createCollisionShape
         if object_type == 'mesh':
             create_collision_shape_input = dict(
-                shapeType=pybullet.GEOM_MESH,
+                shapeType=self.pb.GEOM_MESH,
                 fileName=replace_package(self.config['file_name']),
                 meshScale=self.config.get('mesh_scale', MESH_SCALE_DEFAULT),
             )
 
         elif object_type == 'sphere':
             create_collision_shape_input = dict(
-                shapeType=pybullet.GEOM_SPHERE,
+                shapeType=self.pb.GEOM_SPHERE,
                 radius=self.config.get('radius', RADIUS_DEFAULT),
             )
 
         elif object_type == 'box':
             create_collision_shape_input = dict(
-                shapeType=pybullet.GEOM_BOX,
+                shapeType=self.pb.GEOM_BOX,
                 halfExtents=self.config.get('half_extends', HALF_EXTENDS_DEFAULT),
             )
 
         elif object_type == 'cylinder':
             create_collision_shape_input = dict(
-                shapetype=pybullet.GEOM_CYLINDER,
+                shapetype=self.pb.GEOM_CYLINDER,
                 radius=self.config.get('radius', RADIUS_DEFAULT),
                 height=self.config.get('height', HEIGHT_DEFAULT),
             )
 
         elif object_type == 'plane':
             create_collision_shape_input = dict(
-                shapeType=pybullet.GEOM_PLANE,
+                shapeType=self.pb.GEOM_PLANE,
                 planeNormal=self.config.get('plane_normal', PLANE_NORMAL_DEFAULT),
             )
 
@@ -223,7 +223,7 @@ class PybulletObject:
             raise ValueError(f'object type ({object_type}) not recognized!')
 
         # Create collision object
-        self.collision_id = pybullet.createCollisionShape(**create_collision_shape_input)
+        self.collision_id = self.pb.createCollisionShape(**create_collision_shape_input)
 
 
     def init_dynamics(self, link_index=-1):
@@ -260,7 +260,7 @@ class PybulletObject:
         #      overrides the value if it was specified in the URDF
         #      file in the contact section.
         #
-        pybullet.changeDynamics(
+        self.pb.changeDynamics(
             self.body_unique_id,
             linkIndex=link_index,
             lateralFriction=self.config['lateral_friction'],

@@ -1,4 +1,3 @@
-import pybullet
 import numpy
 import tf_conversions
 from .pybullet_object import PybulletObject
@@ -125,7 +124,7 @@ class PybulletDynamicObject(PybulletObject):
         init_pos = self.config['init_position']
 
         # Initialize body id
-        self.body_unique_id = pybullet.createMultiBody(
+        self.body_unique_id = self.pb.createMultiBody(
             baseMass=self.config['base_mass'],
             baseVisualShapeIndex=self.visual_id,
             baseCollisionShapeIndex=self.collision_id,
@@ -137,11 +136,11 @@ class PybulletDynamicObject(PybulletObject):
         self.init_dynamics()
 
         # Init velocity
-        pybullet.resetBaseVelocity(self.body_unique_id, self.config.get('init_linear_velocity', [0, 0, 0]), self.config['init_angular_velocity'])
+        self.pb.resetBaseVelocity(self.body_unique_id, self.config.get('init_linear_velocity', [0, 0, 0]), self.config['init_angular_velocity'])
 
         # Set tf_frame_id
         self.tf_frame_id = f'rpbi/{self.name}'
 
     def update(self):
-        pos, ori = pybullet.getBasePositionAndOrientation(self.body_unique_id)
+        pos, ori = self.pb.getBasePositionAndOrientation(self.body_unique_id)
         self.tf.set_tf('rpbi/world', self.tf_frame_id, pos, ori)

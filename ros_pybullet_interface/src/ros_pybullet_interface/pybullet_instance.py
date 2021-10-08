@@ -1,9 +1,7 @@
-import pybullet
-
 """Instance of pybullet."""
 
 
-class Pybullet:
+class PybulletInstance:
 
     #
     # Config expects:
@@ -50,9 +48,10 @@ class Pybullet:
     #      stepped. Default is true.
     #
 
-    def __init__(self, config):
+    def __init__(self, config, pybullet):
 
         # Set class attributes
+        self.pb = pybullet
         self.active = False
 
         # Set class attributes
@@ -62,15 +61,15 @@ class Pybullet:
         self.enable_real_time_simulation = self.config.get('enable_real_time_simulation', True)
 
         # Connect to pybullet
-        self.client_id = pybullet.connect(pybullet.GUI)
+        self.client_id = self.pb.connect(self.pb.GUI)
         if self.client_id == -1:
             raise RuntimeError('Unable to connect to Pybullet!')
 
         # Reset simulation
-        pybullet.resetSimulation(physicsClientId=self.client_id)
+        self.pb.resetSimulation(physicsClientId=self.client_id)
 
         # Init visualizer
-        pybullet.configureDebugVisualizer(flag=pybullet.COV_ENABLE_GUI, enable=0)
+        self.pb.configureDebugVisualizer(flag=self.pb.COV_ENABLE_GUI, enable=0)
         camera_config = [
             config.get('camera_distance', 1),
             config.get('camera_yaw', 0),
@@ -81,26 +80,26 @@ class Pybullet:
         self.configure_camera_from_ros = config.get('configure_camera_from_ros', False)
 
         # Initialize gravity
-        pybullet.setGravity(*config.get('gravity', [0, 0, -9.807]))
+        self.pb.setGravity(*config.get('gravity', [0, 0, -9.807]))
 
         # Initialize time step
         self.hz = config.get('pybullet_sampling_frequency', 100)
         self.dt = 1.0/float(self.hz)
-        pybullet.setTimeStep(self.dt)
+        self.pb.setTimeStep(self.dt)
 
     def start_real_time_simulation(self):
-        pybullet.setRealTimeSimulation(1)
+        self.pb.setRealTimeSimulation(1)
         self.active = True
 
     def stop_real_time_simulation(self):
-        pybullet.setRealTimeSimulation(0)
+        self.pb.setRealTimeSimulation(0)
         self.active = False
 
     def reset_debug_visualizer_camera_callback(self, ros_float64multiarray_msg):
         self.reset_debug_visualizer_camera(ros_float64multiarray_msg.data)
 
     def reset_debug_visualizer_camera(self, config):
-        pybullet.resetDebugVisualizerCamera(
+        self.pb.resetDebugVisualizerCamera(
             cameraDistance=config[0],
             cameraYaw=config[1],
             cameraPitch=config[2],
@@ -110,9 +109,9 @@ class Pybullet:
     def step(self, nsteps, ros_rate):
         self.active = True
         for _ in range(nsteps):
-            pybullet.stepSimulation()
+            self.pb.stepSimulation()
             ros_rate.sleep()
         self.active = False
 
     def shutdown(self):
-        pybullet.disconnect()
+        self.pb.disconnect()
