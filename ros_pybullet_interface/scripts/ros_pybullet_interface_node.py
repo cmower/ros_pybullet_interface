@@ -195,6 +195,7 @@ class Node:
             self.pb_instance.start_real_time_simulation()
             rospy.loginfo('Started Pybullet real time simulation.')
         except Exception as err:
+            success = False
             exception_type = type(err).__name__
             msg = str(err)
             info = f"Exception with type {exception_type} was raised with message: {msg}"
@@ -228,6 +229,7 @@ class Node:
             self.pb_instance.stop_real_time_simulation()
             rospy.loginfo('Stopped Pybullet real time simulation.')
         except Exception as err:
+            success = False
             exception_type = type(err).__name__
             msg = str(err)
             info = f"Exception with type {exception_type} was raised with message: {msg}"
@@ -280,6 +282,7 @@ class Node:
             rospy.loginfo('Successfully created dynamic object %s', name)
 
         except Exception as err:
+            success = False
             exception_type = type(err).__name__
             msg = str(err)
             info = f"Exception with type {exception_type} was raised with message: {msg}"
