@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rospy
-import pybullet
 import numpy
+import importlib
 from scipy.interpolate import interp1d
 from std_msgs.msg import Int64, Float64MultiArray
 from sensor_msgs.msg import JointState, Image
@@ -39,7 +39,7 @@ class Node:
         self.tf = TfInterface()
 
         # Setup pybullet interface
-        self.pb = pybullet
+        self.pb = importlib.__import__('pybullet')
 
         # Initialize pybullet
         config = load_config(rospy.get_param('~pybullet_config'))
