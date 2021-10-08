@@ -45,6 +45,12 @@
 
   <!-- Example node -->
   <node pkg="ros_pybullet_interface_examples" name="basic_example_node" type="basic_example_node.py"/>
+  <node pkg="ros_pybullet_interface_examples" name="basic_LWR_example_node" type="basic_robot_example_node.py">
+    <param name="robot_name" type="str" value="LWR"/>
+  </node>
+  <node pkg="ros_pybullet_interface_examples" name="basic_visual_LWR_example_node" type="basic_robot_example_node.py">
+    <param name="robot_name" type="str" value="visual_LWR"/>
+  </node>
 
   <!-- Static tf frames -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
