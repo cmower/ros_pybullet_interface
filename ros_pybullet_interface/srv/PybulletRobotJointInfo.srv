@@ -2,5 +2,8 @@ string robot_name
 ---
 int64[] joint_index  # is link_index: https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=12728
 string[] joint_name
+string[] joint_type
+int64 ndof
+int64 ndof_active
 string info
 bool success

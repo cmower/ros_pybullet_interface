@@ -32,6 +32,10 @@ class Joint:
         return self.info[2]
 
     @property
+    def type_as_string(self):
+        return self.joint_type_as_string[self.type]
+
+    @property
     def link_name(self):
         return self.info[12].decode('utf-8')
 
@@ -104,6 +108,7 @@ class _PybulletRobotBase(PybulletObject):
         # Init joints
         self.joints = [Joint(self.body_unique_id, jidx, self.pb) for jidx in range(self.ndof)]
         self.active_joints = [j for j in self.joints if j.is_active()]
+        self.ndof_active = len(self.active_joints)
 
         # Get tf frame id (defines the robot base in rpbi/world frame)
         self.tf_frame_id = self.config['tf_frame_id']

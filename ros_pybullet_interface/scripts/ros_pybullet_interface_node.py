@@ -321,17 +321,31 @@ class Node:
         success = True
         joint_index = []
         joint_name = []
+        joint_type = []
         try:
-            for joint in self.pb_objects[req.robot_name].joints:
+            robot = self.pb_objects[req.robot_name]
+            for joint in robot.joints:
                 joint_index.append(joint.index)
                 joint_name.append(joint.name)
+                joint_type.append(joint.type_as_string)
+            ndof = robot.ndof
+            ndof_active = robot.ndof_active
             rospy.loginfo('Succesfully collected joint information for robot "%s"', req.robot_name)
         except Exception as err:
             exception_type = type(err).__name__
             msg = str(err)
             info = f"Exception with type {exception_type} was raised with message: {msg}"
             rospy.logwarn('Failed to collect joint information for robot "%s"\nReason: %s', req.robot_name, info)
-        return PybulletRobotJointInfoResponse(joint_index=joint_index, joint_name=joint_name, info=info, success=success)
+        return PybulletRobotJointInfoResponse(
+            joint_index=joint_index,
+            joint_name=joint_name,
+            joint_type=joint_type,
+            ndof=ndof,
+            ndof_active=ndof_active,
+            info=info,
+            success=success,
+        )
+
     def service_run_camera_bullet_time(self, req):
 
         # Setup
