@@ -4,8 +4,9 @@ import pybullet
 import numpy
 from scipy.interpolate import interp1d
 from std_msgs.msg import Int64, Float64MultiArray
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, Image
 from geometry_msgs.msg import WrenchStamped
+
 
 from ros_pybullet_interface.config import load_config
 from ros_pybullet_interface.tf_interface import TfInterface
@@ -29,6 +30,7 @@ class Node:
 
         # Init ros node
         rospy.init_node('ros_pybullet_interface_node')
+        ros_node_dur = rospy.Duration(1.0/float(rospy.get_param('~ros_node_freq')))
 
         # Setup ros status publisher
         self.status_pub = rospy.Publisher('rpbi/active', Int64, queue_size=10)
@@ -131,12 +133,18 @@ class Node:
         rospy.Service('pybullet_robot_joint_info', PybulletRobotJointInfo, self.service_pybullet_robot_joint_info)
         rospy.Service('run_camera_bullet_time', RunCameraBulletTime, self.service_run_camera_bullet_time)
 
+        # Create publisher for visualizer image if desired
+        self.visualizer_publisher = None
+        if self.pb_instance.publish_visualizer_to_ros:
+            self.visualizer_pub = rospy.Publisher('rpbi/visualizer', Image, queue_size=10)
+            rospy.Timer(ros_node_dur, self.publish_visualizer_to_ros)
+
         # Start simulation
         if self.pb_instance.enable_real_time_simulation:
             self.pb_instance.start_real_time_simulation()
 
         # Start nodes main loop
-        rospy.Timer(rospy.Duration(1.0/float(rospy.get_param('~ros_node_freq'))), self.main_loop)
+        rospy.Timer(ros_node_dur, self.main_loop)
 
         rospy.loginfo('ros_pybullet_interface node initialized')
 
@@ -146,12 +154,35 @@ class Node:
         self.pb_objects[name] = obj
 
 
+    #
+    # Timer callbacks
+    #
+
     def main_loop(self, event):
         pb_objects = self.pb_objects.copy()  # prevents errors when self.pb_objects changes size during iterations
         for pb_obj in pb_objects.values():
             pb_obj.update()
         self.status_pub.publish(Int64(data=int(self.pb_instance.active)))
 
+
+    def publish_visualizer_to_ros(self, event):
+
+        # Get image and parse as numpy array
+        image = numpy.array(self.pb_instance.get_visualizer_image(), dtype=numpy.uint8).flatten()
+
+        # Pack Image message and publish
+        msg = Image()
+        msg.header.stamp = rospy.Time.now()
+        msg.width = self.pb_instance.config['camera_width']
+        msg.height = self.pb_instance.config['camera_height']
+        msg.encoding = 'rgba8'
+        msg.step = 4*self.pb_instance.config['camera_width']
+        msg.data = image.tolist()
+        self.visualizer_pub.publish(msg)
+
+    #
+    # Spin method
+    #
 
     def spin(self):
         try:

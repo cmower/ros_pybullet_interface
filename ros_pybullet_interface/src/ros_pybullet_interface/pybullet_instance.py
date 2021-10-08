@@ -57,8 +57,9 @@ class PybulletInstance:
         # Set class attributes
         self.config = config
 
-        # Get real time indicator
+        # Get flags
         self.enable_real_time_simulation = self.config.get('enable_real_time_simulation', True)
+        self.publish_visualizer_to_ros = self.config.get('publish_visualizer_to_ros', False)
 
         # Connect to pybullet
         self.client_id = self.pb.connect(self.pb.GUI)
@@ -107,6 +108,15 @@ class PybulletInstance:
             cameraPitch=config[2],
             cameraTargetPosition=config[3:7],
         )
+
+    def get_visualizer_image(self):
+        output = self.pb.getCameraImage(
+            width=self.config['camera_width'],
+            height=self.config['camera_height'],
+        )
+        rgb_pixels = output[2]
+        return rgb_pixels
+
 
     def step(self, nsteps, ros_rate):
         self.active = True
