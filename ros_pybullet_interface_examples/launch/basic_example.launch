@@ -54,7 +54,7 @@
 
   <!-- Static tf frames -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
-	args="0.1 0.2 0.0 0 0 0 rpbi/world robot_base"/>
+	args="0.1 0.2 0.0 0 0 0 rpbi/world lwr_base"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="visual_robot_base_tf_broadcaster"
 	args="-0.1 -0.2 0.0 0.5 0 0 rpbi/world visual_robot_base"/>
