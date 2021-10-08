@@ -1,0 +1,7 @@
+camera_distance: 2.0
+camera_yaw: 0.0
+camera_pitch: -40.0
+camera_target_position: [0, 0, 0]
+gravity: [0, 0, -9.807]
+hz: 100
+enable_real_time_simulation: True

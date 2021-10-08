@@ -1,0 +1,19 @@
+
+
+# Basic parameters
+name: 'surface'
+file_name: '{ros_pybullet_interface}/objects/surface.obj'
+mesh_scale: [0.0015,0.0015,0.0015]
+rgba_color: [0.5, 0.5, 0.2, 1]
+object_type: 'mesh'
+tf_frame_id: 'surface'
+
+# Dynamic parameters
+lateral_friction: 1.0
+spinning_friction: 0.5
+rolling_friction: 0.5
+restitution: 0.5
+linear_damping: 0.04
+angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 0.7

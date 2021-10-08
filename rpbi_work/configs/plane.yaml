@@ -1,0 +1,17 @@
+
+# Basic parameters
+name: "plane"
+rgba_color: [0.1, 0.5, 0.3, 1.0]
+object_type: "plane"
+plane_normal: [0, 0, 1]
+tf_frame_id: 'plane'
+
+# Dynamic parameters
+lateral_friction: 1.0
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.0
+linear_damping: 0.04
+angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 0.7

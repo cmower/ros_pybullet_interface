@@ -1,0 +1,52 @@
+#
+# PyBullet KUKA configuration file
+#
+name: "LWR"
+file_name: "{ros_pybullet_interface}/robots/kuka_lwr_force/kuka_push.urdf"
+end_effector: "end_effector_sponge"
+use_fixed_base: True
+base_position: [0.0, 0.0, 0.0]
+base_orient_eulerXYZ: [0.0, 0.0, 0.0]
+init_position: [-30.11280589, -49.83176737, -7.65876425, 71.40585079, 7.81488752, -44.31203921, -8.3018490]
+
+
+sensors:
+
+  #
+  # You can have multiple sensors on the robot, each attribute label should be
+  # specified as follows
+  #
+  #     SENSOR_TYPE__LABEL
+  #
+  # where SENSOR_TYPE is one of the following
+  #
+  #  - joint_force_torque_sensor
+  #
+  # and LABEL is some unique label. Each sensor type requires certain arguments
+  # to be set, see below.
+  #
+  #  - joint_force_torque_sensor
+  #    - joint_index (int, joint index where F/T sensor is attached on the robot)
+  #
+  # If the robot has no additional sensors then do not specify the sensors
+  # attribute.
+
+  joint_force_torque_sensor__end_effector:
+    joint_index: 8
+
+
+
+IK:
+  # 0-3 orienation, 3-6 position, 0-6 both orienation and position
+  # first index in IK
+  f_indx : 0
+  # last index in IK
+  l_indx : 6
+
+  # scaling parameter between orientation and position
+  scale_pos_orient : 0.1
+
+  # parameters of the nullspace motion
+  alpha_null : [0., 0., -0., -0., 0., 0.0, 0.]
+  h_delta : [0., 0., -0., -0., 0., 90., 0.]
+  h_norm : [340., 240., 340., 240., 340., 240., 350.]

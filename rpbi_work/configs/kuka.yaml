@@ -1,0 +1,10 @@
+name: "LWR"
+urdf_filename: "{ros_pybullet_interface_examples}/robots/kuka_lwr_force/kuka.urdf"
+# init_position: [0., 28.64788976, 17.18873385, -28.64788976, 11.4591559, 45.83662361, 0.]
+init_position: [0, 0, 0, 0, 0, 0, 0]
+tf_frame_id: "robot_base"
+alpha: 1.0
+
+sensors:
+  joint_force_torque_sensor__effsense:
+    joint_index: 8

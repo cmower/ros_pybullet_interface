@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<IKSolverDemoConfig>
+
+  <IKSolver Name="MySolver">
+    <MaxIterations>1</MaxIterations>
+  </IKSolver>
+
+  <UnconstrainedEndPoseProblem Name="MyProblem">
+
+    <PlanningScene>
+      <Scene>
+        <JointGroup>botharms</JointGroup>
+        <URDF>{nextagea_description}/urdf/NextageAOpen.urdf</URDF>
+        <SRDF>{nextagea_moveit_config}/config/NextageAOpen.srdf</SRDF>
+      </Scene>
+    </PlanningScene>
+
+    <Maps>
+
+      <!-- Left arm -->
+      <EffPosition Name="LPosition">
+        <EndEffector>
+            <Frame Link="LARM_JOINT4_Link"/>
+        </EndEffector>
+      </EffPosition>
+
+      <!-- <EffAxisAlignment Name="LHandDown"> -->
+      <!--   <EndEffector> -->
+      <!--     <Frame Link="LARM_JOINT4_Link" Direction="0 0 -1" Axis="0 0 1"/> -->
+      <!--   </EndEffector> -->
+      <!-- </EffAxisAlignment> -->
+
+      <!-- Right arm -->
+      <!-- <EffPosition Name="RPosition"> -->
+      <!--   <EndEffector> -->
+      <!--       <Frame Link="RARM_JOINT4_Link"/> -->
+      <!--   </EndEffector> -->
+      <!-- </EffPosition> -->
+
+      <!-- <EffAxisAlignment Name="RHandDown"> -->
+      <!--   <EndEffector> -->
+      <!--     <Frame Link="RARM_JOINT4_Link" Direction="0 0 -1" Axis="0 0 1"/> -->
+      <!--   </EndEffector> -->
+      <!-- </EffAxisAlignment> -->
+
+    </Maps>
+
+    <Cost>
+      <Task Task="LPosition" Rho="1"/>
+      <!-- <Task Task="LHandDown" Rho="1"/> -->
+
+      <!-- <Task Task="RPosition" Rho="1"/> -->
+      <!-- <Task Task="RHandDown" Rho="1"/> -->
+    </Cost>
+
+    <!-- <StartState>0 0 0 0 0 0 0</StartState> -->
+    <!-- <W> 7 6 5 4 3 2 1 </W> -->
+  </UnconstrainedEndPoseProblem>
+
+</IKSolverDemoConfig>

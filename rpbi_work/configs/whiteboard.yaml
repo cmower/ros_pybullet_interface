@@ -1,0 +1,18 @@
+
+# Basic parameters
+name: "whiteboad"
+mesh_scale: [1.0, 1.0, 1.0]
+rgba_color: [1.0, 1.0, 1.0, 1.0]
+object_type: "mesh"
+tf_frame_id: "whiteboard"
+file_name: '{ros_pybullet_interface}/objects/whiteboard.obj'
+
+# Dynamic parameters
+lateral_friction: 1.0
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.0
+linear_damping: 0.04
+angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 0.7

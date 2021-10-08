@@ -1,0 +1,24 @@
+
+# Basic parameters
+name: "sphere"
+radius: 0.24
+rgba_color: [0.1, 0.5, 0.3, 1.0]
+object_type: "sphere"
+# init_position: [0.3, 0.2, 0.5]
+init_position: [0, 0, 2]
+init_base_orient_eulerXYZ: [0, 0, 0]
+init_linear_velocity: [0.02, 0, 0]
+init_angular_velocity: [0, 0, 0]
+base_mass: 1
+
+# Dynamic parameters
+lateral_friction: 1.0
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0
+linear_damping: 10
+angular_damping: 10
+# linear_damping: 0.04
+# angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 0.7
