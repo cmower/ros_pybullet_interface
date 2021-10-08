@@ -1,0 +1,51 @@
+<launch>
+
+  <!-- ROS-Pybullet interface node simulator -->
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py" output="screen">
+
+    <!-- Config file for Pybullet -->
+    <param name="pybullet_config" value="{ros_pybullet_interface_examples}/configs/pybullet_basic_example.yaml" type="str"/>
+
+    <!-- Node frequency -->
+    <param name="ros_node_freq" value="100" type="int"/>
+
+    <!-- Simulated robot -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/valkyrie.yaml",
+      ]
+    </rosparam>
+
+    <!-- Visual robot -->
+    <rosparam param="visual_robot_config_file_names">
+      [
+      ]
+    </rosparam>
+
+    <rosparam param="dynamic_object_config_file_names">
+      [
+      ]
+    </rosparam>
+
+    <rosparam param="collision_object_config_file_names">
+      [
+      ]
+    </rosparam>
+
+    <rosparam param="visual_object_config_file_names">
+      [
+      ]
+    </rosparam>
+
+  </node>
+
+  <!-- Example node -->
+  <node pkg="ros_pybullet_interface_examples" name="basic_robot_example_node" type="basic_robot_example_node.py">
+    <param name="robot_name" type="str" value="valkyrie"/>
+  </node>
+
+  <!-- Static tf frames -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
+	args="0.0 0.0 0. 0 0 0 rpbi/world valkyrie_base"/>
+
+</launch>
