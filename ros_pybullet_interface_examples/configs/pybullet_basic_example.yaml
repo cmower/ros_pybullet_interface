@@ -1,6 +1,6 @@
-camera_distance: 2.0
+camera_distance: 3.0
 camera_yaw: 0.0
-camera_pitch: -40.0
+camera_pitch: -45.0
 camera_target_position: [0, 0, 0.5]
 configure_camera_from_ros: False
 gravity: [0, 0, -9.807]
