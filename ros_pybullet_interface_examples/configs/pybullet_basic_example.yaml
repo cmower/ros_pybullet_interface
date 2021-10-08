@@ -6,3 +6,6 @@ configure_camera_from_ros: False
 gravity: [0, 0, -9.807]
 pybullet_sampling_frequency: 250
 enable_real_time_simulation: True
+publish_visualizer_to_ros: False
+camera_width: 1000
+camera_height: 1000
