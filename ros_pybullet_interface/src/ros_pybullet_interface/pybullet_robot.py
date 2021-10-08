@@ -102,7 +102,12 @@ class _PybulletRobotBase(PybulletObject):
     def init_robot(self):
 
         # Load robot
-        self.body_unique_id = self.pb.loadURDF(replace_package(self.config['urdf_filename']), useFixedBase=True)
+        self.use_fixed_base = self.config.get('use_fixed_base', True)
+        self.body_unique_id = self.pb.loadURDF(
+            replace_package(self.config['urdf_filename']),
+            useFixedBase=self.use_fixed_base,
+            flags=self.pb.URDF_USE_MATERIAL_COLORS_FROM_MTL,
+        )
         self.ndof = self.pb.getNumJoints(self.body_unique_id)
 
         # Init joints
@@ -192,9 +197,10 @@ class PybulletRobot(_PybulletRobotBase):
             sensor.publish_state_to_ros()
 
         # Set base position/orientation
-        pos, rot = self.tf.get_tf('rpbi/world', self.tf_frame_id)
-        if pos is not None:
-            self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)
+        if self.use_fixed_base:
+            pos, rot = self.tf.get_tf('rpbi/world', self.tf_frame_id)
+            if pos is not None:
+                self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)
 
         # Set joint motor targets
         if self.target_joint_state is not None:
