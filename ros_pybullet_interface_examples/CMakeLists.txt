@@ -160,9 +160,6 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/basic_example_node.py
   scripts/basic_robot_example_node.py
-
-  # Nextage
-  scripts/nextage_example_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
