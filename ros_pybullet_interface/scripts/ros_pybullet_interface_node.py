@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import rospy
 import pybullet
+import numpy
+from scipy.interpolate import interp1d
 from std_msgs.msg import Int64, Float64MultiArray
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
@@ -17,6 +19,7 @@ from ros_pybullet_interface.srv import ManualPybullet, ManualPybulletResponse
 from ros_pybullet_interface.srv import PybulletBodyUniqueIds, PybulletBodyUniqueIdsResponse
 from ros_pybullet_interface.srv import PybulletRobotJointInfo, PybulletRobotJointInfoResponse
 from ros_pybullet_interface.srv import CreateDynamicObject, CreateDynamicObjectResponse
+from ros_pybullet_interface.srv import RunCameraBulletTime, RunCameraBulletTimeResponse
 
 class Node:
 
@@ -126,6 +129,7 @@ class Node:
         rospy.Service('create_dynamic_object', CreateDynamicObject, self.service_create_dynamic_object)
         rospy.Service('pybullet_body_unique_ids', PybulletBodyUniqueIds, self.service_pybullet_body_unique_ids)
         rospy.Service('pybullet_robot_joint_info', PybulletRobotJointInfo, self.service_pybullet_robot_joint_info)
+        rospy.Service('run_camera_bullet_time', RunCameraBulletTime, self.service_run_camera_bullet_time)
 
         # Start simulation
         if self.pb_instance.enable_real_time_simulation:
@@ -328,7 +332,68 @@ class Node:
             info = f"Exception with type {exception_type} was raised with message: {msg}"
             rospy.logwarn('Failed to collect joint information for robot "%s"\nReason: %s', req.robot_name, info)
         return PybulletRobotJointInfoResponse(joint_index=joint_index, joint_name=joint_name, info=info, success=success)
+    def service_run_camera_bullet_time(self, req):
 
+        # Setup
+        info = ''
+        success = True
+        max_pitch = 45
+
+        # Check camera not being configured from ROS
+        if self.pb_instance.configure_camera_from_ros:
+            info = 'camera being configured from ROS, cannot run bullet time'
+            success = False
+            rospy.logwarn('You cannot call run_camera_bullet_time service')
+            return RunCameraBulletTimeResponse(info=info, success=success)
+
+
+        try:
+            # Extract arguments
+            distance = req.distance
+            target_position = req.target_position
+            duration = req.duration
+            initial_yaw = req.initial_yaw
+
+            # Generate trajectory
+            N = 1000
+            yaw_trajectory = initial_yaw + numpy.linspace(0, 360, N)
+            x_ = numpy.linspace(0, 1, N)
+            pitch_trajectory = -max_pitch*numpy.exp(-3*x_**2)*numpy.cos(x_)
+
+            # Interpolate trajectory in terms of temp parameter p
+            p = numpy.linspace(0, 1, N)
+            yaw_trajectory_interp = interp1d(p, yaw_trajectory, fill_value="extrapolate", kind='cubic')
+            pitch_trajectory_interp = interp1d(p, pitch_trajectory, fill_value="extrapolate", kind='cubic')
+
+            # Get current camera config
+            orig_camera_config = self.pb_instance.camera_config
+
+            # Run bullet-time
+            alpha = 0.0
+            rate = rospy.Rate(50)
+            start_time = rospy.Time.now().to_sec()
+            while alpha < 1.0:
+                t = rospy.Time.now().to_sec() - start_time
+                alpha = t/duration
+                yaw = yaw_trajectory_interp(alpha)
+                pitch = pitch_trajectory_interp(alpha)
+                config = [distance, yaw, pitch, target_position[0], target_position[1], target_position[2]]
+                self.pb_instance.reset_debug_visualizer_camera(config)
+                rate.sleep()
+
+            # Return camera to original position, if required
+            if req.return_to_orig_camera_config_after:
+                self.pb_instance.reset_debug_visualizer_camera(orig_camera_config)
+
+            rospy.loginfo('Completed bullet-time run.')
+        except Exception as err:
+            success = False
+            exception_type = type(err).__name__
+            msg = str(err)
+            info = f"Exception with type {exception_type} was raised with message: {msg}"
+            rospy.logwarn('Failed to run bullet-time!\nReason: %s', info)
+
+        return RunCameraBulletTimeResponse(info=info, success=success)
 
 def main():
     Node().spin()

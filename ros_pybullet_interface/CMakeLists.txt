@@ -18,6 +18,7 @@ add_service_files(
   CreateDynamicObject.srv
   PybulletBodyUniqueIds.srv
   PybulletRobotJointInfo.srv
+  RunCameraBulletTime.srv
 )
 
 generate_messages(

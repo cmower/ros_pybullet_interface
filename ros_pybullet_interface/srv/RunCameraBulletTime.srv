@@ -1,0 +1,8 @@
+float64 duration
+float64[3] target_position
+float64 distance
+float64 initial_yaw
+bool return_to_orig_camera_config_after
+---
+string info
+bool success

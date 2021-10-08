@@ -70,6 +70,7 @@ class PybulletInstance:
 
         # Init visualizer
         self.pb.configureDebugVisualizer(flag=self.pb.COV_ENABLE_GUI, enable=0)
+        self.camera_config = None
         camera_config = [
             config.get('camera_distance', 1),
             config.get('camera_yaw', 0),
@@ -99,6 +100,7 @@ class PybulletInstance:
         self.reset_debug_visualizer_camera(ros_float64multiarray_msg.data)
 
     def reset_debug_visualizer_camera(self, config):
+        self.camera_config = config
         self.pb.resetDebugVisualizerCamera(
             cameraDistance=config[0],
             cameraYaw=config[1],
