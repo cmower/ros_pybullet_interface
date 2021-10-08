@@ -139,7 +139,7 @@ class PybulletDynamicObject(PybulletObject):
         self.pb.resetBaseVelocity(self.body_unique_id, self.config.get('init_linear_velocity', [0, 0, 0]), self.config['init_angular_velocity'])
 
         # Set tf_frame_id
-        self.tf_frame_id = f'rpbi/{self.name}'
+        self.tf_frame_id = self.config.get('tf_frame_id', f'rpbi/{self.name}')
 
     def update(self):
         pos, ori = self.pb.getBasePositionAndOrientation(self.body_unique_id)
