@@ -1,0 +1,6 @@
+name: "talos"
+urdf_filename: "{exotica_examples}/resources/robots/talos_pb.urdf"
+# init_position: [0, 0, 0, 0, 0, 0, 0]
+tf_frame_id: "talos_base"
+alpha: 1.0
+use_fixed_base: True

@@ -1,0 +1,6 @@
+name: "valkyrie"
+urdf_filename: "{exotica_examples}/resources/robots/val_simplified_pb.urdf"
+# init_position: [0, 0, 0, 0, 0, 0, 0]
+tf_frame_id: "valkyrie_base"
+alpha: 1.0
+use_fixed_base: True

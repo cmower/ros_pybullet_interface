@@ -1,0 +1,9 @@
+name: "iiwa"
+urdf_filename: "{ros_pybullet_interface_examples}/robots/kuka_iiwa/iiwa14.urdf"
+init_position: [0, 0, 0, 0, 0, 0, 0]
+tf_frame_id: "iiwa_base"
+alpha: 1.0
+
+sensors:
+  joint_force_torque_sensor__effsense:
+    joint_index: 8

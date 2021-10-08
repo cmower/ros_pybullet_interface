@@ -1,0 +1,17 @@
+name: "pushing_box"
+base_mass: 0.5
+init_position: [0.6, 0.2, 0.45]
+init_base_orient_eulerXYZ: [0, 0, 0]
+init_linear_velocity: [0, 0, 0]
+init_angular_velocity: [0, 0, 0]
+object_type: 'box'
+half_extends: [0.05, 0.05, 0.05]
+rgba_color: [0.1, 0.54, 0.8, 1.0]
+lateral_friction: 1.0
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.0
+linear_damping: 0.04
+angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 0.7
