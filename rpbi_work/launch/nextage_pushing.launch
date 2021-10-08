@@ -1,0 +1,64 @@
+<launch>
+
+  <!-- ROS-Pybullet interface node simulator -->
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py" output="screen">
+
+    <!-- Config file for Pybullet -->
+    <param name="pybullet_config" value="{ros_pybullet_interface_examples}/configs/pybullet_nextage_pushing.yaml" type="str"/>
+
+    <!-- Node frequency -->
+    <param name="ros_node_freq" value="100" type="int"/>
+
+    <!-- Simulated robot -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/nextage.yaml",
+      ]
+    </rosparam>
+
+    <!-- Visual robot -->
+    <rosparam param="visual_robot_config_file_names">
+      [
+      ]
+    </rosparam>
+
+    <rosparam param="dynamic_object_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/pushing_box.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="collision_object_config_file_names">
+      [
+      "{ros_pybullet_interface_examples}/configs/floor.yaml",
+      "{ros_pybullet_interface_examples}/configs/table.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="visual_object_config_file_names">
+      [
+      ]
+    </rosparam>
+
+  </node>
+
+  <!-- Joystick -->
+  <node respawn="true" pkg="joy" type="joy_node" name="joy" >
+    <param name="dev" type="string" value="/dev/input/js0" />
+    <param name="autorepeat_rate" type="double" value="150.0"/>
+  </node>
+
+  <!-- Nextage pushing node -->
+  <node pkg="ros_pybullet_interface_examples" name="nextage_pushing_node" type="nextage_pushing_node.py" output="screen"/>
+
+  <!-- Static tf frames -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
+	args="0. 0. 0.85 0 0 0 rpbi/world nextage_base"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf_broadcaster"
+	args="0 0 0 0 0 0 rpbi/world floor"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="table_tf_broadcaster"
+	args="1 0.2 -0.5 0 0 0 rpbi/world table"/>
+
+</launch>
