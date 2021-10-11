@@ -4,6 +4,9 @@ from std_msgs.msg import Float64MultiArray
 from sensor_msgs.msg import JointState
 
 
+"""Map JointState positions messages onto Float64MultiArray messages."""
+
+
 class Node:
 
     def __init__(self):
