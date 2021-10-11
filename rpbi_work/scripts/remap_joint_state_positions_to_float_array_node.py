@@ -26,7 +26,7 @@ class Node:
         rospy.loginfo('Remapper JointState.position -> Float64MultiArray initialized.')
 
 
-    def callback(self, msg_in):
+    def callback(self, msg):
         self.pub.publish(Float64MultiArray(data=msg.position))
 
 
