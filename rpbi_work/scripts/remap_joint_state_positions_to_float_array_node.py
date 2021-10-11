@@ -9,6 +9,7 @@ from sensor_msgs.msg import JointState
 
 class Node:
 
+
     def __init__(self):
 
         # Setup ros node
@@ -22,8 +23,12 @@ class Node:
         # expect input topic to be remapped in launch
         rospy.Subscriber('input_joint_state_topic', JointState, self.callback)
 
+        rospy.loginfo('Remapper JointState.position -> Float64MultiArray initialized.')
+
+
     def callback(self, msg_in):
         self.pub.publish(Float64MultiArray(data=msg.position))
+
 
     def spin(self):
         rospy.spin()
