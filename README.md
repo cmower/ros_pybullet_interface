@@ -1,6 +1,6 @@
 # ros_pybullet_interface
 
-![alt text](https://github.com/cmower/ros_pybullet_interface/blob/chris-revamp/doc/rpbi.png?raw=true)
+[![IMAGE ALT TEXT HERE](https://github.com/cmower/ros_pybullet_interface/blob/chris-revamp/doc/rpbi.png?raw=true)](https://youtu.be/6g7JFWKXExI)
 
 This repository implements an interface between [ROS](https://www.ros.org/) and [Pybullet](https://pybullet.org/wordpress/).
 In addition, several IK interfaces and other code are provided for specific setups.
