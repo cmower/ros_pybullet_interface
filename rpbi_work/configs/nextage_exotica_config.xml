@@ -9,7 +9,7 @@
 
     <PlanningScene>
       <Scene>
-        <JointGroup>botharms</JointGroup>
+        <JointGroup>body</JointGroup>
         <URDF>{nextagea_description}/urdf/NextageAOpen.urdf</URDF>
         <SRDF>{nextagea_moveit_config}/config/NextageAOpen.srdf</SRDF>
       </Scene>
@@ -20,37 +20,39 @@
       <!-- Left arm -->
       <EffPosition Name="LPosition">
         <EndEffector>
-            <Frame Link="LARM_JOINT4_Link"/>
+          <!-- <Frame Link="LEND_EFFECTOR" Base="nextage_base" LinkOffset="0 0 -0.15"/> --> <!-- offset from Joao -->
+            <Frame Link="LEND_EFFECTOR" Base="nextage_base" LinkOffset="0 0 -0.125"/>
         </EndEffector>
       </EffPosition>
 
-      <!-- <EffAxisAlignment Name="LHandDown"> -->
-      <!--   <EndEffector> -->
-      <!--     <Frame Link="LARM_JOINT4_Link" Direction="0 0 -1" Axis="0 0 1"/> -->
-      <!--   </EndEffector> -->
-      <!-- </EffAxisAlignment> -->
+      <EffAxisAlignment Name="LHandDown">
+        <EndEffector>
+          <Frame Link="LARM_JOINT4_Link" Direction="0 0 1" Axis="0 0 1" />
+        </EndEffector>
+      </EffAxisAlignment>
 
       <!-- Right arm -->
-      <!-- <EffPosition Name="RPosition"> -->
-      <!--   <EndEffector> -->
-      <!--       <Frame Link="RARM_JOINT4_Link"/> -->
-      <!--   </EndEffector> -->
-      <!-- </EffPosition> -->
+      <EffPosition Name="RPosition">
+        <EndEffector>
+          <!-- <Frame Link="REND_EFFECTOR" Base="nextage_base" LinkOffset="0 0 -0.15"/> --> <!-- offset from Joao -->
+          <Frame Link="REND_EFFECTOR" Base="nextage_base" LinkOffset="0 0 -0.125"/>
+        </EndEffector>
+      </EffPosition>
 
-      <!-- <EffAxisAlignment Name="RHandDown"> -->
-      <!--   <EndEffector> -->
-      <!--     <Frame Link="RARM_JOINT4_Link" Direction="0 0 -1" Axis="0 0 1"/> -->
-      <!--   </EndEffector> -->
-      <!-- </EffAxisAlignment> -->
+      <EffAxisAlignment Name="RHandDown">
+        <EndEffector>
+          <Frame Link="RARM_JOINT4_Link" Direction="0 0 1" Axis="0 0 1"/>
+        </EndEffector>
+      </EffAxisAlignment>
 
     </Maps>
 
     <Cost>
-      <Task Task="LPosition" Rho="1"/>
-      <!-- <Task Task="LHandDown" Rho="1"/> -->
+      <Task Task="LPosition" Rho="100"/>
+      <Task Task="LHandDown" Rho="1"/>
 
-      <!-- <Task Task="RPosition" Rho="1"/> -->
-      <!-- <Task Task="RHandDown" Rho="1"/> -->
+      <Task Task="RPosition" Rho="100"/>
+      <Task Task="RHandDown" Rho="1"/>
     </Cost>
 
     <!-- <StartState>0 0 0 0 0 0 0</StartState> -->
