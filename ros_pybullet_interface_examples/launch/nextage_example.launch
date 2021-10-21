@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <launch>
 
   <!-- ROS-Pybullet interface node simulator -->
@@ -39,10 +41,10 @@
 
   </node>
 
-  <!-- Example node -->
-  <node pkg="ros_pybullet_interface_examples" name="basic_robot_example_node" type="basic_robot_example_node.py">
-    <param name="robot_name" type="str" value="nextage"/>
-  </node>
+  <!-- <!-1- Example node -1-> -->
+  <!-- <node pkg="ros_pybullet_interface_examples" name="basic_robot_example_node" type="basic_robot_example_node.py"> -->
+  <!--   <param name="robot_name" type="str" value="nextage"/> -->
+  <!-- </node> -->
 
   <!-- Static tf frames -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
