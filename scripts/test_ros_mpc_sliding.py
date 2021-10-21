@@ -32,7 +32,7 @@ WORLD_FRAME = "ros_pybullet_interface/world"
 SHOW_NOM_FLAG = False
 RUN_FREQ = 50
 
-REAL_SETUP = True
+REAL_SETUP = False
 
 OBJECT_NAME_SIM = "ros_pybullet_interface/sliding_box"  # real box
 ROBOT_NAME_SIM = "LWR/ros_pybullet_interface/robot/end_effector_ball"
@@ -98,7 +98,7 @@ class ROSSlidingMPC:
 
                 break
             except:
-                rospy.logwarn(f"{self.name}: /tf topic does NOT have {self.object_name}")
+                rospy.logwarn(f"{self.name}: /tf topic does NOT have 123 {self.object_name}")
 
         # Get config files
         #  -------------------------------------------------------------------
@@ -118,7 +118,7 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        T = 22  # time of the simulation is seconds
+        T = 8  # time of the simulation is seconds
         # T = 10  # time of the simulation is seconds
         freq = 25  # number of increments per second
         N_MPC = 25  # time horizon for the MPC controller
@@ -148,7 +148,7 @@ class ROSSlidingMPC:
                     obs_pos0 = [trans.transform.translation.x, trans.transform.translation.y]
                     break
                 except:
-                    rospy.logwarn(f"{self.name}: /tf topic does NOT have {self.object_name}")
+                    rospy.logwarn(f"{self.name}: /tf topic does NOT have 456 {self.obstacle_name}")
             print('I received info.')
             # nom traj file for planning
             nom_traj_file_name = rospy.get_param('~sliding_param_nom_traj', [])[0]
@@ -297,30 +297,14 @@ class ROSSlidingMPC:
             obsRadius = [0.065]
         
         # build initial state for optimizer: TODO: get this from dyn function
-
-        # print('*******************')
-        # print('nom pos: ', self.X_nom_val[:, self.idx_nom])
-        # print('curr ori obj: ', np.rad2deg(obj_ori_2d_read))
-        # print('curr pos obj: ', obj_pos_2d_read)
-        # print('curr pos robot: ', robot_pos_2d_read)
-        # print('delta pos: ', np.linalg.norm(obj_pos_2d_read-robot_pos_2d_read))
-        # print('obs pos: ', obsCentre)
-        # print('ori obj: ', obj_ori_2d_read)
-        # print('psi: ', np.rad2deg(psi0))
-        # sys.exit()
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], float(obj_ori_2d_read), psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
         solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0,
                 obsCentre=obsCentre, obsRadius=obsRadius)
         # saving computation times
         self.comp_time_plot.append(t_opt)
-        # print('***********************')
-        # print(solFlag)
         self.idx_nom += 1
         x_next = x_opt[:, 1]
-        # print('x_next: ', x_next)
-        # print('x_opt pos: ', x_opt[:2, :])
-        # print('x_opt ori: ', np.rad2deg(x_opt[2:, :]))
 
         # decode solution
         # compute object pose
@@ -349,11 +333,9 @@ class ROSSlidingMPC:
             robot_ori = R.from_matrix(GLB_ORI_ROBOT)
             robot_ori_quat = robot_ori.as_quat()
             self._cmd_robot_pose = np.hstack((robot_pos, robot_ori_quat))
-            # print('cmd robot pos: ', robot_pos_2d)
-        # print('count down: ', self.idx_nom, '/', self.Nidx)
         if self.idx_nom > self.Nidx:
-            np.save('/home/kuka-lwr/pybullet_ws/files/comp_time', np.asarray(self.comp_time_plot))
-            np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
+            # np.save('/home/kuka-lwr/pybullet_ws/files/comp_time', np.asarray(self.comp_time_plot))
+            # np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
             rospy.signal_shutdown("End of nominal trajectory")
         else:
             # input()

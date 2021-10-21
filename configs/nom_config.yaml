@@ -4,11 +4,12 @@
 
 contactMode: 'sliding_cc_slack'  # 'sticking', 'sliding_cc', or 'sliding_mi'
 solverName: 'knitro'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
+# solverName: 'ipopt'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
 W_x: [1.0, 1.0, 0.01, 0.]  # diagonal state weights
 W_u: [0.1, 0.01, 0., 0.]  # diagonal control weights
 K_goal: 100
-X_goal: [-0.35, -0.45, 3.141, 0.]
-numObs: 1
+X_goal: [0.4, -0.55, 0., 0.]
+numObs: 0
 linDynFlag: False
 codeGenFlag: False
 noPrintingFlag: False

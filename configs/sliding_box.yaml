@@ -37,7 +37,7 @@ link_state:
   #
   # position: [0, -0.6, -0.055]
   # position: [0.5, 0.0, -0.055]
-  position: [-0.24, -0.55, 0.06]
+  position: [-0.23, -0.55, 0.06]
   # orientation_eulerXYZ: [0., 0., 1.5707]
   # orientation_eulerXYZ: [0., 0., 70.]
   orientation_eulerXYZ: [0., 0., 0.]

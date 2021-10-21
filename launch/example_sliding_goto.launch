@@ -2,33 +2,31 @@
 
 <launch>
 
-    <!-- Testing node cartesian poistions (publisher) -->
-    <node
-        name="go_init_sliding_pose"
-        pkg="ros_pybullet_interface"
-        type="go_init_sliding_pose.py"
-        output="screen">
-
-        <!-- List real objects (optional) -->
-        <rosparam param="object_config_file_name">
-          [
-          '{ros_pybullet_interface}/configs/sliding_box.yaml',
-          ]
-        </rosparam>
-        <rosparam param="sliding_param_dyn">
-          [
-          '{ros_pybullet_interface}/configs/sliding_dyn_param.yaml',
-          ]
-        </rosparam>
-        <param
-            name="robot_name"
-            value="LWR_visual"
-            type="str"/>
-
-        <param
-            name="target_name"
-            value="sphere"
-            type="str"/>
-    </node>
+<!-- Testing node cartesian poistions (publisher) -->
+<node
+    name="go_init_sliding_pose"
+    pkg="ros_pybullet_interface"
+    type="go_init_sliding_pose.py"
+    output="screen">
+    <!-- List real objects (optional) -->
+    <rosparam param="object_config_file_name">
+        [
+        '{ros_pybullet_interface}/configs/sliding_box.yaml',
+        ]
+    </rosparam>
+    <rosparam param="sliding_param_dyn">
+        [
+        '{ros_pybullet_interface}/configs/sliding_dyn_param.yaml',
+        ]
+    </rosparam>
+    <param
+        name="robot_name"
+        value="LWR_visual"
+        type="str"/>
+    <param
+        name="target_name"
+        value="sphere"
+        type="str"/>
+</node>
 
 </launch>
