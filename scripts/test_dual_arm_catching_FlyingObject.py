@@ -17,7 +17,7 @@ from py_pack import yaml, np, LA, R
 
 # --- import Hybrid Trajectory Optimization class
 from py_pack import hybridto_srb
-from py_pack import hybridto_dac_ac as HybridTO
+from py_pack import hybridto_dac_fo as HybridTO
 
 # ROS message types
 from nav_msgs.msg import Odometry
