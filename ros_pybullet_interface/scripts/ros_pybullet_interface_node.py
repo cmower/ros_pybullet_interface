@@ -29,7 +29,7 @@ class Node:
     def __init__(self):
 
         # Init ros node
-        rospy.init_node('ros_pybullet_interface_node')
+        rospy.init_node('ros_pybullet_interface_node', anonymous=True)
         ros_node_dur = rospy.Duration(1.0/float(rospy.get_param('~ros_node_freq')))
 
         # Setup ros status publisher
