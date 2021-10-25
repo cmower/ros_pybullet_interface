@@ -17,6 +17,7 @@
       "{ros_pybullet_interface_examples}/configs/nextage.yaml",
       "{ros_pybullet_interface_examples}/configs/talos.yaml",
       "{ros_pybullet_interface_examples}/configs/valkyrie.yaml",
+      "{ros_pybullet_interface_examples}/configs/anymal.yaml",
       ]
     </rosparam>
 
@@ -59,6 +60,9 @@
   <node pkg="ros_pybullet_interface_examples" name="basic_valkyrie_example_node" type="basic_robot_example_node.py">
     <param name="robot_name" type="str" value="valkyrie"/>
   </node>
+  <node pkg="ros_pybullet_interface_examples" name="basic_anymal_example_node" type="basic_robot_example_node.py">
+    <param name="robot_name" type="str" value="anymal"/>
+  </node>
 
   <!-- Static tf frames -->
 
@@ -72,6 +76,7 @@
 	args="4.5 0.0 1.0 -1.57 0 0 rpbi/world talos_base"/>
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_valkyrie_base_tf_broadcaster"
 	args="6 0.0 1.0 -1.57 0 0 rpbi/world valkyrie_base"/>
-
+  <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_anymal_base_tf_broadcaster"
+	args="-1 0.0 0.5 -1.57 0 0 rpbi/world anymal_base"/>
 
 </launch>
