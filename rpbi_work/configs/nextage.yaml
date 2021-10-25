@@ -1,0 +1,4 @@
+name: "nextage"
+urdf_filename: "{nextagea_description}/urdf/NextageAOpen.urdf"
+tf_frame_id: "nextage_base"
+alpha: 1

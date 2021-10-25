@@ -1,0 +1,5 @@
+name: "visual_goal_left"
+tf_frame_id: "left_hand_goal"
+object_type: "sphere"
+radius: 0.03
+rgba_color: [1, 0, 0, 0.4]

@@ -1,0 +1,5 @@
+name: "visual_goal_right"
+tf_frame_id: "right_hand_goal"
+object_type: "sphere"
+radius: 0.03
+rgba_color: [0, 0, 1, 0.4]

@@ -1,56 +1,40 @@
 #!/usr/bin/env python3
-import signal
 import numpy
 import rospy
-import pyexotica as exo
-from sensor_msgs.msg import Joy, JointState
-from pyexotica.publish_trajectory import sig_int_handler
+from std_msgs.msg import Float64MultiArray
 from ros_pybullet_interface.tf_interface import TfInterface
 
 class Node:
 
+    hz = 50
+    dt = 1.0/float(hz)
+    left_hand = 1
+    right_hand = 0
+
     def __init__(self):
+
+        # Init node
         rospy.init_node('nextage_pushing_node')
-        exo.Setup.init_ros()
-        self.solver = exo.Setup.load_solver('{ros_pybullet_interface_examples}/configs/nextage_exotica_config.xml')
-        self.problem = self.solver.get_problem()
-        signal.signal(signal.SIGINT, sig_int_handler)
-        self.hz = 50
-        self.dt = 1.0/float(self.hz)
-        self.pub = rospy.Publisher('rpbi/nextage/joint_state/target', JointState, queue_size=10)
-        self.maxvel = 0.04
-        self.h = numpy.zeros(2)
+        self.left_hand_goal = numpy.array([-0.2, 0.2, 0.0])
+        self.right_hand_goal = numpy.array([-0.2, -0.2, 0.0])
+        self.operator_signal = [numpy.zeros(2), numpy.zeros(2)]
+
+        # Setup tf interface
         self.tf = TfInterface()
-        # self.goal = numpy.array([0.1, 0.1, 0.0, 0, 0, 0])
-        self.goal = numpy.array([0.1, 0.1, 0.0])
-        rospy.Subscriber('joy', Joy, self.joy_callback)
-        rospy.Timer(rospy.Duration(self.dt), self.update)
 
-    def joy_callback(self, msg):
-        h = numpy.array([msg.axes[0], msg.axes[1]])
-        # hnorm = numpy.linalg.norm(h)
-        # try:
-        #     h *= min(1.0, hnorm)*h/hnorm
-        # except ZeroDivisionError:
-        #     pass
-        self.h = h
+        # Setup ros subscribers and timers
+        rospy.Subscriber('operator_node/signal0', Float64MultiArray, self.operator_signal_callback, callback_args=0)
+        rospy.Subscriber('operator_node/signal1', Float64MultiArray, self.operator_signal_callback, callback_args=1)
+        rospy.Timer(rospy.Duration(self.dt), self.main_loop)
 
-    def update(self, event):
-        vel = self.h*self.dt*self.maxvel
-        self.goal[0] += vel[0]
-        self.goal[1] += vel[1]
+    def operator_signal_callback(self, msg, arg):
+        self.operator_signal[arg] = self.dt*numpy.array(msg.data)
 
-        print(self.goal)
-        self.problem.set_goal('LPosition', self.goal)
-        q = self.solver.solve()[0]
-        self.publish_joint_state(q)
-
-    def publish_joint_state(self, q_exo):
-        msg = JointState()
-        msg.header.stamp = rospy.Time.now()
-        msg.position = [0, 0, 0]  # chest, head0, head1
-        msg.position += q_exo.tolist()
-        self.pub.publish(msg)
+    def main_loop(self, event):
+        self.left_hand_goal[:2] += self.operator_signal[self.left_hand]
+        self.right_hand_goal[:2] += self.operator_signal[self.right_hand]
+        self.tf.set_tf('table_top', 'left_hand_goal', position=self.left_hand_goal)
+        self.tf.set_tf('table_top', 'right_hand_goal', position=self.right_hand_goal)
 
     def spin(self):
         rospy.spin()

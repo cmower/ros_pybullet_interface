@@ -1,7 +1,7 @@
-camera_distance: 1.0
-camera_yaw: -40
-camera_pitch: -40.0
-camera_target_position: [0.5, 0, 0.2]
+camera_distance: 0.5
+camera_yaw: -90
+camera_pitch: -70
+camera_target_position: [0.6, 0, 0.8]
 configure_camera_from_ros: False
 gravity: [0, 0, -9.807]
 pybullet_sampling_frequency: 250

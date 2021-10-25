@@ -1,37 +1,13 @@
-file_name: '{ros_pybullet_interface}/objects/whiteboard.obj'
-
-# Basic parameters
-mesh_scale: [5.0, 7.0, 4.0]
-rgba_color: [0.52, 0.36, 0.25, 1]
-# rgba_color: [0.6, 0.55, 0., 1]
-base_mass: -1.0
-
-# Dynamic parameters
+name: 'table'
+object_type: 'box'
+half_extends: [0.7, 1, 0.1]
+rgba_color: [0.8705882352941177, 0.7215686274509804, 0.5294117647058824, 1]
+tf_frame_id: "table"
 lateral_friction: 1.0
-spinning_friction: 0.0
-rolling_friction: 0.0
-restitution: 0.95
+spinning_friction: 0.01
+rolling_friction: 0.5
+restitution: 0.5
 linear_damping: 0.04
-angular_damping: 0.04
+angular_damping: 0.001
 contact_stiffness: 2000.0
-contact_damping: 50.0
-
-link_state:
-
-  # Specifying the link state
-  #
-  # You can set the collision object to be static or dynamic.
-  #
-  # state collision object
-  #   You must specify here a position attribute and orientation attribute.
-  #
-  # dynamic object
-  #
-  #   You must specify an attribute tf_frame_id. The position/orientation of the
-  #   collision object in PyBullet will be updated according to the
-  #   position/orientation of the respective tf frame. In ROS, you must ensure
-  #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
-  #   world frame is called 'ros_pybullet_interface/world'.
-  #
-
-  tf_frame_id: "table"
+contact_damping: 0.7
