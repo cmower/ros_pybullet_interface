@@ -1,0 +1,6 @@
+name: "anymal"
+urdf_filename: "{anymal_description}/exotica/anymal_pb.urdf"
+# init_position: [0, 0, 0, 0, 0, 0, 0]
+tf_frame_id: "anymal_base"
+alpha: 1.0
+use_fixed_base: True
