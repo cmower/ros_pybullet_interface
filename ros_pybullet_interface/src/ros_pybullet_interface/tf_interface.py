@@ -12,7 +12,7 @@ class TfInterface:
         self.tf_buffer = tf2_ros.Buffer()
         tf2_ros.TransformListener(self.tf_buffer)
 
-    def set_tf(self, base_frame_id, child_frame_id, position, orientation):
+    def set_tf(self, base_frame_id, child_frame_id, position, orientation=[0, 0, 0, 1]):
         msg = TransformStamped()
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = base_frame_id
