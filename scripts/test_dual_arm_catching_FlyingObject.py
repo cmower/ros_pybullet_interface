@@ -544,7 +544,7 @@ if __name__=='__main__':
 
     # commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
     # print('solFlag =', solFlag, 'commandFlag =',commandFlag)
-    commandFlag = True
+    commandFlag = False
 
     # Visualize the planning result for capturing swinging object
     PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)

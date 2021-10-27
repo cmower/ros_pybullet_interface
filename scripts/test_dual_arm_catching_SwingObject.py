@@ -510,8 +510,8 @@ if __name__=='__main__':
 
     if objectState == "Swing":
        
-        initObjPos = np.array([0, (ropeLength + objLength / 2) * np.sin(startAngle* np.pi / 180.), hangPoint[2]
-                               - (ropeLength + objLength / 2) * np.cos(startAngle* np.pi / 180.), 0, startAngle* np.pi / 180., 0])
+        initObjPos = np.array([0, (ropeLength + objLength / 2) * np.sin(startAngle* np.pi / 180.) - 0.0, hangPoint[2]
+                               - (ropeLength + objLength / 2) * np.cos(startAngle* np.pi / 180.), 0, 0, startAngle* np.pi / 180.])
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
@@ -559,7 +559,7 @@ if __name__=='__main__':
 
     # commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
     # print('solFlag =', solFlag, 'commandFlag =',commandFlag)
-    commandFlag = True
+    commandFlag = False
 
     # Visualize the planning result for capturing swinging object
     PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
