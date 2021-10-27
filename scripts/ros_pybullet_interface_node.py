@@ -19,7 +19,7 @@ from ros_pybullet_interface.srv import ManualPybulletSteps, ManualPybulletStepsR
 # Constants
 # ------------------------------------------------------
 
-ROS_FREQ = 100       # ROS loop sampling frequency
+ROS_FREQ = 200       # ROS loop sampling frequency
 ROS_DT = 1.0/float(ROS_FREQ)
 PYBULLET_FREQ = ROS_FREQ #256 # PyBullet simulation loop sampling frequency
 PYBULLET_DT = 1.0/float(PYBULLET_FREQ)
