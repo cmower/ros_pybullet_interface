@@ -11,14 +11,14 @@ object:
   maxObjVel: [10, 10, 10, 10, 10, 10]
   slackObjPos: [2.2, 2.2, 2.2, 3.14, 3.14, 3.14]
   slackObjVel: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
-  reducedNode: 15
+  reducedNode: 20
 
 robotYin:
-  workspace: 1.0
-  minWorkspace: [-1.0, -0.8, -0.2]
-  maxWorkspace: [1.0, 0.8, 0.9]
+  workspace: 1.1
+  minWorkspace: [-1.0, -1.0, -0.8]
+  maxWorkspace: [1.0, 1.0, 0.9]
 
 robotYang:
-  workspace: 1.0
-  minWorkspace: [-1.0, -0.8, -0.2]
-  maxWorkspace: [1.0, 0.8, 0.9]
+  workspace: 1.1
+  minWorkspace: [-1.0, -1.0, -0.8]
+  maxWorkspace: [1.0, 1.0, 0.9]
