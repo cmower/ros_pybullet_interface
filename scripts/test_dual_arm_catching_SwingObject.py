@@ -182,8 +182,8 @@ class PlanInterpWithTO:
 
         # get initial guess
         self.xInit = self.HybOpt_DAC.buildInitialGuess()
-        # with open(self.initFile, 'rb') as f:
-        #     self.xInit = np.load(f)
+        with open(self.initFile, 'rb') as f:
+            self.xInit = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel, normVector, cntPntVector, initEEAttYang_Quat, initEEAttYin_Quat):
@@ -276,8 +276,8 @@ class PredictionWithTO():
 
         # initialize the optimization
         self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
-        # with open(self.initFile, 'rb') as f:
-        #     self.xInit_SRB = np.load(f)
+        with open(self.initFile, 'rb') as f:
+            self.xInit_SRB = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel):
@@ -554,7 +554,8 @@ if __name__=='__main__':
 
     # solve the TO problem
     solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
-        PlanInterpWithTO.solveTO(posBodyPre[:, initIndex+0], velBodyPre[:, initIndex], normVector, cntPntVector, endAttYang_Quat, endAttYin_Quat)
+        PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector, cntPntVector, endAttYang_Quat, endAttYin_Quat)
+    print("start optimization:", posBodyPre[:, initIndex])
 
 
     # commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
