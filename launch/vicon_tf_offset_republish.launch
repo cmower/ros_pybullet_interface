@@ -8,12 +8,12 @@
 
     <param
         name="object_name"
-        value="Box_IIWAs"
+        value="hanging_obj_plate"
         type="str"/>
 
     <param
         name="offset"
-        value="0.0 0.0 -0.15 0.0 0.0 0.0"
+        value="0.0 -0.0035 -0.2093 0.0 0.0 0.0"
         type="str"/>
 
   </node>
@@ -31,7 +31,7 @@
 
     <param
         name="offset"
-        value="-0.153 0.153 0.0 0.0 0.0 0.0"
+        value="-0.122 0.43133 -0.01 0.0 0.0 0.0"
         type="str"/>
 
   </node>
@@ -49,7 +49,7 @@
 
     <param
         name="offset"
-        value="0.153 0.153 0.0 180.0 0.0 0.0"
+        value="0.12433 0.429 -0.01 180.0 0.0 0.0"
         type="str"/>
 
   </node>
