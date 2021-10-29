@@ -26,7 +26,7 @@ TARGET_FRAME_ID_SIM = "ros_pybullet_interface/target"
 # ------------------------------------------------------------------------------
 # WORLD_FRAME_ID_REAL = "vicon/world"
 WORLD_FRAME_ID_REAL = 'ros_pybullet_interface/world'
-TARGET_FRAME_ID_REAL = "vicon_offset/Box_IIWAs/Box_IIWAs"
+TARGET_FRAME_ID_REAL = "vicon_offset/hanging_obj_plate/hanging_obj_plate"
 
 
 

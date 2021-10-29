@@ -65,7 +65,7 @@
           60 deg - 1.0472 rad
           Change the second angle of rpy:
       -->
-    <origin rpy="0 0.0 0" xyz="0 0 0"/>
+    <origin rpy="0 1.0472 0" xyz="0 0 0"/>
     <parent link="iiwa_world_hinge"/>
     <child link="iiwa_link_0_hinge"/>
   </joint>
