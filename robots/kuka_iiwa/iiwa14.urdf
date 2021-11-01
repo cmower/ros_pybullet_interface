@@ -359,15 +359,9 @@
             <origin rpy="0 3.14 0" xyz="0 0 0.005"/>
             <material name="Silver"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/ATI-Delta.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="meshes/iiwa14/visual/ATI-Delta_simplified.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
-        <!-- <collision> -->
-        <!--     <origin rpy="0 0 0" xyz="0 0 -0.0333"/> -->
-        <!--     <geometry> -->
-        <!--         <cylinder length="0.0333" radius="0.04"/> -->
-        <!--     </geometry> -->
-        <!-- </collision> -->
     </link>
     <joint name="end_effector_joint" type="fixed">
         <origin rpy="0 0 0.0" xyz="0 0 0.033"/>
@@ -384,14 +378,9 @@
             <origin rpy="0 -1.57 3.14" xyz="0 0 0"/>
             <material name="Grey"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/schunk_adapter-Assembly.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="meshes/iiwa14/visual/schunk_adapter-Assembly_simplified.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
-        <!-- <collision> -->
-        <!--     <geometry> -->
-        <!--         <mesh filename="meshes/iiwa14/visual/adaptor_endeffector.stl" scale="0.001 0.001 0.001"/> -->
-        <!--     </geometry> -->
-        <!-- </collision> -->
     </link>
     <joint name="end_effector_joint_sponge" type="fixed">
         <origin rpy="0 0 0.0" xyz="0 0 0.058"/>
@@ -407,14 +396,14 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/adaptor_endeffector-Body.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="meshes/iiwa14/visual/adaptor_endeffector-Body_simplified.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name="Silver"/>
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/adaptor_endeffector-Body.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="meshes/iiwa14/visual/adaptor_endeffector-Body_simplified.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
     </link>
