@@ -31,6 +31,12 @@ class Node:
         self.scene = self.problem.get_scene()
         signal.signal(signal.SIGINT, sig_int_handler)
 
+        # Re-set target to current end-effectors poses
+        frameL = self.scene.fk('LEND_EFFECTOR_finger', 'base_link')
+        self.scene.attach_object_local('TargetLeft', 'base_link', frameL)
+        frameR = self.scene.fk('REND_EFFECTOR_finger', 'base_link')
+        self.scene.attach_object_local('TargetRight', 'base_link', frameR)
+
         # Setup tf interface
         self.tf = TfInterface()
 
