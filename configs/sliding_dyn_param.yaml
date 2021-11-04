@@ -5,7 +5,7 @@
 xLenght: 0.09 # [meter]
 yLenght: 0.198 # [meter]
 pusherRadious: 0.016 #  [meter]
-pusherFricCoef: 0.05
+pusherFricCoef: 0.15
 pusherForceLim:  2.5
 pusherAngleVelLim: 5.0
 Kz_max: 50

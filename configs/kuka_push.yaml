@@ -40,7 +40,7 @@ sensors:
 IK:
   # 0-3 orienation, 3-6 position, 0-6 both orienation and position
   # first index in IK
-  f_indx : 0
+  f_indx : 3
   # last index in IK
   l_indx : 6
 
