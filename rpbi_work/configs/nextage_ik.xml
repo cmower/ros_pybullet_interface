@@ -9,12 +9,10 @@
       <Scene>
         <Debug>0</Debug>
         <JointGroup>body</JointGroup>
-        <URDF>{nextagea_description}/urdf/NextageAOpen_gazebo_intel_realsense.urdf</URDF>
+        <URDF>{nextagea_description}/urdf/NextageAOpen.urdf</URDF>
         <SRDF>{nextagea_moveit_config}/config/NextageAOpen.srdf</SRDF>
         <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
         <Links>
-            <Link Name="ToolLeft" Parent="LARM_JOINT5_Link" Transform="0 0 -0.18"/>
-            <Link Name="ToolRight" Parent="RARM_JOINT5_Link" Transform="0 0 -0.18"/>
             <Link Name="TargetLeft" Parent="base_link"/>
             <Link Name="TargetRight" Parent="base_link"/>
         </Links>
@@ -24,17 +22,17 @@
     <Maps>
       <EffFrame Name="PositionLeft">
         <EndEffector>
-            <Frame Link="ToolLeft" Base="TargetLeft"/>
+            <Frame Link="LEND_EFFECTOR_finger" Base="TargetLeft"/>
         </EndEffector>
       </EffFrame>
       <EffFrame Name="PositionRight">
         <EndEffector>
-            <Frame Link="ToolRight" Base="TargetRight"/>
+            <Frame Link="REND_EFFECTOR_finger" Base="TargetRight"/>
         </EndEffector>
       </EffFrame>
       <JointVelocityBackwardDifference Name="JointAcc">
         <dt>0.02</dt>
-        <StartState>0 0 0 0 0 0 0 0 0 0 0 0 0 </StartState>
+        <StartState>0 0 0 0 0 0 0 0 0.2618 -0.1745 0 -0.349 0</StartState>
       </JointVelocityBackwardDifference>
       <JointPose Name="Pose" />
       <JointLimit Name="Limits" SafePercentage="0.05"/>
@@ -49,7 +47,7 @@
     </Cost>
 
 
-    <StartState>0 0 0 0 0 0 0 0 0 0 0 0 0 </StartState>
+    <StartState>0 0 0 0 0 0 0 0 0.2618 -0.1745 0 -0.349 0 </StartState>
     <NominalState>0 0 0 0 0 0 0 0 0 0 0 0 0</NominalState>
     <W> 6 5 4 3 2 1 6 5 4 3 2 1 20</W>
 
