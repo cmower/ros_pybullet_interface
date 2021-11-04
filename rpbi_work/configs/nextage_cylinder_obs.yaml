@@ -1,0 +1,15 @@
+name: "cylinder_obs"
+base_mass: 1
+object_type: 'cylinder'
+radius: 0.0625
+height: 0.0325
+rgba_color: [0.1, 0.54, 0.8, 1.0]
+lateral_friction: 0.2
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.0
+linear_damping: 0.
+angular_damping: 0.
+contact_stiffness: 10000.0
+contact_damping: 0.7
+tf_frame_id: "rpbi/cylinder_obs"
