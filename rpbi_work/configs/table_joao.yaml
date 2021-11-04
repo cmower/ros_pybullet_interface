@@ -1,0 +1,13 @@
+name: 'table'
+object_type: 'box'
+half_extends: [0.7, 1, 0.1]
+rgba_color: [0.8705882352941177, 0.7215686274509804, 0.5294117647058824, 1]
+tf_frame_id: "table"
+lateral_friction: 1.0
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.95
+linear_damping: 0.04
+angular_damping: 0.04
+contact_stiffness: 2000.0
+contact_damping: 50.

@@ -1,0 +1,8 @@
+camera_distance: 1.0
+camera_yaw: 0
+camera_pitch: -20
+camera_target_position: [0.6, 0, 0.8]
+configure_camera_from_ros: False
+gravity: [0, 0, -9.807]
+pybullet_sampling_frequency: 250
+enable_real_time_simulation: True
