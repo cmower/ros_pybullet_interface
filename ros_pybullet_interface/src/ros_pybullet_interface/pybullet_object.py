@@ -125,7 +125,7 @@ class PybulletObject:
             create_visual_shape_input = dict(
                 shapeType=self.pb.GEOM_CYLINDER,
                 radius=self.config.get('radius', RADIUS_DEFAULT),
-                height=self.config.get('height', HEIGHT_DEFAULT),
+                length=self.config.get('height', HEIGHT_DEFAULT),
                 rgbaColor=self.config.get('rgba_color', RGBA_COLOR_DEFAULT),
             )
 
@@ -208,7 +208,7 @@ class PybulletObject:
 
         elif object_type == 'cylinder':
             create_collision_shape_input = dict(
-                shapetype=self.pb.GEOM_CYLINDER,
+                shapeType=self.pb.GEOM_CYLINDER,
                 radius=self.config.get('radius', RADIUS_DEFAULT),
                 height=self.config.get('height', HEIGHT_DEFAULT),
             )
