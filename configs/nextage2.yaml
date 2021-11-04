@@ -1,0 +1,26 @@
+name: "nextage"
+file_name: "{nextagea_description}/urdf/NextageAOpen.urdf"
+end_effector: "LEND_EFFECTOR_finger"
+use_fixed_base: True
+tf_frame_id: "nextage_base"
+base_position: [0.0, 0.0, 0.0]
+base_orient_eulerXYZ: [0.0, 0.0, 0.0]
+init_position: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 15.0, -10.0, 0.0, -20.0, 0.0]
+
+IK:
+  # 0-3 orienation, 3-6 position, 0-6 both orienation and position
+  # first index in IK
+  f_indx : 3
+  # last index in IK
+  l_indx : 5
+
+  # weights for orientation tracking - [x, y, z] of the target
+  ori_axis_weights: [1, 1 ,1]
+
+  # scaling parameter between orientation and position
+  scale_pos_orient : 0.1
+
+  # parameters of the nullspace motion
+  alpha_null : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  h_delta : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -45.0, 0.0]
+  h_norm : [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 160.0, 1.0]

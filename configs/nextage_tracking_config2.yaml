@@ -1,0 +1,15 @@
+#
+# Configuration file for tracking using sliding
+# 
+contactMode: 'sliding_cc_slack'  # 'sticking', 'sliding_cc', 'sliding_cc_slack', or 'sliding_mi'
+solverName: 'knitro'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
+# solverName: 'ipopt'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
+W_x: [0.2, 0.2, 0.05, 0.0]  # diagonal state weights
+W_u: [0.1, 0.1, 0.0005, 0.0005]  # diagonal control weights
+K_goal: 2
+X_goal: null
+numObs: 0
+linDynFlag: False
+codeGenFlag: False
+noPrintingFlag: False
+phases: null
