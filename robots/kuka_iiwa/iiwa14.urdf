@@ -383,7 +383,7 @@
         </visual>
     </link>
     <joint name="end_effector_joint_sponge" type="fixed">
-        <origin rpy="0 0 0.0" xyz="0 0 0.058"/>
+        <origin rpy="0 0 0.0" xyz="0 0 0.078"/>   <!--0.058-->
         <parent link="adapter"/>
         <child link="end_effector_sponge"/>
     </joint>
