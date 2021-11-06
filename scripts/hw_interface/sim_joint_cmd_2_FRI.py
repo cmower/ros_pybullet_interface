@@ -12,10 +12,14 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import MultiArrayDimension
 
+from topic_tools.srv import MuxSelect
+
 NDOF = 7
 
 SIM_CMD_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
-REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC = 'PositionController/command' # commands joint states on this topic
+# REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC = 'PositionController/command' # commands joint states on this topic
+REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC = 'JointLimit/command' # commands joint states on this topic
+
 
 REAL_ROBOT_JOINT_STATE_TOPIC = 'joint_states'
 SIM_ROBOT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
@@ -23,8 +27,8 @@ SIM_ROBOT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
 JOINT_NAMES = ["IIWA_Joint_0","IIWA_Joint_1","IIWA_Joint_2","IIWA_Joint_3","IIWA_Joint_4",\
                 "IIWA_Joint_5","IIWA_Joint_6"]
 
-MIN_JOINT_LIMITS = [-169, -100, -169, -119, -169, -119, -173]
-MAX_JOINT_LIMITS = [ 169,  100,  169,  119,  169,  119, 173]
+MIN_JOINT_LIMITS = [-169, -119, -169, -119, -169, -119, -174]
+MAX_JOINT_LIMITS = [ 169,  119,  169,  119,  169,  119, 174]
 
 
 class SimCmdToandFromROSFRI(object):
@@ -68,6 +72,11 @@ class SimCmdToandFromROSFRI(object):
 
         # command robots only if the flag is activated
         if cmd_robot_flag:
+
+            select_srv = rospy.ServiceProxy(f"{robot_name}_mux_joint_position/select", MuxSelect)
+            # activate IK-based commanding
+            select_srv(f"{robot_name}/JointLimit/command")
+
             # Setup ros publisher to cmd real robots
             real_world_publishers_topic_name = f"{robot_name}/{REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC}"
             self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray)
