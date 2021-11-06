@@ -50,15 +50,15 @@
       '{ros_pybullet_interface}/configs/sphere2.yaml',
       '{ros_pybullet_interface}/configs/target_obj_visual_demo.yaml',
       '{ros_pybullet_interface}/configs/hanging_plate_box_visual_vicon.yaml',
-      <!-- '{ros_pybullet_interface}/configs/yang_workspace_visual.yaml',
-      '{ros_pybullet_interface}/configs/yin_workspace_visual.yaml', -->
+      '{ros_pybullet_interface}/configs/yang_workspace_visual.yaml',
+      '{ros_pybullet_interface}/configs/yin_workspace_visual.yaml',
       ]
     </rosparam>
 
     <!-- List objects (optional) -->
     <rosparam param="object_config_file_names">
       [
-      '{ros_pybullet_interface}/configs/target_obj_demo.yaml',
+      <!-- '{ros_pybullet_interface}/configs/target_obj_demo.yaml', -->
       ]
     </rosparam>
 
@@ -85,7 +85,6 @@
 
   <!-- Flag that activates forwarding of commands to the robots -->
   <arg name="command_real_robots" default="false"/>
-
 
   <node
       name="sim_HW_republisher_yang"
