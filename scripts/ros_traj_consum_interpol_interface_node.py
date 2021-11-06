@@ -293,6 +293,9 @@ class ROSTrajInterface(object):
         # if interpolation is for a robot
         robot_name = rospy.get_param('~robot_name','')
 
+        # stream the interpolated data or not
+        rospy.set_param('/stream_interpolated_motion_flag', False)
+
         #  TrajManager
         self.setupTrajManager(traj_config_file_name, robot_name)
 
@@ -368,6 +371,10 @@ class ROSTrajInterface(object):
 
     def publishdNextWayPtToROS(self, event):
         """ Publish 6D information for the respective rigid body """
+
+        # check if stream flag is active
+        if rospy.get_param('/stream_interpolated_motion_flag')!= True:
+            return
 
         motion = self.trajManag.getNextWayPt()
 
