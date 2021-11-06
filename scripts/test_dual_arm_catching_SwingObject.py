@@ -100,14 +100,24 @@ class PlanInterpWithTO:
         self.slackObjPos = np.array(params['object']['slackObjPos'])
         self.slackObjVel = np.array(params['object']['slackObjVel'])
 
-        self.initArmEEPos1 = initEEYang
-        self.initArmEEPos2 = initEEYin
 
-        self.minArmEEPos1 = np.array(params['robotYang']['minWorkspace']) + initBaseYang
-        self.maxArmEEPos1 = np.array(params['robotYang']['maxWorkspace']) + initBaseYang
+        # self.initArmEEPos1 = initEEYang
+        # self.initArmEEPos2 = initEEYin
+        #
+        # self.minArmEEPos1 = np.array(params['robotYang']['minWorkspace']) + initBaseYang
+        # self.maxArmEEPos1 = np.array(params['robotYang']['maxWorkspace']) + initBaseYang
+        #
+        # self.minArmEEPos2 = np.array(params['robotYin']['minWorkspace']) + initBaseYin
+        # self.maxArmEEPos2 = np.array(params['robotYin']['maxWorkspace']) + initBaseYin
 
-        self.minArmEEPos2 = np.array(params['robotYin']['minWorkspace']) + initBaseYin
-        self.maxArmEEPos2 = np.array(params['robotYin']['maxWorkspace']) + initBaseYin
+        self.initArmEEPos1 = initEEYin
+        self.initArmEEPos2 = initEEYang
+
+        self.minArmEEPos1 = np.array(params['robotYang']['minWorkspace']) + initBaseYin
+        self.maxArmEEPos1 = np.array(params['robotYang']['maxWorkspace']) + initBaseYin
+
+        self.minArmEEPos2 = np.array(params['robotYin']['minWorkspace']) + initBaseYang
+        self.maxArmEEPos2 = np.array(params['robotYin']['maxWorkspace']) + initBaseYang
 
 
     def publishRobotTrajectory(self, event):
@@ -194,8 +204,8 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
         solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector, cntPntVector)
-        with open(self.initFile, 'wb') as f:
-            np.save(f, np.array(xSolution))
+        # with open(self.initFile, 'wb') as f:
+        #     np.save(f, np.array(xSolution))
         # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
         # decode solution
@@ -206,15 +216,16 @@ class PlanInterpWithTO:
             # self.HybOpt_DAC.plotResult(timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array,
             #                            forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, animateFlag=False)
             m, n = posLimb1Array.shape
-            # for i in range(n):
-            #     posLimb1Array[3:, i] = endAttYang_Quat
-            #     posLimb2Array[3:, i] = endAttYin_Quat
+            # np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
+            # posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat, np_initEEAttYang_Quat)).T
+            # np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
+            # posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat,np_initEEAttYin_Quat)).T
+
+
             np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
-            posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat, np_initEEAttYang_Quat)).T
             np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
-            posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat,np_initEEAttYin_Quat)).T
-            # posLimb1Array[3:6, 0] = endAttYang
-            # posLimb2Array[3:6, 0] = endAttYin
+            posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat, np_initEEAttYin_Quat)).T
+            posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat,np_initEEAttYang_Quat)).T
 
 
         return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array
@@ -260,8 +271,11 @@ class PredictionWithTO():
 
         # simplified workspace of robot: r; installation position of left robot and right robot: L0, R0
         self.r = float(params['robotYang']['workspace'])
-        self.L0 = initBaseYang
-        self.R0 = initBaseYin
+        # self.L0 = initBaseYang
+        # self.R0 = initBaseYin
+
+        self.L0 = initBaseYin
+        self.R0 = initBaseYang
 
 
     def buildTO(self):
@@ -289,8 +303,8 @@ class PredictionWithTO():
 
         # solve problem
         preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
-        with open(self.initFile, 'wb') as f:
-            np.save(f, np.array(xSolution))
+        # with open(self.initFile, 'wb') as f:
+        #     np.save(f, np.array(xSolution))
         # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
         # decode solution
@@ -313,7 +327,7 @@ class PredictionWithTO():
 
 class InitialsOfPrediciton():
 
-    def __init__(self, paramFilePath = 'configs/config_flying.yaml'):
+    def __init__(self, paramFilePath = 'configs/config_swing.yaml'):
 
         # Name of node
         self.name = rospy.get_name()
@@ -332,7 +346,8 @@ class InitialsOfPrediciton():
         with open(paramFile, 'r') as ymlfile:
             params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 
-        self.condition = float(params['estimation']['condition'])
+        self.conditionPos = float(params['estimation']['conditionPos'])
+        self.conditionVel = float(params['estimation']['conditionVel'])
 
 
     def readPose(self, msg):
@@ -414,9 +429,9 @@ class InitialsOfPrediciton():
         while(True):
 
             pose, velocity= self.getPosVel()
-
             # return the estimation results if the object pass the predefined location
-            if pose[1] >= self.condition:
+            # if pose[1] <= self.conditionPos and
+            if LA.norm(velocity[1]) >= self.conditionVel:
                 break
 
         return pose, velocity
@@ -509,24 +524,32 @@ if __name__=='__main__':
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     if objectState == "Swing":
-       
-        initObjPos = np.array([0, (ropeLength + objLength / 2) * np.sin(startAngle* np.pi / 180.) - 0.0, hangPoint[2]
-                               - (ropeLength + objLength / 2) * np.cos(startAngle* np.pi / 180.), 0, 0, startAngle* np.pi / 180.])
+
+        initObjPos = np.array([0 + hangPoint[0], (ropeLength + objLength / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
+                               - (ropeLength + objLength / 2) * np.cos(startAngle* np.pi / 180.), 0* np.pi / 180., 0, startAngle* np.pi / 180.])
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
         initObjVel = np.array([0, 0, 0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
-    set_object_state_client.setObjState(pos, quat, lin_vel*0, ang_vel*0, 'target')
-    rospy.sleep(2)
-    set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target')
+    # --- for simulation
+    # set_object_state_client.setObjState(pos, quat, lin_vel*0, ang_vel*0, 'target')
+    # rospy.sleep(2)
+    # set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target')
 
     # get object and robot state from pybullet
-    # initObjPos, initObjVel = Initials.startEstimation()
-    # initObjVel = np.array([0, 0, 0, 0.0, 0.0, 0.0])
+    print("Manual initial pose", initObjPos)
+    initObjPos, initObjVel = Initials.startEstimation()
+    # initObjPos = np.array([-0.26928543,  0.40148064,  0.92327187, -0.00703615,  0.00954215, -0.46739115 ])
+    # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
+
+    # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
+
+
+
 
     # initObjVel[0] *= 0.
     # # initObjVel[1] *= -1
@@ -549,21 +572,39 @@ if __name__=='__main__':
     start_time = time.time()
 
 
+
     # solve the trajectory optimization for prediction
     initIndex, normVector, cntPntVector, timePre, posBodyPre, velBodyPre = PredictionWithTO.solveTO(initObjPos, initObjVel)
+
+    print("start optimization:", timePre[:, initIndex], posBodyPre[:, initIndex])
+
+
+    # ------------------------------------------------------------------------ #
+    #
+    # We keep this part of the code to evaluate the accuracy of our prediction optimisation
+    # Compare in video and in the plot jogger
+    # ------------------------------------------------------------------------ #
+    # trajObjPlan = np.vstack((np.vstack((timePre, posBodyPre)), velBodyPre))
+    # PlanInterpWithTO.trajObjPlan = trajObjPlan
+    # PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+    # rospy.spin()
+    # break
 
     # solve the TO problem
     solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector, cntPntVector, endAttYang_Quat, endAttYin_Quat)
-    print("start optimization:", posBodyPre[:, initIndex])
 
 
-    # commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
+    print('Computation time:', time.time()-start_time)
+
+
     # print('solFlag =', solFlag, 'commandFlag =',commandFlag)
-    commandFlag = False
+    # commandFlag = False
+    commandFlag = True
+
 
     # Visualize the planning result for capturing swinging object
-    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
 
 
     if commandFlag == True:
@@ -577,10 +618,9 @@ if __name__=='__main__':
             rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)
 
     PlanInterpWithTO.trajObjPlan = trajObjPlan
-    PlanInterpWithTO.trajYangPlan = trajYangPlan
-    PlanInterpWithTO.trajYinPlan = trajYinPlan
+    PlanInterpWithTO.trajYangPlan = trajYinPlan
+    PlanInterpWithTO.trajYinPlan = trajYangPlan
 
-    print('Computation time:', time.time()-start_time)
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
@@ -589,5 +629,13 @@ if __name__=='__main__':
         PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
+
+    # activate streaming of commands
+    initIndex = initIndex-5 #5
+    if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
+    # if True:
+        # stream the interpolated data or not
+        rospy.set_param('/stream_interpolated_motion_flag', True)
+        print('Time till activation of execution:', time.time()-start_time)
 
     rospy.spin()
