@@ -1,11 +1,12 @@
 
-file_name: '{ros_pybullet_interface}/objects/target.obj'
+# file_name: '{ros_pybullet_interface}/objects/target.obj'
+file_name: '{ros_pybullet_interface}/objects/workspace_sphere.obj'
 
 name: 'yang_workspace_visual'
 
 # Basic parameters
-mesh_scale: [1.4, 1.0, 1.4]
-rgba_color: [0.1, 0.9, 0.1, 0.5]
+mesh_scale: [0.82, 0.82, 0.82]
+rgba_color: [0.1, 0.9, 0.1, 0.3]
 base_mass: 0
 
 # Dynamic parameters
@@ -36,6 +37,6 @@ link_state:
   #   that this frame can be defined wrt the PyBullet world frame. The PyBullet
   #   world frame is called 'ros_pybullet_interface/world'.
   #
-  position: [0.8, 0.0, 0.0]
-  orientation_eulerXYZ: [0.0, 0.0, 0.0]
-#  tf_frame_id: "ros_pybullet_interface/yang_workspace_visual"
+  # position: [-1.148, 2.071, 1.125]
+  # orientation_eulerXYZ: [0.0, 0.0, 0.0]
+ tf_frame_id: "yang/ros_pybullet_interface/robot/iiwa_link_2"
