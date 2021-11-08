@@ -42,6 +42,7 @@
       [
       "{rpbi_work}/configs/visual_goal_left.yaml",
       "{rpbi_work}/configs/visual_goal_right.yaml",
+      "{rpbi_work}/configs/nextage_sliding_box_visual.yaml",
       ]
     </rosparam>
 

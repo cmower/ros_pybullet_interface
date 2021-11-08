@@ -1,11 +1,12 @@
 name: "pushing_box"
 base_mass: 1
-init_position: [0.48, -0.25, 0.73]
+init_position: [0.425, -0.25, 0.735]
 init_base_orient_eulerXYZ: [0, 0, 0]
 init_linear_velocity: [0, 0, 0]
 init_angular_velocity: [0, 0, 0]
 object_type: 'box'
-half_extends: [0.09, 0.198, 0.065]
+# half_extends: [0.09, 0.198, 0.065]
+half_extends: [0.045, 0.099, 0.0325]
 rgba_color: [0.1, 0.54, 0.8, 1.0]
 lateral_friction: 0.2
 spinning_friction: 0.0

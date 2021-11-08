@@ -10,7 +10,7 @@ W_u: [0., 0., 0., 0.]  # diagonal control weights
 # W_u: [0.01, 0.01, 0.001, 0.001]  # diagonal control weights
 K_goal: 100
 # X_goal: [0.75, -0.12, 0., 0.]
-X_goal: [0.75, -0.25, 0., 0.]
+X_goal: [0.80, -0.25, 0., 0.]
 numObs: 0
 linDynFlag: False
 codeGenFlag: False

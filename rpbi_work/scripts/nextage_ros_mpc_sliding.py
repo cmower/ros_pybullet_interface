@@ -6,8 +6,10 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import tf2_ros
 import casadi as cs
-from ros_pybullet_interface.utils import loadYAMLConfig, ROOT_DIR
+from ros_pybullet_interface.config import load_config
 np.set_printoptions(precision=3)
+# service for stepping the simulation from code
+from ros_pybullet_interface.srv import ManualPybullet, ManualPybulletRequest
 
 import rospy
 
@@ -15,7 +17,6 @@ import rospy
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
 # ros_pybullet funcs
-# import make_manual_pybullet_steps
 
 # --- import external library
 import sliding_pack
@@ -24,8 +25,8 @@ CMD_DOF = 7
 GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 1., 0.],
                           [0., 0., 1.]])
-ROBOT_HEIGHT = -0.10
-VISUAL_OBJ_HEIGHT = -0.11
+ROBOT_HEIGHT = 0.73
+VISUAL_OBJ_HEIGHT = 0.8
 OBJECT_TARGET_FRAME_ID = "rpbi_work/nextage_sliding_box_visual"  # visual box
 WORLD_FRAME = "rpbi/world"
 SHOW_NOM_FLAG = False
@@ -34,7 +35,7 @@ RUN_FREQ = 50
 OBJECT_NAME_SIM = "rpbi/pushing_box"  # real box
 ROBOT_NAME_SIM = "rpbi/nextage/REND_EFFECTOR_finger"
 END_EFFECTOR_TARGET_FRAME_ID_SIM = 'right_hand_goal' # listens for end-effector poses on this topic
-OBSTACLE_NAME_SIM = "ros_pybullet_interface/sliding_obs"
+OBSTACLE_NAME_SIM = "rpbi/cylinder_obs"
 
 OBJECT_NAME_REAL = "vicon_offset/pushing_box_wood/pushing_box_wood"
 ROBOT_NAME_REAL = "nextage/ros_pybullet_interface/robot/REND_EFFECTOR_finger"
@@ -101,12 +102,12 @@ class ROSSlidingMPC:
         # Get config files
         #  -------------------------------------------------------------------
         sliding_dyn_file_name = rospy.get_param('~sliding_param_dyn', [])[0]
-        dyn_config = loadYAMLConfig(sliding_dyn_file_name)
+        dyn_config = load_config(sliding_dyn_file_name)
         tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
-        tracking_config = loadYAMLConfig(tracking_traj_file_name)
+        tracking_config = load_config(tracking_traj_file_name)
         # nom traj file for planning
         nom_traj_file_name = rospy.get_param('~sliding_param_nom_traj', [])[0]
-        nom_config = loadYAMLConfig(nom_traj_file_name)
+        nom_config = load_config(nom_traj_file_name)
         #  -------------------------------------------------------------------
 
         # Initialize internal variables
@@ -335,12 +336,18 @@ class ROSSlidingMPC:
             # np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
             rospy.signal_shutdown("End of nominal trajectory")
         else:
-            # input()
+            input()
             pass
 
         if not self.real_setup:
             # service stuff
-            make_manual_pybullet_steps.makeStep(int(100./RUN_FREQ))
+            rospy.wait_for_service('manual_pybullet_step')
+            try:
+                srv_handle = rospy.ServiceProxy('manual_pybullet_step', ManualPybullet)
+                srv_req = ManualPybulletRequest(num_steps=1, hz=RUN_FREQ) # this gets the inputs for the service func
+                srv_handle(srv_req) # this is calling the service
+            except rospy.ServiceException as e:
+                print("It failed to step with error: %s"%e)
 
         return solFlag
 
