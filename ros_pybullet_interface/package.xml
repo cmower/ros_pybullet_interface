@@ -16,12 +16,12 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>sensor_msgs</depend>
-  <depend>python-yaml</depend>
+  <depend>python3-yaml</depend>
   <depend>python3-pybullet-pip</depend>
   <depend>geometry_msgs</depend>
-  <depend>keyboard</depend>
-  <depend>python-numpy</depend>
-  <depend>python-scipy</depend>
+  <!-- <depend>keyboard</depend> -->
+  <depend>python3-numpy</depend>
+  <depend>python3-scipy</depend>
 
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
