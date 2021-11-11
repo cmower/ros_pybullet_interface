@@ -134,8 +134,9 @@
         value="{ros_pybullet_interface}/configs/yin_visual.yaml"
         type="str"/>
 
+
     <!-- remap such that the initial state of the IK comes from real world state -->
-    <remap from="yin_visual/ros_pybullet_interface/joint_state/current"  to="yin/ros_pybullet_interface/joint_state/target" />
+        <remap if="$(arg command_real_robots)" from="yin_visual/ros_pybullet_interface/joint_state/current"  to="yin/ros_pybullet_interface/joint_state/target" />
 
 
   </node>
@@ -152,8 +153,10 @@
         value="{ros_pybullet_interface}/configs/yang_visual.yaml"
         type="str"/>
 
+
         <!-- remap such that the initial state of the IK comes from real world state -->
-        <remap from="yang_visual/ros_pybullet_interface/joint_state/current"  to="yang/ros_pybullet_interface/joint_state/target" />
+        <remap if="$(arg command_real_robots)" from="yang_visual/ros_pybullet_interface/joint_state/current"  to="yang/ros_pybullet_interface/joint_state/target" />
+
 
   </node>
 
