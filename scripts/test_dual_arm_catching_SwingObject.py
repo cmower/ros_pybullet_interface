@@ -18,6 +18,7 @@ from py_pack import yaml, np, LA, R
 # --- import Hybrid Trajectory Optimization class
 from py_pack import hybridto_so
 from py_pack import hybridto_dac_so as HybridTO
+# from py_pack import hybridto_dac_so_baseline as HybridTO
 
 # ROS message types
 from nav_msgs.msg import Odometry
@@ -221,11 +222,12 @@ class PlanInterpWithTO:
             # np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
             # posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat,np_initEEAttYin_Quat)).T
 
-
+            # trick to smooth the motion
             np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
             np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
             posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat, np_initEEAttYin_Quat)).T
             posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat,np_initEEAttYang_Quat)).T
+
 
 
         return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array
@@ -530,7 +532,7 @@ if __name__=='__main__':
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
-        initObjVel = np.array([0, 0, 0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0, 0.1, 0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     # --- for simulation
@@ -540,9 +542,16 @@ if __name__=='__main__':
 
     # get object and robot state from pybullet
     print("Manual initial pose", initObjPos)
-    initObjPos, initObjVel = Initials.startEstimation()
+    # initObjPos, initObjVel = Initials.startEstimation()
     # initObjPos = np.array([-0.26928543,  0.40148064,  0.92327187, -0.00703615,  0.00954215, -0.46739115 ])
     # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
+
+    # initObjPos = np.array([-0.29598359,  0.41650146,  0.91157457, -0.01189178,  0.04048672, -0.41590197])
+    # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
+
+    initObjPos = np.array([-0.32111365,  0.42011474,  0.90574154, -0.01731582,  0.026264,   -0.3743614 ])
+    initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
+
 
     # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
     print("The estimated pose of the object is :", initObjPos)
@@ -603,8 +612,8 @@ if __name__=='__main__':
     commandFlag = True
 
 
-    # Visualize the planning result for capturing swinging object
-    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+    print(timeSeq)
+
 
 
     if commandFlag == True:
@@ -632,10 +641,13 @@ if __name__=='__main__':
 
     # activate streaming of commands
     initIndex = initIndex-5 #5
-    if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
-    # if True:
+    # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
+    if True:
         # stream the interpolated data or not
         rospy.set_param('/stream_interpolated_motion_flag', True)
         print('Time till activation of execution:', time.time()-start_time)
+
+    # Visualize the planning result for capturing swinging object
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
 
     rospy.spin()

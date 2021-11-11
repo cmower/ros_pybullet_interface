@@ -23,7 +23,7 @@ import ros_pybullet_interface.interpolation as interpol
 # Constants
 # ------------------------------------------------------
 
-FREQ = 200 # Resolution of trajectory knots --- sampling frequency
+FREQ = 50 # Resolution of trajectory knots --- sampling frequency
 
 class TrajManager:
 
@@ -276,13 +276,18 @@ class ROSTrajInterface(object):
 
     def __init__(self):
 
-        # Setup constants
-        self.dt = 1.0/float(FREQ)
-
         # Name of node
         self.name = rospy.get_name()
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
+
+        # safty check
+        if FREQ > 200:
+            rospy.loginfo("%s: Shutting down to high FREQUENCY of consuming in node ", self.name)
+            self.cleanShutdown()
+
+        # Setup constants
+        self.dt = 1.0/float(FREQ)
 
         # get the path to this catkin ws
         self.current_dir = utils.ROOT_DIR
