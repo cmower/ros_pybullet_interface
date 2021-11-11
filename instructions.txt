@@ -1,0 +1,28 @@
+
+# parse rosbag data
+rosrun ros_pybullet_interface parse_rosbags_dressing.py
+
+# read and publish only part of the ROS bag to save more accurate ROS bag
+rosrun ros_pybullet_interface pub_link_tf_to_TF_and_filterForce.py
+
+# republish a transform topic to TF topic
+rosrun ros_pybullet_interface pub_link_tf_to_TF.py
+
+# example of recording only specific topics
+rosbag record rosout elbow/pose hand/pose netft_data yin_visual/ros_pybullet_interface/joint_state/target
+
+# -----------------------------------------------------------------
+
+# replay data in simulation
+
+# start the simulator
+roslaunch ros_pybullet_interface replay_real_world_human.launch
+
+# make human passive to move human around
+rosrun ros_pybullet_interface make_human_passive.py
+
+
+# -----------------------------------------------------------------
+
+# read data from files (arrays by Shen) and visualise motions and estimation
+rosrun ros_pybullet_interface replay_processed_dressing_estimation.py
