@@ -8,7 +8,9 @@ use_fixed_base: True
 base_position: [-1.24, 0.5, 0.0]
 base_orient_eulerXYZ: [0.0, 0.0, -15.0]
 # init_position: [0.0, -30., 0., -80., 0., 10., 90.]
-init_position: [-20., 100., 30., 70., 0., 20., 0.]
+# init_position: [-20., 100., 30., 70., 0., 20., 0.]
+
+init_position: [-160., -95., 45., -60., -35., 20., 90.]
 
 # init_position: [0., 0., 0., 0., 0., 0., 0.]
 

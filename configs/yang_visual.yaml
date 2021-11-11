@@ -7,7 +7,10 @@ end_effector: "end_effector_sponge"
 use_fixed_base: True
 base_position: [0.8, 0.0, 0.0]
 base_orient_eulerXYZ: [0.0, 0.0, 180.0]
-init_position: [0.0, -30., 0., -90., 0., 30., 90.]
+# init_position: [0.0, -30., 0., -90., 0., 30., 90.]
+
+init_position: [-160., -95., 45., -60., -35., 20., 90.]
+
 
 sensors:
 
