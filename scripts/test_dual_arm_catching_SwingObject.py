@@ -26,6 +26,9 @@ from nav_msgs.msg import Odometry
 NEW_TRAJ_Yang_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
+NEW_TRAJ_PRED_OBJ_TOPIC = 'ros_pybullet_interface/object/predtraj' # publishes end-effector planned trajectory on this topic
+
+
 
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_FRAME_ID = 'ros_pybullet_interface/robot/end_effector_sponge' # listens for end-effector poses on this topic
@@ -78,11 +81,15 @@ class PlanInterpWithTO:
         self.trajRobotPlan = np.empty(0)
         self.trajYangPlan = np.empty(0)
         self.trajYinPlan = np.empty(0)
+        self.predtrajObjPlan = np.empty(0)
+        self.pred_flag = 0
 
         # start punlishers
         self.new_Yangtraj_publisher = rospy.Publisher(f"{robot1_name}/{NEW_TRAJ_Yang_TOPIC}", Float64MultiArray, queue_size=1)
         self.new_Yintraj_publisher = rospy.Publisher(f"{robot2_name}/{NEW_TRAJ_Yin_TOPIC}", Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
+        self.new_PredObjtraj_publisher = rospy.Publisher(NEW_TRAJ_PRED_OBJ_TOPIC, Float64MultiArray, queue_size=1)
+
 
         # get the path to this catkin ws
         self.initFile = os.path.join(ROOT_DIR, initFilePath)
@@ -150,6 +157,13 @@ class PlanInterpWithTO:
         if message != None:
             self.new_Objtraj_publisher.publish(message)
 
+    def publishObjPredTrajectory(self, event):
+
+        message = self.np2DtoROSmsg(self.predtrajObjPlan)
+
+        if message != None and self.pred_flag == 0:
+            self.new_PredObjtraj_publisher.publish(message)
+            self.pred_flag = 1
 
     def np2DtoROSmsg(self, data2Darray):
 
@@ -241,7 +255,7 @@ class PlanInterpWithTO:
 
             # compute Euclidean distance, to see if object is in the expected location
             dist = LA.norm(pose[0:3]-posInitTraj[0:3])
-            if dist <= self.uncertainty:
+            if dist <= self.uncertainty and velocity[1] > 0:
                 commandFlag = True
                 break
 
@@ -480,7 +494,9 @@ if __name__=='__main__':
         params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 
     ori_representation = params['TOproblem']['ori_representation']
+    objWidth = params['object']['shape']['rectangle']['width']
     objLength = params['object']['shape']['rectangle']['length']
+    objHeight = params['object']['shape']['rectangle']['height']
 
     hangPoint = np.array(params['hangPoint'])
     ropeLength = params['ropeLength']
@@ -527,8 +543,8 @@ if __name__=='__main__':
 
     if objectState == "Swing":
 
-        initObjPos = np.array([0 + hangPoint[0], (ropeLength + objLength / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
-                               - (ropeLength + objLength / 2) * np.cos(startAngle* np.pi / 180.), 0* np.pi / 180., 0, startAngle* np.pi / 180.])
+        initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
+                               - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), 0* np.pi / 180., 0, startAngle* np.pi / 180.])
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
@@ -543,6 +559,7 @@ if __name__=='__main__':
     # get object and robot state from pybullet
     print("Manual initial pose", initObjPos)
     # initObjPos, initObjVel = Initials.startEstimation()
+
     # initObjPos = np.array([-0.26928543,  0.40148064,  0.92327187, -0.00703615,  0.00954215, -0.46739115 ])
     # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
 
@@ -551,6 +568,7 @@ if __name__=='__main__':
 
     initObjPos = np.array([-0.32111365,  0.42011474,  0.90574154, -0.01731582,  0.026264,   -0.3743614 ])
     initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
+    # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.0,  0.0,  0.0])
 
 
     # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
@@ -558,6 +576,9 @@ if __name__=='__main__':
     print("The estimated velocity of the object is :", initObjVel)
 
 
+    if LA.norm(initObjVel[-1]) >= 0.15:
+        print("too big rotation!!!!!!!!!!")
+        exit()
 
 
     # initObjVel[0] *= 0.
@@ -587,7 +608,9 @@ if __name__=='__main__':
 
     print("start optimization:", timePre[:, initIndex], posBodyPre[:, initIndex])
 
-
+    predtrajObjPlan = np.vstack((np.vstack((timePre, posBodyPre)), velBodyPre))
+    PlanInterpWithTO.predtrajObjPlan = predtrajObjPlan
+    PlanInterpWithTO.writeCallbackTimerPredObjTraj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjPredTrajectory)
     # ------------------------------------------------------------------------ #
     #
     # We keep this part of the code to evaluate the accuracy of our prediction optimisation
@@ -640,7 +663,7 @@ if __name__=='__main__':
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
 
     # activate streaming of commands
-    initIndex = initIndex-5 #5
+    initIndex = initIndex-6 #5
     # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
     if True:
         # stream the interpolated data or not
@@ -648,6 +671,6 @@ if __name__=='__main__':
         print('Time till activation of execution:', time.time()-start_time)
 
     # Visualize the planning result for capturing swinging object
-    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
 
     rospy.spin()
