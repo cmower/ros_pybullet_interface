@@ -9,7 +9,8 @@ base_position: [0.8, 0.0, 0.0]
 base_orient_eulerXYZ: [0.0, 0.0, 180.0]
 # init_position: [0.0, -30., 0., -90., 0., 30., 90.]
 
-init_position: [ -160., -95., 25., -75., -35., 30., 90.]
+# init_position: [ -160., -95., 25., -75., -35., 30., 90.]
+init_position: [ -160., -95., 69., -70., 53., -30., 0.] # test
 
 
 
