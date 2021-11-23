@@ -14,6 +14,7 @@ from sensor_msgs.msg import JointState
 
 
 # ROS messages types of the real robot
+from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import MultiArrayDimension
 
@@ -30,8 +31,10 @@ FREQ = 200 # IK sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # publishes  for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # listens joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
-END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this topic
+END_EFFECTOR_TARGET_FRAME_ID = 'ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this tf id
 ROBOT_BASE_ID = "ros_pybullet_interface/robot/robot_base" # listen for the pose of the robot base
+END_EFFECTOR_TARGET_TOPIC = 'ros_pybullet_interface/end_effector/target_pose' # listens for end-effector poses on this topic
+
 
 EEBodyPointPosition = np.array([0.0, 0.0, -0.0]) #np.zeros(3)
 
@@ -92,7 +95,7 @@ class PyRBDLRobot:
         self.q[6:self.numJoints] = qNew
 
     def updateBasePos(self, posNew):
-        self.q[0:3] = pos
+        self.q[0:3] = posNew
 
     def updateBaseOrientationEuler(self, orient_eulerXYZNew):
         ori_mat = np.asarray(XYZeuler2RotationMat(orient_eulerXYZNew))
@@ -110,6 +113,8 @@ class PyRBDLRobot:
     def getJointName(self):
         return self.joint_name
 
+
+    ### --- why use two different function for end-effector position and orientation
     def getCurEEPos(self):
         return rbdl.CalcBodyToBaseCoordinates(self.rbdlModel, self.q, self.rbdlEndEffectorID, EEBodyPointPosition)
 
@@ -263,6 +268,7 @@ class ROSdIKInterface(object):
         # Setup constants
         self.dt = 1.0/float(FREQ)
 
+        # listen to tf topic for end effector targets
         self.IK_listen_buff = tf2_ros.Buffer()
         listener = tf2_ros.TransformListener(self.IK_listen_buff)
 
@@ -279,6 +285,12 @@ class ROSdIKInterface(object):
 
         #  PyRBDLRobot
         self.robot_name = self.setupPyRBDLRobot(robot_config_file_name)
+
+        # topic where to list to for end effector targets
+        listener_topic_name = f"{self.robot_name}/{END_EFFECTOR_TARGET_TOPIC}"
+        rospy.Subscriber(listener_topic_name, TransformStamped, self.readTFeeTargetFromTopic)
+        # initialize a received sequence counter
+        self.seq_rec = 0    
 
         # Setup ros publishers
         publishers_topic_name = f"{self.robot_name}/{TARGET_JOINT_STATE_TOPIC}"
@@ -341,8 +353,10 @@ class ROSdIKInterface(object):
             # effort = self.robotIK.robot.getJointConfig(),
         )
         msg.header.stamp = rospy.Time.now()
+        msg.header.seq = self.seq_rec
         self.target_joint_state_publisher.publish(msg)
 
+        
     # def publishdIKJointStateToROS2RealWorld(self, event):
     #     # Pack trajectory msg
     #     msg = Float64MultiArray()
@@ -374,6 +388,16 @@ class ROSdIKInterface(object):
         target_EE_ori = R.from_quat(np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w]))
         self.target_EE_orientation = target_EE_ori.as_matrix()
 
+    def readTFeeTargetFromTopic(self, msg):
+
+        tf = msg
+        self.target_EE_position = np.asarray([tf.transform.translation.x, tf.transform.translation.y,tf.transform.translation.z])
+        target_EE_ori = R.from_quat(np.asarray([tf.transform.rotation.x, tf.transform.rotation.y, tf.transform.rotation.z, tf.transform.rotation.w]))
+        self.target_EE_orientation = target_EE_ori.as_matrix()
+        # pass on the indexing info of the message
+        self.seq_rec = msg.header.seq
+
+
     def updateRBDL(self, event):
         self.robotIK.fullDiffIKStep(self.target_EE_position, self.target_EE_orientation)
 
@@ -403,7 +427,7 @@ if __name__ == '__main__':
 
         # Establish connection with end-effector commander
         rospy.loginfo("%s: Setup target reader.", ROSdIKinterface.name)
-        ROSdIKinterface.startListening2EETargets()
+        # ROSdIKinterface.startListening2EETargets()
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSdIKinterface.dt)
