@@ -33,6 +33,9 @@ JOINT_NAMES = ["IIWA_Joint_0","IIWA_Joint_1","IIWA_Joint_2","IIWA_Joint_3","IIWA
 MIN_JOINT_LIMITS = [-169, -119, -169, -119, -169, -119, -174]
 MAX_JOINT_LIMITS = [ 169,  119,  169,  119,  169,  119, 174]
 
+MIN_STIFFNESS_LIMITS = [ 300.,  300.,  300.,  30.,  30.,  30.]
+MAX_STIFFNESS_LIMITS = [ 3000.,  3000.,  3000.,  300.,  300.,  300.]
+
 
 class SimCmdToandFromROSFRI(object):
     """docstring for ."""
@@ -64,7 +67,7 @@ class SimCmdToandFromROSFRI(object):
 
         # Setup ros publisher to update simulated robots
         sim_state_publishers_topic_name = f"{robot_name}/{SIM_ROBOT_JOINT_STATE_TOPIC}"
-        self.sim_joint_state_command_publisher = rospy.Publisher(sim_state_publishers_topic_name, JointState)
+        self.sim_joint_state_command_publisher = rospy.Publisher(sim_state_publishers_topic_name, JointState, queue_size=1)
 
         # Setup subscriber that reads commanded robot state
         subscr_real_state_topic_name =  f"{robot_name}/{REAL_ROBOT_JOINT_STATE_TOPIC}"
@@ -84,7 +87,7 @@ class SimCmdToandFromROSFRI(object):
 
         # Setup ros publisher to cmd real robots
         real_world_publishers_topic_name = f"{robot_name}/{REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC}"
-        self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray)
+        self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
 
         # Setup subscriber that reads commanded robot state
         subscr_sim_cmd_topic_name =  f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
@@ -98,10 +101,14 @@ class SimCmdToandFromROSFRI(object):
     def readStiffness(self, msg):
 
         stiffnessRatio = 0.1
-        self.linearStiffness = msg.data
-        self.angularStiffness = stiffnessRatio*self.linearStiffness
+        linearStiffness = [3000., 3000., msg.data]
+        angularStiffness = [stiffnessRatio*msg.data, stiffnessRatio*msg.data, 250.]
 
-        self.stiffness = [self.linearStiffness]*3 +[self.angularStiffness]*3 
+        stiffness = list(linearStiffness) + list(angularStiffness)
+        cliped_stiffness = np.zeros(len(stiffness))
+        np.clip(np.array(stiffness), MIN_STIFFNESS_LIMITS, MAX_STIFFNESS_LIMITS, out=cliped_stiffness)
+
+        self.stiffness = list(cliped_stiffness)
 
 
     def republishStates(self, msg):
@@ -138,8 +145,6 @@ class SimCmdToandFromROSFRI(object):
         # ----------------------------------------------------------------------
         joint_values = msg.position
         seq_counter = msg.header.seq
-
-        print("seq_counter!!!!!!!!!!", seq_counter)
 
         # check if command is within the limits and clip
         cmd_q = np.zeros(len(joint_values))
