@@ -23,8 +23,10 @@ from py_pack import hybridto_dac_so as HybridTO
 # ROS message types
 from nav_msgs.msg import Odometry
 
-NEW_TRAJ_Yang_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
-NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+NEW_TRAJ_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+# NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+STIFFNESS_TOPIC = 'ros_pybullet_interface/end_effector/stiffness' # publishes end-effector planned trajectory on this topic
+# STIFFNESS_Yin_TOPIC = 'ros_pybullet_interface/end_effector/stiffness' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_PRED_OBJ_TOPIC = 'ros_pybullet_interface/object/predtraj' # publishes end-effector planned trajectory on this topic
 
@@ -81,14 +83,18 @@ class PlanInterpWithTO:
         self.trajRobotPlan = np.empty(0)
         self.trajYangPlan = np.empty(0)
         self.trajYinPlan = np.empty(0)
+        self.stiffnessYinPlan = np.empty(0)
+        self.stiffnessYangPlan = np.empty(0)
         self.predtrajObjPlan = np.empty(0)
         self.pred_flag = 0
 
         # start punlishers
-        self.new_Yangtraj_publisher = rospy.Publisher(f"{robot1_name}/{NEW_TRAJ_Yang_TOPIC}", Float64MultiArray, queue_size=1)
-        self.new_Yintraj_publisher = rospy.Publisher(f"{robot2_name}/{NEW_TRAJ_Yin_TOPIC}", Float64MultiArray, queue_size=1)
+        self.new_Yangtraj_publisher = rospy.Publisher(f"{robot1_name}/{NEW_TRAJ_TOPIC}", Float64MultiArray, queue_size=1)
+        self.new_Yintraj_publisher = rospy.Publisher(f"{robot2_name}/{NEW_TRAJ_TOPIC}", Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
         self.new_PredObjtraj_publisher = rospy.Publisher(NEW_TRAJ_PRED_OBJ_TOPIC, Float64MultiArray, queue_size=1)
+        self.stiffness_Yang_publisher = rospy.Publisher(f"{robot1_name}/{STIFFNESS_TOPIC}", Float64MultiArray, queue_size=1)
+        self.stiffness_Yin_publisher = rospy.Publisher(f"{robot2_name}/{STIFFNESS_TOPIC}", Float64MultiArray, queue_size=1)
 
 
         # get the path to this catkin ws
@@ -149,6 +155,20 @@ class PlanInterpWithTO:
 
         if message != None:
             self.new_Yintraj_publisher.publish(message)
+
+    def publishYangStiffness(self, event):
+
+        message = self.np2DtoROSmsg(self.stiffnessYangPlan)
+
+        if message != None:
+            self.stiffness_Yang_publisher.publish(message)
+
+    def publishYinStiffness(self, event):
+
+        message = self.np2DtoROSmsg(self.stiffnessYinPlan)
+
+        if message != None:
+            self.stiffness_Yin_publisher.publish(message)
 
     def publishObjTrajectory(self, event):
 
@@ -226,7 +246,7 @@ class PlanInterpWithTO:
         # decode solution
         if (solFlag):
             timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array, forLimb1Array,\
-            posLimb2Array, velLimb2Array, forLimb2Array, alphaArray = self.HybOpt_DAC.decodeSol(xSolution, normVector)
+            posLimb2Array, velLimb2Array, forLimb2Array, stiffnessArray = self.HybOpt_DAC.decodeSol(xSolution, normVector)
 
             # self.HybOpt_DAC.plotResult(timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array,
             #                            forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, animateFlag=False)
@@ -244,7 +264,7 @@ class PlanInterpWithTO:
 
 
 
-        return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array
+        return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, stiffnessArray
 
 
     def stateMachine(self, posInitTraj):
@@ -493,6 +513,9 @@ if __name__=='__main__':
     with open(paramFile, 'r') as ymlfile:
         params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 
+    ncf = params['TOproblemDAC']['ncf']
+    ntf = params['TOproblemDAC']['ntf']
+
     ori_representation = params['TOproblem']['ori_representation']
     objWidth = params['object']['shape']['rectangle']['width']
     objLength = params['object']['shape']['rectangle']['length']
@@ -545,10 +568,12 @@ if __name__=='__main__':
 
         initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
                                - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), 0* np.pi / 180., 0, startAngle* np.pi / 180.])
+        # initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
+        #                        - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), -90*np.pi / 180., startAngle* np.pi / 180., 0* np.pi / 180.])
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
-        initObjVel = np.array([0, 0.1, 0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0, 0.0, 0, 0.0, 0.0, 0.2*0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     # --- for simulation
@@ -566,8 +591,8 @@ if __name__=='__main__':
     # initObjPos = np.array([-0.29598359,  0.41650146,  0.91157457, -0.01189178,  0.04048672, -0.41590197])
     # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
 
-    initObjPos = np.array([-0.32111365,  0.42011474,  0.90574154, -0.01731582,  0.026264,   -0.3743614 ])
-    initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
+    # initObjPos = np.array([-0.32111365,  0.42011474,  0.90574154, -0.01731582,  0.026264,   -0.3743614 ])
+    # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
     # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.0,  0.0,  0.0])
 
 
@@ -576,9 +601,9 @@ if __name__=='__main__':
     print("The estimated velocity of the object is :", initObjVel)
 
 
-    if LA.norm(initObjVel[-1]) >= 0.15:
-        print("too big rotation!!!!!!!!!!")
-        exit()
+    # if LA.norm(initObjVel[-1]) >= 0.15:
+    #     print("too big rotation!!!!!!!!!!")
+    #     exit()
 
 
     # initObjVel[0] *= 0.
@@ -623,7 +648,7 @@ if __name__=='__main__':
     # break
 
     # solve the TO problem
-    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
+    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, stiffnessArray = \
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector, cntPntVector, endAttYang_Quat, endAttYin_Quat)
 
 
@@ -643,22 +668,37 @@ if __name__=='__main__':
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
         trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
-
+        print("position when makeing contact", posLimb1[0, ncf], posLimb2[0, ncf])
+        stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1], timeSeq[ntf-1], timeSeq[-1]])
+        stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
+        stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
+        stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
+        stiffnessYinPlan = np.vstack((stiffTimeSeq, stiffnessYinSeq))
+        print(stiffnessYangPlan)
 
     else:
         trajObjPlan, trajYangPlan, trajYinPlan = \
             rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)
 
+        print(np.shape(timeSeq))
+        stiffnessYangPlan = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
+        stiffnessYinPlan = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
+
+    print(stiffnessYangPlan, np.shape(stiffnessYangPlan))
+
     PlanInterpWithTO.trajObjPlan = trajObjPlan
     PlanInterpWithTO.trajYangPlan = trajYinPlan
     PlanInterpWithTO.trajYinPlan = trajYangPlan
-
+    PlanInterpWithTO.stiffnessYangPlan = stiffnessYinPlan
+    PlanInterpWithTO.stiffnessYinPlan = stiffnessYangPlan
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
         PlanInterpWithTO.writeCallbackTimerYang = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangTrajectory)
         PlanInterpWithTO.writeCallbackTimerYin = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinTrajectory)
         PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+        PlanInterpWithTO.writeCallbackTimerYangStiffness = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangStiffness)
+        PlanInterpWithTO.writeCallbackTimerYinStiffness = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinStiffness)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
 
