@@ -12,6 +12,11 @@
         value="{ros_pybullet_interface}/configs/traj_object3D_freemotion.yaml"
         type="str"/>
 
+    <!-- <param
+      name="robot_name"
+      value="object"
+      type="str"/> -->
+
   </node>
 
   <node
@@ -25,6 +30,11 @@
         name="traj_config"
         value="{ros_pybullet_interface}/configs/traj_sphere1.yaml"
         type="str"/>
+
+    <!-- <param
+      name="robot_name"
+      value="sphere"
+      type="str"/> -->
 
       <!-- <remap from="yang_visual/ros_pybullet_interface/end_effector/traj"  to="yang/ros_pybullet_interface/end_effector/traj" /> -->
 
@@ -41,6 +51,11 @@
         name="traj_config"
         value="{ros_pybullet_interface}/configs/traj_sphere2.yaml"
         type="str"/>
+
+    <!-- <param
+      name="robot_name"
+      value="sphere2"
+      type="str"/> -->
 
      <!-- <remap from="yin_visual/ros_pybullet_interface/end_effector/traj"  to="yin/ros_pybullet_interface/end_effector/traj" /> -->
 
@@ -64,6 +79,11 @@
       value="yang_visual"
       type="str"/>
 
+    <param
+      name="variable_stiffness"
+      value="true"
+      type="bool"/>
+
   </node>
 
   <node
@@ -82,6 +102,11 @@
       name="robot_name"
       value="yin_visual"
       type="str"/>
+
+    <param
+      name="variable_stiffness"
+      value="true"
+      type="bool"/>
 
   </node>
 
