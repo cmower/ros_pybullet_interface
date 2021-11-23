@@ -667,13 +667,14 @@ if __name__=='__main__':
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
         trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
-        print("position when makeing contact", posLimb1[0, ncf], posLimb2[0, ncf])
+        print("position when making contact", posLimb1[0, ncf], posLimb2[0, ncf])
+        print("force when making contact", forLimb1[0, ncf-1], forLimb1[0, ntf-1], forLimb1[0, -1])
+        print("force when making contact", forLimb2[0, ncf-1], forLimb2[0, ntf-1], forLimb2[0, -1])
         stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1], timeSeq[ntf-1], timeSeq[-1]])
         stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
         stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
         stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
         stiffnessYinPlan = np.vstack((stiffTimeSeq, stiffnessYinSeq))
-        print(stiffnessYangPlan)
 
     else:
         trajObjPlan, trajYangPlan, trajYinPlan = \
@@ -682,8 +683,6 @@ if __name__=='__main__':
         print(np.shape(timeSeq))
         stiffnessYangPlan = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
         stiffnessYinPlan = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
-
-    print(stiffnessYangPlan, np.shape(stiffnessYangPlan))
 
     PlanInterpWithTO.trajObjPlan = trajObjPlan
     PlanInterpWithTO.trajYangPlan = trajYinPlan
