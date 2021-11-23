@@ -19,6 +19,7 @@ VISUAL_FRAME_LINE_WIDTH = 2
 
 def initPyBullet(time_step, gravity=[0, 0, -9.81]):
     pybullet.connect(pybullet.GUI)
+    # pybullet.connect(pybullet.DIRECT) # --- this command will disable the visualization
     pybullet.resetSimulation()
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.setTimeStep(time_step)
