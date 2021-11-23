@@ -28,7 +28,6 @@ interpolation:
 
 communication:
   publisher:
-    topic: 'ros_pybullet_interface/end_effector/target_pose'
     header_frame_id: 'ros_pybullet_interface/world'
     msg_child_frame_id: 'ros_pybullet_interface/end_effector/target'
   listener:
