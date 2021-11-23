@@ -5,8 +5,8 @@ estimation:
   uncertainty: 0.10
 
 object:
-  finObjPos: [-0.3, 2.5, 1.0, 0, 0, 0]
-  # finObjPos: [-0.3, 2.4, 1.0, 0, 0, 0]
+  # finObjPos: [-0.3, 2.5, 1.0, 0, 0, 0]
+  finObjPos: [-0.3, 2.3, 1.1, 0, 0, 0] # --- test file
   maxObjPos: [1.01, 10, 10, 10, 10, 10]
   finObjVel: [0., 0., 0., 0., 0., 0.]
   maxObjVel: [10, 10, 10, 10, 10, 10]
@@ -16,11 +16,11 @@ object:
   reducedNode: 30 # 30
 
 robotYin:
-  workspace: 1.5
-  minWorkspace: [-1.5, -1.0, -0.8]
-  maxWorkspace: [1.5, 1.0, 1.9]
+  workspace: 1.4
+  minWorkspace: [-1.4, -0.9, -0.8]
+  maxWorkspace: [1.4, 0.9, 1.9]
 
 robotYang:
-  workspace: 1.5
-  minWorkspace: [-1.5, -1.0, -0.8]
-  maxWorkspace: [1.5, 1.0, 1.9]
+  workspace: 1.4
+  minWorkspace: [-1.4, -0.9, -0.8]
+  maxWorkspace: [1.4, 0.9, 1.9]

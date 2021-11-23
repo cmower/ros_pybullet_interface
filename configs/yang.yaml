@@ -5,8 +5,8 @@ name: "yang"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [-1.24, 0.5, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, -15.0]
+base_position: [-1.569, 2.097, 0.857]
+base_orient_eulerXYZ: [0.253, 0.630, -24.908]
 # init_position: [0.0, -30., 0., -80., 0., 10., 90.]
 # init_position: [-20., 100., 30., 70., 0., 20., 0.]
 
