@@ -663,7 +663,6 @@ if __name__=='__main__':
     print(timeSeq)
 
 
-
     if commandFlag == True:
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
