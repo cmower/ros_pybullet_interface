@@ -688,7 +688,7 @@ if __name__=='__main__':
     PlanInterpWithTO.trajYangPlan = trajYinPlan
     PlanInterpWithTO.trajYinPlan = trajYangPlan
     PlanInterpWithTO.stiffnessYangPlan = stiffnessYinPlan
-    PlanInterpWithTO.stiffnessYinPlan = stiffnessYangPlan
+    PlanInterpWithTO.stiffnessYinPlan = stiffnessYangPlan 
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
