@@ -12,6 +12,7 @@ from scipy.spatial.transform import Slerp
 # ROS message types
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float32
 
 
 import ros_pybullet_interface.utils as utils
@@ -42,6 +43,7 @@ class TrajManager:
 
         # init struct for interpolated motion plan
         self.motionInterpPlan = np.array([])
+        self.stiffnessInterpPlan = np.array([])
 
 
     def getNextWayPt(self):
@@ -54,6 +56,16 @@ class TrajManager:
         else:
             return None
 
+    def getNextStiffness(self):
+        """ Get function to access data from the trajectory class """
+
+        stiffness_waypt = self.popFirstStiffnessElem()
+
+        if stiffness_waypt is not None:
+            return stiffness_waypt
+        else:
+            return None
+            
 
     def transTraj2Motion6D(self, way_pt):
         """A function that maps dimensions of the Traj to 6D"""
@@ -123,6 +135,23 @@ class TrajManager:
         nextWaypt = self.motionInterpPlan[:,0]
         self.motionInterpPlan = np.delete(self.motionInterpPlan, 0, 1)
         self.timeInterpPlan = np.delete(self.timeInterpPlan, 0)
+
+        return nextWaypt
+
+    def popFirstStiffnessElem(self):
+        """ Extract the 1st element of the motion struct to
+        send to the simulation"""
+
+
+        # if we use interpolation, we use the interpolated one
+        # if self.use_interp:
+
+        if self.stiffnessInterpPlan.shape[0] == 0:
+            rospy.logerr("All the trajectory data has been consumed")
+            return None
+
+        nextWaypt = self.stiffnessInterpPlan[0]
+        self.stiffnessInterpPlan = np.delete(self.stiffnessInterpPlan, 0)
 
         return nextWaypt
 
@@ -202,6 +231,34 @@ class TrajManager:
         else:
             self.timeInterpPlan = timevector
             self.motionInterpPlan = trajPlan
+
+
+    def setInitStiffness(self, new_traj):
+        """ More comments are needed """
+
+        # # time is always the first row
+        timePlan = new_traj[0,:]
+        # timePlan = timePlan.reshape(1,timePlan.shape[0])
+        # second row denote stiffness
+        trajPlan = new_traj[1,:]
+        # trajPlan = trajPlan.reshape(1,trajPlan.shape[0])
+
+        # interpolate
+        if self.use_interp:
+            # self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan)
+            _, self.stiffnessInterpPlan = self.computeInterpStiffness(timePlan, trajPlan)
+        else:
+            self.stiffnessInterpPlan = trajPlan
+
+
+    def computeInterpStiffness(self, time_vector, traj_plan):
+        tempMotionInterpPlan = np.empty((0))
+        trajDim = traj_plan.shape[0]
+        row_len = 0
+        interSeqTime, interSeq_I = interpol.interpolateInterp1d(time_vector, traj_plan, kind='linear', sampleFreq = self.interFreq, plotFlag=False, plotTitle="None")
+
+        return interSeqTime, interSeq_I
+
 
     def computeInterpTraj(self, time_vector, traj_plan, dtraj_plan):
         """ Compute the interpolated trajectory from the planning traj
@@ -293,17 +350,23 @@ class ROSTrajInterface(object):
         self.current_dir = utils.ROOT_DIR
 
         # Get ros parameters
-        traj_config_file_name = rospy.get_param('~traj_config')
+        self.traj_config_file_name = rospy.get_param('~traj_config')
 
         # if interpolation is for a robot
-        robot_name = rospy.get_param('~robot_name','')
+        self.robot_name = rospy.get_param('~robot_name','')
+
+        # flag for stiffness interpolation/publishing
+        self.variable_stiffness = rospy.get_param('~variable_stiffness', False)
 
         # stream the interpolated data or not
         rospy.set_param('/stream_interpolated_motion_flag', False)
 
-        #  TrajManager
-        self.setupTrajManager(traj_config_file_name, robot_name)
+        # sequence counter for indexing published messages
+        self.seq_counter = 0
 
+        #  TrajManager
+        self.setupTrajManager(self.traj_config_file_name, self.robot_name)
+        
         # Establish connection with planning node
         rospy.loginfo(f"{self.name}: Waiting for self.current_traj_topic topic")
         msgTraj = rospy.wait_for_message(self.current_traj_topic , Float64MultiArray)
@@ -311,6 +374,11 @@ class ROSTrajInterface(object):
         # single update of trajectory
         # To be used for play-back motion plans
         self.readInitialTrajFromROS(msgTraj)
+
+        if self.variable_stiffness:
+            self.setupStiffnessManager(self.traj_config_file_name, self.robot_name)
+            msgStiffness = rospy.wait_for_message(self.current_stiffness_listener , Float64MultiArray)
+            self.readInitialStiffnessFromROS(msgStiffness)
 
         # Subscribe target trajectory callback
         # repetitive update of trajectory
@@ -336,12 +404,36 @@ class ROSTrajInterface(object):
         # set info about TF publisher
         self.msg_header_frame_id = config['communication']['publisher']['header_frame_id']
         self.msg_child_frame_id = f"{robot}/{config['communication']['publisher']['msg_child_frame_id']}"
-
+        
         # set info for listener
         self.current_traj_topic = f"{robot}/{config['communication']['listener']['topic']}"
 
+        if self.variable_stiffness:          
+            # set info about ee pose target topic publisher
+            self.topic = f"{robot}/{config['communication']['publisher']['topic']}"
+            self.target_ee_pose_publisher = rospy.Publisher(self.topic, TransformStamped, queue_size=1)
+
         # Create trajectory manager instance
         self.trajManag = TrajManager(mot_dim, interpol)
+
+    
+    def setupStiffnessManager(self, config_file_name, robot):
+
+        # Load robot configuration
+        config = utils.loadYAMLConfig(config_file_name)
+
+        # Extract data from configuration
+        interpol = config['interpolation']
+
+        # set info for listener
+        self.current_stiffness_listener = f"{robot}/{config['stiffnessComm']['listener']['topic']}"
+        # set info for stiffness publisher
+        self.stiffness_publisher_name = f"{robot}/{config['stiffnessComm']['publisher']['topic']}"
+        self.current_stiffness_publisher = rospy.Publisher(self.stiffness_publisher_name, Float32, queue_size=1)
+
+        # Create trajectory manager instance
+        self.stiffnessManag = TrajManager(1, interpol)
+    
 
 
     def readInitialTrajFromROS(self, msg):
@@ -351,6 +443,14 @@ class ROSTrajInterface(object):
 
         #  call to initial setup of trajectory data
         self.trajManag.setInitTraj(msg_data)
+
+    def readInitialStiffnessFromROS(self, msg):
+        # listener, that receives the initial trajectory
+        # decode msg
+        msg_data = self.decodeROStrajmsg(msg)
+
+        #  call to initial setup of trajectory data
+        self.stiffnessManag.setInitStiffness(msg_data)
 
 
     def readCurrentTrajUpdateFromROS(self, msg):
@@ -381,6 +481,7 @@ class ROSTrajInterface(object):
         if rospy.get_param('/stream_interpolated_motion_flag')!= True:
             return
 
+        
         motion = self.trajManag.getNextWayPt()
 
         # if the motion plan is not empty
@@ -399,10 +500,67 @@ class ROSTrajInterface(object):
             msg.transform.rotation.z = motion[5]
             msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
 
-            # Publish msg
+            # Publish tf msg
             self.tfBroadcaster.sendTransform(msg)
+
         else:
             self.cleanShutdown()
+
+    def publishdNextWayPtToROStopics(self, event):
+        """ Publish 6D information for the respective rigid body """
+
+        # check if stream flag is active
+        if rospy.get_param('/stream_interpolated_motion_flag')!= True:
+            return
+
+        motion = self.trajManag.getNextWayPt()
+
+        # if the motion plan is not empty
+        if motion is not None:
+
+            # Pack pose msg
+            msg = TransformStamped()
+           
+            msg.header.stamp = rospy.Time.now()
+            msg.header.frame_id = self.msg_header_frame_id
+            msg.child_frame_id = self.msg_child_frame_id
+            msg.transform.translation.x = motion[0]
+            msg.transform.translation.y = motion[1]
+            msg.transform.translation.z = motion[2]
+            msg.transform.rotation.x = motion[3]
+            msg.transform.rotation.y = motion[4]
+            msg.transform.rotation.z = motion[5]
+            msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
+
+             # Publish tf msg
+            self.tfBroadcaster.sendTransform(msg)
+
+            if self.variable_stiffness:
+
+                 # Publish tf msg
+                msg.header.seq = self.seq_counter
+                self.target_ee_pose_publisher.publish(msg)
+
+                # Publish stifness msg
+                stiffness = self.stiffnessManag.getNextStiffness()
+                msg = Float32()
+                # msg.header.seq = self.seq_counter
+                msg.data = stiffness
+                self.current_stiffness_publisher.publish(msg)
+
+        else:
+            self.cleanShutdown()
+
+    def publishdNextStiffness(self, event):
+        stiffness = self.stiffnessManag.getNextStiffness()
+
+        msg = Float32()
+        msg.data = stiffness
+
+        self.current_stiffness_publisher.publish(msg)
+       
+
+
 
     def cleanShutdown(self):
         print('')
@@ -425,8 +583,11 @@ if __name__ == '__main__':
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSTrajInterface.dt)
-        ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROS)
+       
+        ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROStopics)
 
+        # ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROS)
+        
         # Ctrl-C will stop the script
         rospy.on_shutdown(ROSTrajInterface.cleanShutdown)
         # spin() simply keeps python from exiting until this node is stopped
