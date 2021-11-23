@@ -710,6 +710,6 @@ if __name__=='__main__':
         print('Time till activation of execution:', time.time()-start_time)
 
     # Visualize the planning result for capturing swinging object
-    # PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
 
     rospy.spin()
