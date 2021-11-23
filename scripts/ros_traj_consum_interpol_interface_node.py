@@ -361,9 +361,6 @@ class ROSTrajInterface(object):
         # stream the interpolated data or not
         rospy.set_param('/stream_interpolated_motion_flag', False)
 
-        # sequence counter for indexing published messages
-        self.seq_counter = 0
-
         #  TrajManager
         self.setupTrajManager(self.traj_config_file_name, self.robot_name)
         
@@ -407,11 +404,6 @@ class ROSTrajInterface(object):
         
         # set info for listener
         self.current_traj_topic = f"{robot}/{config['communication']['listener']['topic']}"
-
-        if self.variable_stiffness:          
-            # set info about ee pose target topic publisher
-            self.topic = f"{robot}/{config['communication']['publisher']['topic']}"
-            self.target_ee_pose_publisher = rospy.Publisher(self.topic, TransformStamped, queue_size=1)
 
         # Create trajectory manager instance
         self.trajManag = TrajManager(mot_dim, interpol)
@@ -503,48 +495,11 @@ class ROSTrajInterface(object):
             # Publish tf msg
             self.tfBroadcaster.sendTransform(msg)
 
-        else:
-            self.cleanShutdown()
-
-    def publishdNextWayPtToROStopics(self, event):
-        """ Publish 6D information for the respective rigid body """
-
-        # check if stream flag is active
-        if rospy.get_param('/stream_interpolated_motion_flag')!= True:
-            return
-
-        motion = self.trajManag.getNextWayPt()
-
-        # if the motion plan is not empty
-        if motion is not None:
-
-            # Pack pose msg
-            msg = TransformStamped()
-           
-            msg.header.stamp = rospy.Time.now()
-            msg.header.frame_id = self.msg_header_frame_id
-            msg.child_frame_id = self.msg_child_frame_id
-            msg.transform.translation.x = motion[0]
-            msg.transform.translation.y = motion[1]
-            msg.transform.translation.z = motion[2]
-            msg.transform.rotation.x = motion[3]
-            msg.transform.rotation.y = motion[4]
-            msg.transform.rotation.z = motion[5]
-            msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
-
-             # Publish tf msg
-            self.tfBroadcaster.sendTransform(msg)
-
             if self.variable_stiffness:
-
-                 # Publish tf msg
-                msg.header.seq = self.seq_counter
-                self.target_ee_pose_publisher.publish(msg)
 
                 # Publish stifness msg
                 stiffness = self.stiffnessManag.getNextStiffness()
                 msg = Float32()
-                # msg.header.seq = self.seq_counter
                 msg.data = stiffness
                 self.current_stiffness_publisher.publish(msg)
 
@@ -558,10 +513,7 @@ class ROSTrajInterface(object):
         msg.data = stiffness
 
         self.current_stiffness_publisher.publish(msg)
-       
-
-
-
+    
     def cleanShutdown(self):
         print('')
         rospy.loginfo("%s: Shutting down interpolation node ", self.name)
@@ -584,9 +536,7 @@ if __name__ == '__main__':
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSTrajInterface.dt)
        
-        ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROStopics)
-
-        # ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROS)
+        ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROS)
         
         # Ctrl-C will stop the script
         rospy.on_shutdown(ROSTrajInterface.cleanShutdown)
