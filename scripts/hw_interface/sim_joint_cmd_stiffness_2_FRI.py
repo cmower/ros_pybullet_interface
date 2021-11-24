@@ -34,7 +34,9 @@ MIN_JOINT_LIMITS = [-169, -119, -169, -119, -169, -119, -174]
 MAX_JOINT_LIMITS = [ 169,  119,  169,  119,  169,  119, 174]
 
 MIN_STIFFNESS_LIMITS = [ 300.,  300.,  300.,  30.,  30.,  30.]
-MAX_STIFFNESS_LIMITS = [ 3000.,  3000.,  3000.,  300.,  300.,  300.]
+MAX_STIFFNESS_LIMITS = [ 4000.,  4000.,  4000.,  300.,  300.,  300.]
+DEFAULT_LIN_STIFF = 3000.
+DEFAULT_ANG_STIFF = 200.
 
 
 class SimCmdToandFromROSFRI(object):
@@ -59,7 +61,7 @@ class SimCmdToandFromROSFRI(object):
 
         # init the latest robot state
         self.latest_robot_state = np.asarray([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        self.stiffness = [2000.,2000.,2000.,200.,200.,200.]
+        self.stiffness = [DEFAULT_LIN_STIFF,DEFAULT_LIN_STIFF,2000.,DEFAULT_ANG_STIFF,DEFAULT_ANG_STIFF,DEFAULT_ANG_STIFF]
         self.counter = 0
         # ----------------------------------------------------------------------
         # incoming messaging (update simulated robots)
@@ -85,24 +87,24 @@ class SimCmdToandFromROSFRI(object):
             # activate IK-based commanding
             select_srv(f"{robot_name}/JointLimit/command")
 
-        # Setup ros publisher to cmd real robots
-        real_world_publishers_topic_name = f"{robot_name}/{REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC}"
-        self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
+            # Setup ros publisher to cmd real robots
+            real_world_publishers_topic_name = f"{robot_name}/{REAL_ROBOT_CMD_JOINT_COMMAND_TOPIC}"
+            self.real_world_target_joint_command_publisher = rospy.Publisher(real_world_publishers_topic_name, Float64MultiArray, queue_size=1)
 
-        # Setup subscriber that reads commanded robot state
-        subscr_sim_cmd_topic_name =  f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
-        rospy.Subscriber(subscr_sim_cmd_topic_name, JointState, self.republishCmds)
+            # Setup subscriber that reads commanded robot state
+            subscr_sim_cmd_topic_name =  f"{robot_name}_visual/{SIM_CMD_JOINT_STATE_TOPIC}"
+            rospy.Subscriber(subscr_sim_cmd_topic_name, JointState, self.republishCmds)
 
-        # Setup subscriber that reads commanded robot stiffness
-        subscr_stiffness_topic_name =  f"{robot_name}_visual/{SIM_CMD_STIFFNESS_TOPIC}"
-        rospy.Subscriber(subscr_stiffness_topic_name, Float32, self.readStiffness)
+            # Setup subscriber that reads commanded robot stiffness
+            subscr_stiffness_topic_name =  f"{robot_name}_visual/{SIM_CMD_STIFFNESS_TOPIC}"
+            rospy.Subscriber(subscr_stiffness_topic_name, Float32, self.readStiffness)
 
 
     def readStiffness(self, msg):
 
         stiffnessRatio = 0.1
-        linearStiffness = [3000., 3000., msg.data]
-        angularStiffness = [stiffnessRatio*msg.data, stiffnessRatio*msg.data, 250.]
+        linearStiffness = [DEFAULT_LIN_STIFF, DEFAULT_LIN_STIFF, msg.data]
+        angularStiffness = [stiffnessRatio*msg.data, stiffnessRatio*msg.data, DEFAULT_ANG_STIFF]
 
         stiffness = list(linearStiffness) + list(angularStiffness)
         cliped_stiffness = np.zeros(len(stiffness))
@@ -116,25 +118,28 @@ class SimCmdToandFromROSFRI(object):
         # ----------------------------------------------------------------------
         # read state from real robot
         # ----------------------------------------------------------------------
-        # current_joint_position = np.asarray(list(msg.position))
+        current_joint_position = np.asarray(list(msg.position))
+        current_joint_velocity = np.asarray(list(msg.velocity))
+        current_joint_effort = np.asarray(list(msg.effort))
+
         # # update the latest robot state
         # self.latest_robot_state = current_joint_position
         #
         # # ----------------------------------------------------------------------
         # # update state of the simulated robot
         # # ----------------------------------------------------------------------
-        # sim_msg = JointState(
-        #     name = JOINT_NAMES,
-        #     position = current_joint_position,
-        #     # velocity = ,
-        #     # effort = ,
-        # )
-        # sim_msg.header.stamp = rospy.Time.now()
+        sim_msg = JointState(
+            name = JOINT_NAMES,
+            position = current_joint_position[:7],
+            velocity = current_joint_velocity[:7],
+            effort = current_joint_effort[:7],
+        )
+        sim_msg.header.stamp = rospy.Time.now()
 
         # ----------------------------------------------------------------------
         # read state from real robot and update state of the simulated robot
         # ----------------------------------------------------------------------
-        sim_msg = msg
+        # sim_msg = msg
         self.sim_joint_state_command_publisher.publish(sim_msg)
 
 
