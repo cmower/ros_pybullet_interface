@@ -24,7 +24,7 @@
   <node
       name="sim_HW_republisher_yang"
       pkg="ros_pybullet_interface"
-      type="sim_joint_cmd_2_FRI.py"
+      type="sim_joint_cmd_stiffness_2_FRI.py"
       output="screen">
 
     <param
@@ -42,7 +42,7 @@
   <node
       name="sim_HW_republisher_yin"
       pkg="ros_pybullet_interface"
-      type="sim_joint_cmd_2_FRI.py"
+      type="sim_joint_cmd_stiffness_2_FRI.py"
       output="screen">
 
     <param
