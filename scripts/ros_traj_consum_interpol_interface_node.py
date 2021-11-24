@@ -24,7 +24,7 @@ import ros_pybullet_interface.interpolation as interpol
 # Constants
 # ------------------------------------------------------
 
-FREQ = 50 # Resolution of trajectory knots --- sampling frequency
+FREQ = 200 # Resolution of trajectory knots --- sampling frequency
 
 class TrajManager:
 
@@ -65,7 +65,7 @@ class TrajManager:
             return stiffness_waypt
         else:
             return None
-            
+
 
     def transTraj2Motion6D(self, way_pt):
         """A function that maps dimensions of the Traj to 6D"""
@@ -363,7 +363,7 @@ class ROSTrajInterface(object):
 
         #  TrajManager
         self.setupTrajManager(self.traj_config_file_name, self.robot_name)
-        
+
         # Establish connection with planning node
         rospy.loginfo(f"{self.name}: Waiting for self.current_traj_topic topic")
         msgTraj = rospy.wait_for_message(self.current_traj_topic , Float64MultiArray)
@@ -401,14 +401,14 @@ class ROSTrajInterface(object):
         # set info about TF publisher
         self.msg_header_frame_id = config['communication']['publisher']['header_frame_id']
         self.msg_child_frame_id = f"{robot}/{config['communication']['publisher']['msg_child_frame_id']}"
-        
+
         # set info for listener
         self.current_traj_topic = f"{robot}/{config['communication']['listener']['topic']}"
 
         # Create trajectory manager instance
         self.trajManag = TrajManager(mot_dim, interpol)
 
-    
+
     def setupStiffnessManager(self, config_file_name, robot):
 
         # Load robot configuration
@@ -425,7 +425,7 @@ class ROSTrajInterface(object):
 
         # Create trajectory manager instance
         self.stiffnessManag = TrajManager(1, interpol)
-    
+
 
 
     def readInitialTrajFromROS(self, msg):
@@ -473,7 +473,7 @@ class ROSTrajInterface(object):
         if rospy.get_param('/stream_interpolated_motion_flag')!= True:
             return
 
-        
+
         motion = self.trajManag.getNextWayPt()
 
         # if the motion plan is not empty
@@ -513,7 +513,7 @@ class ROSTrajInterface(object):
         msg.data = stiffness
 
         self.current_stiffness_publisher.publish(msg)
-    
+
     def cleanShutdown(self):
         print('')
         rospy.loginfo("%s: Shutting down interpolation node ", self.name)
@@ -535,9 +535,9 @@ if __name__ == '__main__':
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSTrajInterface.dt)
-       
+
         ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROS)
-        
+
         # Ctrl-C will stop the script
         rospy.on_shutdown(ROSTrajInterface.cleanShutdown)
         # spin() simply keeps python from exiting until this node is stopped
