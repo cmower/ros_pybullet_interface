@@ -227,8 +227,8 @@ class PlanInterpWithTO:
 
         # get initial guess
         self.xInit = self.HybOpt_DAC.buildInitialGuess()
-        with open(self.initFile, 'rb') as f:
-            self.xInit = np.load(f)
+        # with open(self.initFile, 'rb') as f:
+        #     self.xInit = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel, normVector, cntPntVector, initEEAttYang_Quat, initEEAttYin_Quat):
@@ -326,8 +326,8 @@ class PredictionWithTO():
 
         # initialize the optimization
         self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
-        with open(self.initFile, 'rb') as f:
-            self.xInit_SRB = np.load(f)
+        # with open(self.initFile, 'rb') as f:
+        #     self.xInit_SRB = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel):
@@ -591,8 +591,8 @@ if __name__=='__main__':
     # initObjPos = np.array([-0.29598359,  0.41650146,  0.91157457, -0.01189178,  0.04048672, -0.41590197])
     # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
 
-    # initObjPos = np.array([-0.32111365,  0.42011474,  0.90574154, -0.01731582,  0.026264,   -0.3743614 ])
-    # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
+    initObjPos = np.array([-0.32111365,  0.42011474,  0.90574154, -0.01731582,  0.026264,   -0.3743614 ])
+    initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
     # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.0,  0.0,  0.0])
 
 
@@ -688,7 +688,7 @@ if __name__=='__main__':
     PlanInterpWithTO.trajYangPlan = trajYinPlan
     PlanInterpWithTO.trajYinPlan = trajYangPlan
     PlanInterpWithTO.stiffnessYangPlan = stiffnessYinPlan
-    PlanInterpWithTO.stiffnessYinPlan = stiffnessYangPlan 
+    PlanInterpWithTO.stiffnessYinPlan = stiffnessYangPlan
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
@@ -700,6 +700,9 @@ if __name__=='__main__':
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
 
+    # Visualize the planning result for capturing swinging object
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+
     # activate streaming of commands
     initIndex = initIndex-6 #5
     # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
@@ -708,7 +711,6 @@ if __name__=='__main__':
         rospy.set_param('/stream_interpolated_motion_flag', True)
         print('Time till activation of execution:', time.time()-start_time)
 
-    # Visualize the planning result for capturing swinging object
-    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+
 
     rospy.spin()
