@@ -2,7 +2,7 @@ estimation:
 #  condition: 0.95 #0.85
   conditionPos: 0.55 # simulation
   conditionVel: 0.05 # simulation
-  uncertainty: 0.10
+  uncertainty: 0.05 # 0.10
 
 object:
   # finObjPos: [-0.3, 2.5, 1.0, 0, 0, 0]
