@@ -30,13 +30,13 @@ SIM_ROBOT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'
 JOINT_NAMES = ["IIWA_Joint_0","IIWA_Joint_1","IIWA_Joint_2","IIWA_Joint_3","IIWA_Joint_4",\
                 "IIWA_Joint_5","IIWA_Joint_6"]
 
-MIN_JOINT_LIMITS = [-169, -119, -169, -119, -169, -119, -174]
-MAX_JOINT_LIMITS = [ 169,  119,  169,  119,  169,  119, 174]
+MIN_JOINT_LIMITS = [-169, -115, -169, -119, -169, -119, -174]
+MAX_JOINT_LIMITS = [ 169,  115,  169,  119,  169,  119, 174]
 
-MIN_STIFFNESS_LIMITS = [ 300.,  300.,  300.,  30.,  30.,  30.]
+MIN_STIFFNESS_LIMITS = [ 200.,  200.,  200.,  20.,  20.,  20.]
 MAX_STIFFNESS_LIMITS = [ 4000.,  4000.,  4000.,  300.,  300.,  300.]
 DEFAULT_LIN_STIFF = 3000.
-DEFAULT_ANG_STIFF = 200.
+DEFAULT_ANG_STIFF = 100.
 
 
 class SimCmdToandFromROSFRI(object):
@@ -102,7 +102,7 @@ class SimCmdToandFromROSFRI(object):
 
     def readStiffness(self, msg):
 
-        stiffnessRatio = 0.1
+        stiffnessRatio = 0.05
         linearStiffness = [DEFAULT_LIN_STIFF, DEFAULT_LIN_STIFF, msg.data]
         angularStiffness = [stiffnessRatio*msg.data, stiffnessRatio*msg.data, DEFAULT_ANG_STIFF]
 

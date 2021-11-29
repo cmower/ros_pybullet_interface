@@ -567,13 +567,13 @@ if __name__=='__main__':
     if objectState == "Swing":
 
         initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
-                               - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), 0* np.pi / 180., 0, startAngle* np.pi / 180.])
+                               - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), -60* np.pi / 180., 0, startAngle* np.pi / 180.])
         # initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
         #                        - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), -90*np.pi / 180., startAngle* np.pi / 180., 0* np.pi / 180.])
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
-        initObjVel = np.array([0, 0.0, 0, 0.0, 0.0, 0.2*0])
+        initObjVel = np.array([0, 0.0, 0, 0.0, 0.0, 1.5])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     # --- for simulation
@@ -652,25 +652,42 @@ if __name__=='__main__':
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector, cntPntVector, endAttYang_Quat, endAttYin_Quat)
 
 
-    print('Computation time:', time.time()-start_time)
-
 
     # print('solFlag =', solFlag, 'commandFlag =',commandFlag)
     # commandFlag = False
     commandFlag = True
 
 
-    print(timeSeq)
-
-
     if commandFlag == True:
+
+        scaling_ratio = 1.0
+        # # update the robot trajectory according to the force and stiffness
+        delta_x1 = scaling_ratio*forLimb1[0, :]/stiffnessArray[0,-1]
+        delta_x2 = scaling_ratio*forLimb2[0, :]/stiffnessArray[1,-1]
+        # print(delta_x1, '\n', posLimb1[0., :], '\n', delta_x2, '\n', posLimb2[0., :])
+        posLimb1[0., :] += delta_x1
+        posLimb2[0., :] += delta_x2
+        # print("posLimb1 x position:", posLimb1[0., :])
+        # print("posLimb2 x position:", posLimb2[0., :])
+        # print("delta_x1 x position:", delta_x1[0., :])
+        # print("delta_x2 x position:", delta_x2[0., :])
+
+
+        # manual adaptation
+        # posLimb1[0., :] += -0.05
+        # posLimb2[0., :] += 0.05
+
+
+        # fix stiffness
+        # stiffnessArray[:,:] = 1600
+        # print('stiffnessArray ', stiffnessArray)
+
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
         trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
-        print("position when making contact", posLimb1[0, ncf], posLimb2[0, ncf])
         print("force when making contact", forLimb1[0, ncf-1], forLimb1[0, ntf-1], forLimb1[0, -1])
         print("force when making contact", forLimb2[0, ncf-1], forLimb2[0, ntf-1], forLimb2[0, -1])
-        stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1], timeSeq[ntf-1], timeSeq[-1]])
+        stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1]-0.0, timeSeq[ntf-1], timeSeq[-1]])
         stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
         stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
         stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
@@ -680,7 +697,6 @@ if __name__=='__main__':
         trajObjPlan, trajYangPlan, trajYinPlan = \
             rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)
 
-        print(np.shape(timeSeq))
         stiffnessYangPlan = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
         stiffnessYinPlan = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
 
@@ -700,9 +716,11 @@ if __name__=='__main__':
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
 
+    print('Computation time:', time.time()-start_time)
+
 
     # activate streaming of commands
-    initIndex = initIndex-9 #6 #5
+    initIndex = initIndex-10 #9 #6 #5
     if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
     # if True:
         # stream the interpolated data or not
