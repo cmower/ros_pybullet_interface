@@ -1,0 +1,5 @@
+name: "pushing_box_visual"
+tf_frame_id: "pushing_box_visual"
+object_type: "box"
+half_extends: [0.045, 0.099, 0.034]  # 0.09,0.0198,0.068]
+rgba_color: [1, 0, 0, 0.5]
