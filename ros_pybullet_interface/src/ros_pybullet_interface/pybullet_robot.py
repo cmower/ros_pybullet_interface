@@ -132,7 +132,18 @@ class _PybulletRobotBase(PybulletObject):
         self.target_joint_state = None
 
     def target_joint_state_callback(self, msg):
-        self.target_joint_state = msg.position
+        if len(msg.name) == 0:
+            # hope that positions are in correct order
+            target_joint_state = msg.position
+        else:
+            # populate target joint states using names
+            # TODO: consider giving user option to supply a namespace
+            target_joint_state = []
+            for joint in self.active_joints:
+                idx = msg.name.index(joint.name)
+                target_joint_state.append(msg.position[idx])
+        self.target_joint_state = target_joint_state
+
 
 
 class PybulletRobot(_PybulletRobotBase):
