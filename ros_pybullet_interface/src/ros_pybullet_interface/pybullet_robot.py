@@ -1,6 +1,8 @@
+import os
+import time
 import numpy
 from .pybullet_object import PybulletObject
-from .config import replace_package
+from .config import replace_package, rp
 
 class Joint:
 
@@ -103,11 +105,7 @@ class _PybulletRobotBase(PybulletObject):
 
         # Load robot
         self.use_fixed_base = self.config.get('use_fixed_base', True)
-        self.body_unique_id = self.pb.loadURDF(
-            replace_package(self.config['urdf_filename']),
-            useFixedBase=self.use_fixed_base,
-            flags=self.pb.URDF_USE_MATERIAL_COLORS_FROM_MTL,
-        )
+        self.load_urdf()
         self.ndof = self.pb.getNumJoints(self.body_unique_id)
 
         # Init joints
@@ -130,6 +128,49 @@ class _PybulletRobotBase(PybulletObject):
 
         # Initialize other class attributes
         self.target_joint_state = None
+
+    def load_urdf(self):
+
+        # Get urdf filename and create new temp filename
+        user_urdf_filename = replace_package(self.config['urdf_filename'])
+        stamp = str(time.time_ns())
+        new_urdf_filename = os.path.join('/tmp', f"pybullet_temp_urdf_{stamp}.urdf")
+
+        # Create new urdf file (if needed)
+        with open(user_urdf_filename, 'r') as fin:
+
+            # Check if ""package://"" exists in file
+            contains_package_tag = False
+            lines_of_user_urdf_file = list(fin.readlines())
+            for line in lines_of_user_urdf_file:
+                if "package://" in line:
+                    contains_package_tag = True
+                    break
+
+            if contains_package_tag:
+                # True -> create temp urdf file
+                with open(new_urdf_filename, 'w') as fout:
+                    for line in lines_of_user_urdf_file:
+                        if "package://" in line:
+                            idx = line.find("package://")
+                            package_name = line[idx:].split('/')[2]
+                            abs_path = rp.get_path(package_name)
+                            old = "package://" + package_name
+                            new = abs_path
+                            new_line = line.replace(old, new)
+                        else:
+                            new_line = line
+                        fout.write(new_line)
+                urdf_filename_use = new_urdf_filename
+            else:
+                # False -> use user given urdf
+                urdf_filename_use = user_urdf_filename
+
+        self.body_unique_id = self.pb.loadURDF(
+            urdf_filename_use,
+            useFixedBase=self.use_fixed_base,
+            flags=self.pb.URDF_USE_MATERIAL_COLORS_FROM_MTL,
+        )
 
     def target_joint_state_callback(self, msg):
         self.target_joint_state = msg.position
