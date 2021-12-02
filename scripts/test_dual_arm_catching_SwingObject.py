@@ -18,7 +18,9 @@ from py_pack import yaml, np, LA, R
 # --- import Hybrid Trajectory Optimization class
 from py_pack import hybridto_so
 from py_pack import hybridto_dac_so as HybridTO
+# from py_pack import hybridto_dac_so_simplified as HybridTO
 # from py_pack import hybridto_dac_so_baseline as HybridTO
+
 
 # ROS message types
 from nav_msgs.msg import Odometry
@@ -239,12 +241,17 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
         solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector, cntPntVector)
-        # with open(self.initFile, 'wb') as f:
-        #     np.save(f, np.array(xSolution))
+
         # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+
+        # solFlag = True
+        # xSolution = self.xInit
 
         # decode solution
         if (solFlag):
+            # with open(self.initFile, 'wb') as f:
+            #     np.save(f, np.array(xSolution))
+
             timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array, forLimb1Array,\
             posLimb2Array, velLimb2Array, forLimb2Array, stiffnessArray = self.HybOpt_DAC.decodeSol(xSolution, normVector)
 
@@ -322,7 +329,7 @@ class PredictionWithTO():
         # build the problem
         self.HybProb = self.HybOpt3D_SRB.buildProblem()
         # build the problem with warm start
-        self.HybProb_warmstart = self.HybOpt3D_SRB.buildProblem(warmStart=True)
+        # self.HybProb_warmstart = self.HybOpt3D_SRB.buildProblem(warmStart=True)
 
         # initialize the optimization
         self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
@@ -339,8 +346,14 @@ class PredictionWithTO():
 
         # solve problem
         preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
+
         # with open(self.initFile, 'wb') as f:
         #     np.save(f, np.array(xSolution))
+
+
+        # preFlag  = True
+        # xSolution = self.xInit_SRB
+
         # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
         # decode solution
@@ -353,6 +366,8 @@ class PredictionWithTO():
             print("#---Prediction time: %s seconds ---#" % (time.time() - start_time))
             print("#---Index for the initial state for TO: %s ---#" % (initIndex))
             print("#---Normal vector of contact surface for TO: %s ---#" % (normVector))
+
+            # self.HybOpt3D_SRB.plotResults(timePre, posBodyPre, velBodyPre)
 
             #  clamp reduce index
             reduce = max(0, min(self.reducedNode, initIndex))
@@ -467,7 +482,12 @@ class InitialsOfPrediciton():
             pose, velocity= self.getPosVel()
             # return the estimation results if the object pass the predefined location
             # if pose[1] <= self.conditionPos and
-            if LA.norm(velocity[1]) >= self.conditionVel:
+
+            # for linear motion
+            # if LA.norm(velocity[1]) >= self.conditionVel:
+
+            # for angular motion
+            if LA.norm(velocity[-1]) >= self.conditionVel:
                 break
 
         return pose, velocity
@@ -567,13 +587,13 @@ if __name__=='__main__':
     if objectState == "Swing":
 
         initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
-                               - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), -60* np.pi / 180., 0, startAngle* np.pi / 180.])
+                               - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), 80* np.pi / 180., 0, startAngle* np.pi / 180.])
         # initObjPos = np.array([0 + hangPoint[0], (ropeLength + objHeight / 2) * np.sin(startAngle* np.pi / 180.) + hangPoint[1], hangPoint[2]
         #                        - (ropeLength + objHeight / 2) * np.cos(startAngle* np.pi / 180.), -90*np.pi / 180., startAngle* np.pi / 180., 0* np.pi / 180.])
         pos = initObjPos[0:3]
         quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
-        initObjVel = np.array([0, 0.0, 0, 0.0, 0.0, 1.5])
+        initObjVel = np.array([0, 0.0, 0, 0.0, 0.0, -1.2])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     # --- for simulation
@@ -583,7 +603,9 @@ if __name__=='__main__':
 
     # get object and robot state from pybullet
     print("Manual initial pose", initObjPos)
+    # sdssd
     initObjPos, initObjVel = Initials.startEstimation()
+
 
     # initObjPos = np.array([-0.26928543,  0.40148064,  0.92327187, -0.00703615,  0.00954215, -0.46739115 ])
     # initObjVel = np.array([0.01881166, 0.05259493, -0.03216697,  0.02389044, -0.02223103, -0.08940978])
@@ -595,10 +617,64 @@ if __name__=='__main__':
     # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.01638131,  0.03911706,  0.07240328])
     # initObjVel = np.array([0.01716915,  0.06257734, -0.02340356, -0.0,  0.0,  0.0])
 
+    # test points for positive rotation
+    # initObjPos = np.array([-0.29053939,  0.23990097,  0.98629075, -1.14193254, -0.76219918, -0.26582987])
+    # initObjVel = np.array([ 0.07326763,  0.29370682, -0.16077111,  0.03833025,  0.62989838 , 1.068754  ])
+
+    # positive rotation filters
+    # pos_low = np.array([-0.33,  0.2,  0.94, -1.2, -0.9, -0.4])
+    # pos_high = np.array([-0.2,  0.36,  1.0, -1.0, -0.6, -0.2])
+    # vel_low = np.array([0.0,  0.1,  -0.2, -1.25, 0.35, 0.95])
+    # vel_high = np.array([0.15,  0.4, -0.08, 0.12, 1.0, 1.2])
+
+
+    # test points fornegative rotation
+
+    # initObjPos = np.array([-0.20256568,  0.29759256,  0.96083867,  1.17344726,  0.84388604, -0.30144974])
+    # initObjVel = np.array([-0.05012899,  0.24866655, -0.13899159,  0.16913429, -0.6286595,  -1.02856811])
+
+    # initObjPos = np.array([-0.22083216,  0.32038664,  0.94641998, 1.1821864,   0.81207912, -0.25043509])
+    # initObjVel = np.array([-0.05363575,  0.32104825, -0.161003,   0.10721137, -0.55168185, -1.14416892])
+
+    #
+    # initObjPos = np.array([-0.22488139,  0.28022532,  0.96246352,  1.2096055,   0.77701228, -0.25851786])
+    # initObjVel = np.array([-0.03168395,  0.31317117, -0.15545152,  0.03109472, -0.59858124, -1.00808825])
+
+    # initObjPos = np.array([-0.22745209,  0.29994553,  0.95505301,  1.14334202,  0.79073043, -0.31453779])
+    # initObjVel = np.array([-0.06074515,  0.28023242, -0.15702155,  0.10889657, -0.61673693, -1.02959783])
+
+
+    # initObjPos = np.array([-0.24858868,  0.29396994,  0.95543446,  1.19830499,  0.7806029,  -0.21669758])
+    # initObjVel = np.array([-0.08456861,  0.26945524, -0.13748985, -0.04550141, -0.38924994, -0.96302452])
+
+
+    # negative rotation filters
+    pos_low = np.array([-0.25,  0.20,  0.9, 1.1, 0.7, -0.35])
+    pos_high = np.array([-0.17,  0.33,  1.0, 1.26, 0.9, -0.18])
+
+    vel_low = np.array([-0.15,  0.19,  -0.22, -0.2, -0.65, -1.05])
+    vel_high = np.array([0.0,  0.4, -0.10, 0.30, -0.10, -0.8])
+
+
+    pos_test = np.logical_and(initObjPos > pos_low, initObjPos < pos_high)
+    res_pos = pos_test.all()
+    vel_test = np.logical_and(initObjVel > vel_low, initObjVel < vel_high)
+    res_vel = vel_test.all()
 
     # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
+
+    if (res_pos==False):
+        print("Position test ", pos_test)
+        print("too big difference in position ----------------------!!!!!!!!!!")
+        exit()
+
+    if (res_vel==False):
+        print("Velocity test ", vel_test)
+        print("too big difference in velocity ----------------------!!!!!!!!!!")
+        exit()
+
 
 
     # if LA.norm(initObjVel[-1]) >= 0.15:
@@ -636,6 +712,7 @@ if __name__=='__main__':
     predtrajObjPlan = np.vstack((np.vstack((timePre, posBodyPre)), velBodyPre))
     PlanInterpWithTO.predtrajObjPlan = predtrajObjPlan
     PlanInterpWithTO.writeCallbackTimerPredObjTraj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjPredTrajectory)
+
     # ------------------------------------------------------------------------ #
     #
     # We keep this part of the code to evaluate the accuracy of our prediction optimisation
@@ -644,8 +721,9 @@ if __name__=='__main__':
     # trajObjPlan = np.vstack((np.vstack((timePre, posBodyPre)), velBodyPre))
     # PlanInterpWithTO.trajObjPlan = trajObjPlan
     # PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+    # rospy.set_param('/stream_interpolated_motion_flag', True)
     # rospy.spin()
-    # break
+    # sdsds
 
     # solve the TO problem
     solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, stiffnessArray = \
@@ -660,7 +738,7 @@ if __name__=='__main__':
 
     if commandFlag == True:
 
-        scaling_ratio = 1.0
+        scaling_ratio = 0.7 #1.0
         # # update the robot trajectory according to the force and stiffness
         delta_x1 = scaling_ratio*forLimb1[0, :]/stiffnessArray[0,-1]
         delta_x2 = scaling_ratio*forLimb2[0, :]/stiffnessArray[1,-1]
@@ -674,9 +752,16 @@ if __name__=='__main__':
 
 
         # manual adaptation
-        # posLimb1[0., :] += -0.05
-        # posLimb2[0., :] += 0.05
+        # posLimb1[0, :] += -0.01
+        # posLimb2[0, :] += 0.01
 
+        # manual adaptation for z axis
+        # posLimb1[2, :] += -0.01
+        # posLimb2[2, :] += -0.03
+
+        # manual adaptation for x axis - kin limits
+        posLimb1[0, :] += 0.05
+        posLimb2[0, :] += 0.05
 
         # fix stiffness
         # stiffnessArray[:,:] = 1600
@@ -688,8 +773,12 @@ if __name__=='__main__':
         print("force when making contact", forLimb1[0, ncf-1], forLimb1[0, ntf-1], forLimb1[0, -1])
         print("force when making contact", forLimb2[0, ncf-1], forLimb2[0, ntf-1], forLimb2[0, -1])
         stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1]-0.0, timeSeq[ntf-1], timeSeq[-1]])
-        stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
-        stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
+        # stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
+        # stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
+        #
+        stiffnes_ratio = 1.0
+        stiffnessYangSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[0,-1], stiffnes_ratio*stiffnessArray[0,:])), stiffnes_ratio*stiffnessArray[0,-1])).reshape(((1, 4)))
+        stiffnessYinSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[1,-1], stiffnes_ratio*stiffnessArray[1,:])), stiffnes_ratio*stiffnessArray[1,-1])).reshape(((1, 4)))
         stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
         stiffnessYinPlan = np.vstack((stiffTimeSeq, stiffnessYinSeq))
 
@@ -720,7 +809,7 @@ if __name__=='__main__':
 
 
     # activate streaming of commands
-    initIndex = initIndex-10 #9 #6 #5
+    initIndex = initIndex-10#10 #9 #6 #5
     if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
     # if True:
         # stream the interpolated data or not
@@ -729,5 +818,6 @@ if __name__=='__main__':
 
     # Visualize the planning result for capturing swinging object
     PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+
 
     rospy.spin()
