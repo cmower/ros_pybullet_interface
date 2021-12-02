@@ -7,19 +7,17 @@ end_effector: "end_effector_sponge"
 use_fixed_base: True
 base_position: [-1.569, 2.097, 0.857]
 base_orient_eulerXYZ: [0.253, 0.630, -24.908]
-# init_position: [0.0, -30., 0., -80., 0., 10., 90.]
-# init_position: [-20., 100., 30., 70., 0., 20., 0.]
 
-# init_position: [-160., -95., 45., -60., -35., 20., 90.]
 
-# init_position: [ -160., -95., 25., -75., -35., 30., 90.]
+# used for all the experiments
+# init_position: [ -160., -95., 69., -90., 53., -30., 0.] # test comparison
+# init_position: [ -160., -95., 69., -90., 53., -50., 0.] # test positive rotation
+init_position: [ -160., -95., 69., -90., -90., 70., 0.] # test negative rotation
 
-init_position: [ -160., -95., 69., -70., 53., -30., 0.] # test
+#  initial orient maybe it was used... but probably not !!!
+# init_position: [ -160., -95., 69., -70., 53., -50., 0.] # test
 
-#---remounting
-#base_position: [1.1, 0.1, 0.0]
-#base_orient_eulerXYZ: [0.0, -30.0, 0.0]
-#init_position: [0.0, 45., 0., 80., 0., -10., 90.]
+
 
 sensors:
 
