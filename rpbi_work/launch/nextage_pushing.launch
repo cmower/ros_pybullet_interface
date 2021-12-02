@@ -167,7 +167,7 @@
   <!-- 	args="0. 0. 0.85 0 0 0 rpbi/world nextage_base"/> -->
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
-  	args="0. 0. -0.85 0 0 0 nextage_base rpbi/world"/>  
+  	args="0. 0. -0.85 0 0 0 sim/nextage_base rpbi/world"/>  
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf_broadcaster"
 	args="0 0 0 0 0 0 rpbi/world floor"/>
@@ -179,7 +179,7 @@
 	args="0 0 -0.1 0 0 0 table_top table"/> <!-- DO NOT EDIT THIS -->
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="connect_vicon_nextage_base_and_nextage_base_tf_broadcaster"
-	args="-0.375 -0.00525 -0.01 3.141592653589793 0 0 vicon/nextage_vicon_base/nextage_vicon_base nextage_base"/>
+	args="-0.375 -0.00525 -0.01 3.141592653589793 0 0 vicon/nextage_vicon_base/nextage_vicon_base sim/nextage_base"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="sliding_box_center_tf_broadcaster"
 	args="0. 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
