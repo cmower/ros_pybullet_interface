@@ -1,4 +1,5 @@
 name: "nextage"
-urdf_filename: "{nextagea_description}/urdf/NextageAOpen.urdf"
-tf_frame_id: "nextage_base"
+# urdf_filename: "{nextagea_description}/urdf/NextageAOpen.urdf"
+urdf_filename: "{nextage_smart_factory}/urdf/nextagea_dual_pick.urdf"
+tf_frame_id: "sim/nextage_base"
 alpha: 1
