@@ -1,24 +1,25 @@
 estimation:
-#  condition: 0.95 #0.85
-  condition: -2.2 # simulation
+  conditionPos: 0.0 # simulation
+  conditionVel: 0.05 # simulation
+  uncertainty: 0.10
   uncertainty: 0.12
 
 object:
-  finObjPos: [0., 0.0, 0.7, -1.57, 0, 0]
+  finObjPos: [-0.2, 2.2, 1.5, 0, 0, 0]
 #  finObjPos: [0.2, 0.0, 1.4, 3.14, 0, 0]
   maxObjPos: [10, 10, 10, 10, 10, 10]
   finObjVel: [0., 0., 0., 0., 0., 0.]
   maxObjVel: [10, 10, 10, 10, 10, 10]
-  slackObjPos: [2.2, 2.2, 2.2, 3.14, 3.14, 3.14]
-  slackObjVel: [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
-  reducedNode: 100
+  slackObjPos: [0.2, 2.2, 0.1, 3.14, 3.14, 3.14]
+  slackObjVel: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+  reducedNode: 37
 
 robotYin:
-  workspace: 1.0
-  minWorkspace: [-0.8, -0.60, -0.2]
-  maxWorkspace: [0.8, 0.60, 0.8]
+  workspace: 1.4
+  minWorkspace: [-1.4, -0.75, 0.4]
+  maxWorkspace: [1.4, 0.35, 1.2]
 
 robotYang:
-  workspace: 1.0
-  minWorkspace: [-0.8, -0.60, -0.2]
-  maxWorkspace: [0.8, 0.60, 0.8]
+  workspace: 1.4
+  minWorkspace: [-1.4, -0.65, 0.4]
+  maxWorkspace: [1.4, 0.35, 1.2]

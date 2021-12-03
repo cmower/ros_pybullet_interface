@@ -5,15 +5,12 @@ name: "yang_visual"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14_visual.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [-1.569, 2.097, 0.857]
+# base_position: [-1.569, 2.097, 0.857]
+base_position: [-1.469, 2.097, 0.857] # new base position for throwing
 base_orient_eulerXYZ: [0.253, 0.630, -24.908]
 
-# init_position: [ -160., -95., 69., -70., 53., -30., 0.] # test comparion
-# init_position: [ -160., -95., 69., -70., 53., -50., 0.] # test positive rotation
-init_position: [ -160., -95., 69., -90., -90., 70., 0.] # test negative rotation
-
-#  initial orient maybe it was used... but probably not !!!
-# init_position: [ -160., -95., 69., -70., 53., -50., 0.] # test
+# init_position: [ 0., -40., -50., -80., -90., -50., 0.]
+init_position: [ -80., 70., -115., -80., 90., -75., 90.]
 
 
 sensors:

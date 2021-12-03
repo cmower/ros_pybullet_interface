@@ -19,12 +19,18 @@ from py_pack import yaml, np, LA, R
 from py_pack import hybridto_srb
 from py_pack import hybridto_dac_fo as HybridTO
 
+
 # ROS message types
 from nav_msgs.msg import Odometry
 
-NEW_TRAJ_Yang_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
-NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+NEW_TRAJ_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+# NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
+STIFFNESS_TOPIC = 'ros_pybullet_interface/end_effector/stiffness' # publishes end-effector planned trajectory on this topic
+# STIFFNESS_Yin_TOPIC = 'ros_pybullet_interface/end_effector/stiffness' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
+NEW_TRAJ_PRED_OBJ_TOPIC = 'ros_pybullet_interface/object/predtraj' # publishes end-effector planned trajectory on this topic
+
+
 
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 END_EFFECTOR_FRAME_ID = 'ros_pybullet_interface/robot/end_effector_sponge' # listens for end-effector poses on this topic
@@ -77,11 +83,19 @@ class PlanInterpWithTO:
         self.trajRobotPlan = np.empty(0)
         self.trajYangPlan = np.empty(0)
         self.trajYinPlan = np.empty(0)
+        self.stiffnessYinPlan = np.empty(0)
+        self.stiffnessYangPlan = np.empty(0)
+        self.predtrajObjPlan = np.empty(0)
+        self.pred_flag = 0
 
         # start punlishers
-        self.new_Yangtraj_publisher = rospy.Publisher(f"{robot1_name}/{NEW_TRAJ_Yang_TOPIC}", Float64MultiArray, queue_size=1)
-        self.new_Yintraj_publisher = rospy.Publisher(f"{robot2_name}/{NEW_TRAJ_Yin_TOPIC}", Float64MultiArray, queue_size=1)
+        self.new_Yangtraj_publisher = rospy.Publisher(f"{robot1_name}/{NEW_TRAJ_TOPIC}", Float64MultiArray, queue_size=1)
+        self.new_Yintraj_publisher = rospy.Publisher(f"{robot2_name}/{NEW_TRAJ_TOPIC}", Float64MultiArray, queue_size=1)
         self.new_Objtraj_publisher = rospy.Publisher(NEW_TRAJ_OBJ_TOPIC, Float64MultiArray, queue_size=1)
+        self.new_PredObjtraj_publisher = rospy.Publisher(NEW_TRAJ_PRED_OBJ_TOPIC, Float64MultiArray, queue_size=1)
+        self.stiffness_Yang_publisher = rospy.Publisher(f"{robot1_name}/{STIFFNESS_TOPIC}", Float64MultiArray, queue_size=1)
+        self.stiffness_Yin_publisher = rospy.Publisher(f"{robot2_name}/{STIFFNESS_TOPIC}", Float64MultiArray, queue_size=1)
+
 
         # get the path to this catkin ws
         self.initFile = os.path.join(ROOT_DIR, initFilePath)
@@ -100,14 +114,24 @@ class PlanInterpWithTO:
         self.slackObjPos = np.array(params['object']['slackObjPos'])
         self.slackObjVel = np.array(params['object']['slackObjVel'])
 
-        self.initArmEEPos1 = initEEYang
-        self.initArmEEPos2 = initEEYin
 
-        self.minArmEEPos1 = np.array(params['robotYang']['minWorkspace']) + initBaseYang
-        self.maxArmEEPos1 = np.array(params['robotYang']['maxWorkspace']) + initBaseYang
+        # self.initArmEEPos1 = initEEYang
+        # self.initArmEEPos2 = initEEYin
+        #
+        # self.minArmEEPos1 = np.array(params['robotYang']['minWorkspace']) + initBaseYang
+        # self.maxArmEEPos1 = np.array(params['robotYang']['maxWorkspace']) + initBaseYang
+        #
+        # self.minArmEEPos2 = np.array(params['robotYin']['minWorkspace']) + initBaseYin
+        # self.maxArmEEPos2 = np.array(params['robotYin']['maxWorkspace']) + initBaseYin
 
-        self.minArmEEPos2 = np.array(params['robotYin']['minWorkspace']) + initBaseYin
-        self.maxArmEEPos2 = np.array(params['robotYin']['maxWorkspace']) + initBaseYin
+        self.initArmEEPos1 = initEEYin
+        self.initArmEEPos2 = initEEYang
+
+        self.minArmEEPos1 = np.array(params['robotYang']['minWorkspace']) + initBaseYin
+        self.maxArmEEPos1 = np.array(params['robotYang']['maxWorkspace']) + initBaseYin
+
+        self.minArmEEPos2 = np.array(params['robotYin']['minWorkspace']) + initBaseYang
+        self.maxArmEEPos2 = np.array(params['robotYin']['maxWorkspace']) + initBaseYang
 
 
     def publishRobotTrajectory(self, event):
@@ -132,6 +156,20 @@ class PlanInterpWithTO:
         if message != None:
             self.new_Yintraj_publisher.publish(message)
 
+    def publishYangStiffness(self, event):
+
+        message = self.np2DtoROSmsg(self.stiffnessYangPlan)
+
+        if message != None:
+            self.stiffness_Yang_publisher.publish(message)
+
+    def publishYinStiffness(self, event):
+
+        message = self.np2DtoROSmsg(self.stiffnessYinPlan)
+
+        if message != None:
+            self.stiffness_Yin_publisher.publish(message)
+
     def publishObjTrajectory(self, event):
 
         message = self.np2DtoROSmsg(self.trajObjPlan)
@@ -139,6 +177,13 @@ class PlanInterpWithTO:
         if message != None:
             self.new_Objtraj_publisher.publish(message)
 
+    def publishObjPredTrajectory(self, event):
+
+        message = self.np2DtoROSmsg(self.predtrajObjPlan)
+
+        if message != None and self.pred_flag == 0:
+            self.new_PredObjtraj_publisher.publish(message)
+            self.pred_flag = 1
 
     def np2DtoROSmsg(self, data2Darray):
 
@@ -182,8 +227,8 @@ class PlanInterpWithTO:
 
         # get initial guess
         self.xInit = self.HybOpt_DAC.buildInitialGuess()
-        with open(self.initFile, 'rb') as f:
-            self.xInit = np.load(f)
+        # with open(self.initFile, 'rb') as f:
+        #     self.xInit = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel, normVector, cntPntVector, initEEAttYang_Quat, initEEAttYin_Quat):
@@ -194,30 +239,39 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
         solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector, cntPntVector)
-        with open(self.initFile, 'wb') as f:
-            np.save(f, np.array(xSolution))
+
         # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
+
+        # solFlag = True
+        # xSolution = self.xInit
 
         # decode solution
         if (solFlag):
+            # with open(self.initFile, 'wb') as f:
+            #     np.save(f, np.array(xSolution))
+
             timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array, forLimb1Array,\
-            posLimb2Array, velLimb2Array, forLimb2Array, alphaArray = self.HybOpt_DAC.decodeSol(xSolution, normVector)
+            posLimb2Array, velLimb2Array, forLimb2Array, stiffnessArray = self.HybOpt_DAC.decodeSol(xSolution, normVector)
 
             # self.HybOpt_DAC.plotResult(timeArray, posBodyArray, velBodyArray, posLimb1Array, velLimb1Array,
             #                            forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, animateFlag=False)
             m, n = posLimb1Array.shape
-            # for i in range(n):
-            #     posLimb1Array[3:, i] = endAttYang_Quat
-            #     posLimb2Array[3:, i] = endAttYin_Quat
+            # np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
+            # posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat, np_initEEAttYang_Quat)).T
+            # np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
+            # posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat,np_initEEAttYin_Quat)).T
+
+            # trick to smooth the motion
             np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
-            posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat, np_initEEAttYang_Quat)).T
             np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
-            posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat,np_initEEAttYin_Quat)).T
-            # posLimb1Array[3:6, 0] = endAttYang
-            # posLimb2Array[3:6, 0] = endAttYin
+            # posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat, np_initEEAttYin_Quat)).T
+            # posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat,np_initEEAttYang_Quat)).T
+
+            posLimb1Array[3:7, 0] = np_initEEAttYin_Quat
+            posLimb2Array[3:7, 0] = np_initEEAttYang_Quat
 
 
-        return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array
+        return solFlag, timeArray, posBodyArray, velBodyArray, posLimb1Array,velLimb1Array, forLimb1Array, posLimb2Array, velLimb2Array, forLimb2Array, stiffnessArray
 
 
     def stateMachine(self, posInitTraj):
@@ -228,7 +282,7 @@ class PlanInterpWithTO:
 
             # compute Euclidean distance, to see if object is in the expected location
             dist = LA.norm(pose[0:3]-posInitTraj[0:3])
-            if dist <= self.uncertainty:
+            if dist <= self.uncertainty and velocity[1] > 0:
                 commandFlag = True
                 break
 
@@ -260,8 +314,11 @@ class PredictionWithTO():
 
         # simplified workspace of robot: r; installation position of left robot and right robot: L0, R0
         self.r = float(params['robotYang']['workspace'])
-        self.L0 = initBaseYang
-        self.R0 = initBaseYin
+        # self.L0 = initBaseYang
+        # self.R0 = initBaseYin
+
+        self.L0 = initBaseYin
+        self.R0 = initBaseYang
 
 
     def buildTO(self):
@@ -272,7 +329,7 @@ class PredictionWithTO():
         # build the problem
         self.HybProb = self.HybOpt3D_SRB.buildProblem()
         # build the problem with warm start
-        self.HybProb_warmstart = self.HybOpt3D_SRB.buildProblem(warmStart=True)
+        # self.HybProb_warmstart = self.HybOpt3D_SRB.buildProblem(warmStart=True)
 
         # initialize the optimization
         self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
@@ -289,8 +346,14 @@ class PredictionWithTO():
 
         # solve problem
         preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
-        with open(self.initFile, 'wb') as f:
-            np.save(f, np.array(xSolution))
+
+        # with open(self.initFile, 'wb') as f:
+        #     np.save(f, np.array(xSolution))
+
+
+        # preFlag  = True
+        # xSolution = self.xInit_SRB
+
         # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
         # decode solution
@@ -303,6 +366,8 @@ class PredictionWithTO():
             print("#---Prediction time: %s seconds ---#" % (time.time() - start_time))
             print("#---Index for the initial state for TO: %s ---#" % (initIndex))
             print("#---Normal vector of contact surface for TO: %s ---#" % (normVector))
+
+            # self.HybOpt3D_SRB.plotResults(timePre, posBodyPre, velBodyPre)
 
             #  clamp reduce index
             reduce = max(0, min(self.reducedNode, initIndex))
@@ -332,7 +397,8 @@ class InitialsOfPrediciton():
         with open(paramFile, 'r') as ymlfile:
             params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 
-        self.condition = float(params['estimation']['condition'])
+        self.conditionPos = float(params['estimation']['conditionPos'])
+        self.conditionVel = float(params['estimation']['conditionVel'])
 
 
     def readPose(self, msg):
@@ -414,10 +480,16 @@ class InitialsOfPrediciton():
         while(True):
 
             pose, velocity= self.getPosVel()
-
             # return the estimation results if the object pass the predefined location
-            if pose[1] >= self.condition:
+            if pose[1] >= self.conditionPos:
                 break
+
+            # for linear motion
+            # if LA.norm(velocity[1]) >= self.conditionVel:
+
+            # # for angular motion
+            # if LA.norm(velocity[-1]) >= self.conditionVel:
+            #     break
 
         return pose, velocity
 
@@ -458,120 +530,182 @@ if __name__=='__main__':
                 only_obj = rospy.get_param('~only_object')
             '''
     path2extrPck = os.environ['PATH2HYBRIDMPC']
-    paramFile = os.path.join(path2extrPck, "py_pack/config/parameters.yml")
+    paramFile = os.path.join(path2extrPck, "py_pack/config/paramFlyingObject.yml")
     with open(paramFile, 'r') as ymlfile:
         params = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 
+    ncf = params['TOproblemDAC']['ncf']
+    ntf = params['TOproblemDAC']['ntf']
+
     ori_representation = params['TOproblem']['ori_representation']
+    objWidth = params['object']['shape']['rectangle']['width']
+    objLength = params['object']['shape']['rectangle']['length']
+    objHeight = params['object']['shape']['rectangle']['height']
+
 
     # build the prediction problem
     PredictionWithTO.buildTO()
     # build the TO problem
     PlanInterpWithTO.buildTO()
 
-    #---SET OBJECT STATE FOR INITIALIZATION: Moving, Swinging, Flying---#
+    #---SET OBJECT STATE FOR INITIALIZATION: Moving,  Flying---#
     objectState = "Flying"
-
-    if objectState == "Moving":
-        # get bounds of variables and constraints
-        if ori_representation == "euler":
-            # euler representation initialization #
-            initObjPos = np.array([0.0, -2.5, 0.3, -90.0 / 180 * np.pi, 0, 0])
-            #  real
-            # initObjPos = np.array([0.188, 1.06, 0.90, 100 / 180 * np.pi, 0, 0])
-
-            pos = initObjPos[0:3]
-            quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
-        elif ori_representation == "quaternion":
-            # quaternion representation initialization #
-            initObjPos = np.array([0, 0, 0.5, 0, 0, 0, 1])
-            pos = initObjPos[0:3]
-            quat = initObjPos[3:7]
-
-        initObjVel = np.array([0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
-        #  real
-        # initObjVel = np.array([0.0, -0.3, 0.0, 0.0, 0.0, 0.0])
-        lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     if objectState == "Flying":
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([0, -2.0, -1.0, 0, 0, 0])
+            initObjPos = np.array([-0.2, 0.0, 1.7, 0, 0, 0])
             pos = initObjPos[0:3]
             quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
-        initObjVel = np.array([0, 2.5, 5.5, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0, 2.9, 3.0, 0.0, 0.0, 0.0])
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
-    set_object_state_client.setObjState(pos, quat, lin_vel*0, ang_vel*0, 'target')
-    rospy.sleep(2)
-    set_object_state_client.setObjState(pos, quat, lin_vel, ang_vel, 'target')
-
     # get object and robot state from pybullet
-    # initObjPos, initObjVel = Initials.startEstimation()
-    initObjVel = np.array([0, 2.5, 5.5, 0.0, 0.0, 0.0])
+    print("Manual initial pose", initObjPos)
+    initObjPos, initObjVel = Initials.startEstimation()
+
+    # positive rotation filters
+    # pos_low = np.array([-0.33,  0.2,  0.94, -1.2, -0.9, -0.4])
+    # pos_high = np.array([-0.2,  0.36,  1.0, -1.0, -0.6, -0.2])
+    # vel_low = np.array([0.0,  0.1,  -0.2, -1.25, 0.35, 0.95])
+    # vel_high = np.array([0.15,  0.4, -0.08, 0.12, 1.0, 1.2])
+
+    # pos_test = np.logical_and(initObjPos > pos_low, initObjPos < pos_high)
+    # res_pos = pos_test.all()
+    # vel_test = np.logical_and(initObjVel > vel_low, initObjVel < vel_high)
+    # res_vel = vel_test.all()
+
+    # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
 
-    # initObjVel[0] *= 0.
-    # # initObjVel[1] *= -1
-    # initObjVel[2:6] *= 0.
-    # uncertainty = 1.57-initObjPos[3]
-    # if abs(uncertainty) >= np.deg2rad(20.):
-    #     print('uncertainty:', np.rad2deg(uncertainty))
+    # if (res_pos==False):
+    #     print("Position test ", pos_test)
+    #     print("too big difference in position ----------------------!!!!!!!!!!")
     #     exit()
     #
-    # if abs(uncertainty) >= np.deg2rad(10.):
-    #     print('uncertainty:', np.rad2deg(uncertainty))
-    #     uncertainty = max(np.deg2rad(10.), min(uncertainty, np.deg2rad(-10.)))
-    #
-    #
-    # initObjPos[3] = 3.14 - uncertainty
+    # if (res_vel==False):
+    #     print("Velocity test ", vel_test)
+    #     print("too big difference in velocity ----------------------!!!!!!!!!!")
+    #     exit()
 
-    # if (initObjVel[1] < -0.37 or initObjVel[1] > -0.20):
-    #     print('initObjVel:', initObjVel)
+
+
+    # if LA.norm(initObjVel[-1]) >= 0.15:
+    #     print("too big rotation!!!!!!!!!!")
     #     exit()
+
+
     start_time = time.time()
 
 
     # solve the trajectory optimization for prediction
     initIndex, normVector, cntPntVector, timePre, posBodyPre, velBodyPre = PredictionWithTO.solveTO(initObjPos, initObjVel)
 
+    print("start optimization:", timePre[:, initIndex], posBodyPre[:, initIndex])
+
+    predtrajObjPlan = np.vstack((np.vstack((timePre, posBodyPre)), velBodyPre))
+    PlanInterpWithTO.predtrajObjPlan = predtrajObjPlan
+    PlanInterpWithTO.writeCallbackTimerPredObjTraj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjPredTrajectory)
+
+    # ------------------------------------------------------------------------ #
+    #
+    # We keep this part of the code to evaluate the accuracy of our prediction optimisation
+    # Compare in video and in the plot jogger
+    # ------------------------------------------------------------------------ #
+    # trajObjPlan = np.vstack((np.vstack((timePre, posBodyPre)), velBodyPre))
+    # PlanInterpWithTO.trajObjPlan = trajObjPlan
+    # PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+    # rospy.set_param('/stream_interpolated_motion_flag', True)
+    # rospy.spin()
+    # sdsds
+
     # solve the TO problem
-    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2 = \
+    solFlag, timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, stiffnessArray = \
         PlanInterpWithTO.solveTO(posBodyPre[:, initIndex], velBodyPre[:, initIndex], normVector, cntPntVector, endAttYang_Quat, endAttYin_Quat)
 
 
-    # commandFlag = PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex])
-    # print('solFlag =', solFlag, 'commandFlag =',commandFlag)
-    commandFlag = False
 
-    # Visualize the planning result for capturing swinging object
-    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+    # print('solFlag =', solFlag, 'commandFlag =',commandFlag)
+    # commandFlag = False
+    commandFlag = True
 
 
     if commandFlag == True:
+
+        scaling_ratio = 0.0 #1.0
+        # # update the robot trajectory according to the force and stiffness
+        delta_x1 = scaling_ratio*forLimb1[0, :]/stiffnessArray[0,-1]
+        delta_x2 = scaling_ratio*forLimb2[0, :]/stiffnessArray[1,-1]
+        # print(delta_x1, '\n', posLimb1[0., :], '\n', delta_x2, '\n', posLimb2[0., :])
+        posLimb1[0., :] += delta_x1
+        posLimb2[0., :] += delta_x2
+        # print("posLimb1 x position:", posLimb1[0., :])
+        # print("posLimb2 x position:", posLimb2[0., :])
+        # print("delta_x1 x position:", delta_x1[0., :])
+        # print("delta_x2 x position:", delta_x2[0., :])
+
+
+        # manual adaptation
+        # posLimb1[0, :] += -0.01
+        # posLimb2[0, :] += 0.01
+
+        # fix stiffness
+        # stiffnessArray[:,:] = 1600
+        # print('stiffnessArray ', stiffnessArray)
+
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
         trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
-
+        print("force when making contact", forLimb1[0, ncf-1], forLimb1[0, ntf-1], forLimb1[0, -1])
+        print("force when making contact", forLimb2[0, ncf-1], forLimb2[0, ntf-1], forLimb2[0, -1])
+        stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1]-0.0, timeSeq[ntf-1], timeSeq[-1]])
+        # stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
+        # stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
+        #
+        stiffnes_ratio = 0.5
+        stiffnessYangSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[0,-1], stiffnes_ratio*stiffnessArray[0,:])), stiffnes_ratio*stiffnessArray[0,-1])).reshape(((1, 4)))
+        stiffnessYinSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[1,-1], stiffnes_ratio*stiffnessArray[1,:])), stiffnes_ratio*stiffnessArray[1,-1])).reshape(((1, 4)))
+        stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
+        stiffnessYinPlan = np.vstack((stiffTimeSeq, stiffnessYinSeq))
 
     else:
         trajObjPlan, trajYangPlan, trajYinPlan = \
             rearrageSolution(initIndex, timePre, posBodyPre, velBodyPre, timeSeq, posBody, velBody, posLimb1, velLimb1, posLimb2, velLimb2)
 
-    PlanInterpWithTO.trajObjPlan = trajObjPlan
-    PlanInterpWithTO.trajYangPlan = trajYangPlan
-    PlanInterpWithTO.trajYinPlan = trajYinPlan
+        stiffnessYangPlan = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
+        stiffnessYinPlan = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
 
-    print('Computation time:', time.time()-start_time)
+    PlanInterpWithTO.trajObjPlan = trajObjPlan
+    PlanInterpWithTO.trajYangPlan = trajYinPlan
+    PlanInterpWithTO.trajYinPlan = trajYangPlan
+    PlanInterpWithTO.stiffnessYangPlan = stiffnessYinPlan
+    PlanInterpWithTO.stiffnessYinPlan = stiffnessYangPlan
 
     if solFlag == True:
         rospy.loginfo("TO problem solved, publish the state of object and robots!")
         PlanInterpWithTO.writeCallbackTimerYang = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangTrajectory)
         PlanInterpWithTO.writeCallbackTimerYin = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinTrajectory)
         PlanInterpWithTO.writeCallbackTimerObj = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishObjTrajectory)
+        PlanInterpWithTO.writeCallbackTimerYangStiffness = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYangStiffness)
+        PlanInterpWithTO.writeCallbackTimerYinStiffness = rospy.Timer(rospy.Duration(1.0/float(freq)), PlanInterpWithTO.publishYinStiffness)
 
         rospy.loginfo("TO problem solved, set visual object state in bullet!")
+
+    print('Computation time:', time.time()-start_time)
+
+
+    # activate streaming of commands
+    initIndex = initIndex-10#10 #9 #6 #5
+    # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
+    if True:
+        # stream the interpolated data or not
+        rospy.set_param('/stream_interpolated_motion_flag', True)
+        print('Time till activation of execution:', time.time()-start_time)
+
+    # Visualize the planning result for capturing flying object
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+
 
     rospy.spin()

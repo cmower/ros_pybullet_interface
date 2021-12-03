@@ -5,11 +5,18 @@ name: "yin"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [0.952, 2.046, 0.843]
+# base_position: [0.952, 2.046, 0.843] # current base position
+base_position: [0.852, 2.046, 0.843] # currrent position
+
 base_orient_eulerXYZ: [0.629, 0.349, -171.913]
 
-# used for all the experiments
-init_position: [-7., 90., -110., 75., -47., 50., -20.]
+
+# init_position: [ -20., -45., 70., -70., 90., -40., 20.]
+
+init_position: [ -100., -75., 120., 90., 100., -70., -90.]
+
+
+
 
 
 sensors:
