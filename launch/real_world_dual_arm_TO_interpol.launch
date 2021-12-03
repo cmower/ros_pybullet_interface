@@ -114,7 +114,7 @@
   <!-- Testing node trajectory publisher -->
   <node name="test_dual_arm_capturing_obj3D"
       pkg="ros_pybullet_interface"
-      type="test_dual_arm_catching_SwingObject.py"
+      type="test_dual_arm_catching_FlyingObject.py"
       output="screen">
 
       <!-- type="test_dual_arm_capturing_prediction.py" -->
