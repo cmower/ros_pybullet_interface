@@ -24,12 +24,9 @@ from py_pack import hybridto_dac_so as HybridTO
 from nav_msgs.msg import Odometry
 
 NEW_TRAJ_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
-# NEW_TRAJ_Yin_TOPIC = 'ros_pybullet_interface/end_effector/traj' # publishes end-effector planned trajectory on this topic
 STIFFNESS_TOPIC = 'ros_pybullet_interface/end_effector/stiffness' # publishes end-effector planned trajectory on this topic
-# STIFFNESS_Yin_TOPIC = 'ros_pybullet_interface/end_effector/stiffness' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_OBJ_TOPIC = 'ros_pybullet_interface/object/traj' # publishes end-effector planned trajectory on this topic
 NEW_TRAJ_PRED_OBJ_TOPIC = 'ros_pybullet_interface/object/predtraj' # publishes end-effector planned trajectory on this topic
-
 
 
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
@@ -259,8 +256,8 @@ class PlanInterpWithTO:
             # trick to smooth the motion
             np_initEEAttYang_Quat = np.array(initEEAttYang_Quat)
             np_initEEAttYin_Quat = np.array(initEEAttYin_Quat)
-            posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat, np_initEEAttYin_Quat)).T
-            posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat,np_initEEAttYang_Quat)).T
+            # posLimb1Array[3:7, 0:2] = np.vstack((np_initEEAttYin_Quat, np_initEEAttYin_Quat)).T
+            # posLimb2Array[3:7, 0:2] = np.vstack((np_initEEAttYang_Quat,np_initEEAttYang_Quat)).T
 
 
 
