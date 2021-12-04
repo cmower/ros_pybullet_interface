@@ -10,6 +10,7 @@ base_position: [-1.469, 2.097, 0.857] # new base position for throwing
 base_orient_eulerXYZ: [0.253, 0.630, -24.908]
 
 # init_position: [ 0., -40., -50., -80., -90., -50., 0.]
+
 init_position: [ -80., 70., -115., -80., 90., -75., 90.]
 
 

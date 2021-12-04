@@ -9,6 +9,10 @@ use_fixed_base: True
 base_position: [-1.469, 2.097, 0.857]
 base_orient_eulerXYZ: [0.253, 0.630, -24.908]
 
+# flying
+base_position: [-1.45, 2.066, 0.866]
+base_orient_eulerXYZ: [0.253, 0.630, -24.908]
+
 # from sim
 # init_position: [ 0., -40., -50., -80., -90., -50., 0.]
 

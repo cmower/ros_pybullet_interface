@@ -554,42 +554,55 @@ if __name__=='__main__':
     if objectState == "Flying":
         if ori_representation == "euler":
             # euler representation initialization #
-            initObjPos = np.array([-0.2, 0.0, 1.7, 0, 0, 0])
+            # initObjPos = np.array([-0.3, 0.0, 1.7, 0, 0, 0])
+            initObjPos = np.array([-0.23, 0.3, 2.0, -0.0, 0, 0])
+
+            # initObjPos = np.array([-0.2, 0.3, 2.2, -0.0, 0, 0])
+            # initObjPos = np.array([-0.25, 0.3, 2.1, -0.0, 0, 0])
+
             pos = initObjPos[0:3]
             quat = R.from_euler('ZYX', initObjPos[3:6]).as_quat()
 
-        initObjVel = np.array([0, 2.9, 3.0, 0.0, 0.0, 0.0])
+        # initObjVel = np.array([0, 2.9, 3.0, 0.0, 0.0, 0.0])
+        # initObjVel = np.array([0, 3.0, 1.0, 0.0, 0.0, 0.0])
+        initObjVel = np.array([0, 2.575, 2.2, 0.0, 0.0, 0.0])
+
+        # initObjVel = np.array([0, 2.5, 1.0, 0.0, 0.0, 0.0])
+
+
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
 
     # get object and robot state from pybullet
     print("Manual initial pose", initObjPos)
     initObjPos, initObjVel = Initials.startEstimation()
 
-    # positive rotation filters
-    # pos_low = np.array([-0.33,  0.2,  0.94, -1.2, -0.9, -0.4])
-    # pos_high = np.array([-0.2,  0.36,  1.0, -1.0, -0.6, -0.2])
-    # vel_low = np.array([0.0,  0.1,  -0.2, -1.25, 0.35, 0.95])
-    # vel_high = np.array([0.15,  0.4, -0.08, 0.12, 1.0, 1.2])
+    # throw rocket filters
+    pos_low = np.array([-0.28,  0.25,  1.9, -0.5, -0.15, -0.15])
+    pos_high = np.array([-0.19,  0.35,  2.1, 0.5, 0.15, -0.15])
+    vel_low = np.array([-0.05,  2.5,  2.1, -1.0, -0.1, -0.1])
+    vel_high = np.array([0.05,  2.6,  2.2, 1.0, 0.1, 0.1])
 
-    # pos_test = np.logical_and(initObjPos > pos_low, initObjPos < pos_high)
-    # res_pos = pos_test.all()
-    # vel_test = np.logical_and(initObjVel > vel_low, initObjVel < vel_high)
-    # res_vel = vel_test.all()
+    pos_test = np.logical_and(initObjPos > pos_low, initObjPos < pos_high)
+    res_pos = pos_test.all()
+    vel_test = np.logical_and(initObjVel > vel_low, initObjVel < vel_high)
+    res_vel = vel_test.all()
 
     # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
 
-    # if (res_pos==False):
-    #     print("Position test ", pos_test)
-    #     print("too big difference in position ----------------------!!!!!!!!!!")
-    #     exit()
-    #
-    # if (res_vel==False):
-    #     print("Velocity test ", vel_test)
-    #     print("too big difference in velocity ----------------------!!!!!!!!!!")
-    #     exit()
+    if (res_pos==False):
+        print("Position test ", pos_test)
+        print("too big difference in position ----------------------!!!!!!!!!!")
+        exit()
 
+    if (res_vel==False):
+        print("Velocity test ", vel_test)
+        print("too big difference in velocity ----------------------!!!!!!!!!!")
+        exit()
+
+    initObjPos[3] = 0.0
+    initObjVel[3] = 0.0
 
 
     # if LA.norm(initObjVel[-1]) >= 0.15:
