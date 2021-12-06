@@ -227,8 +227,8 @@ class PlanInterpWithTO:
 
         # get initial guess
         self.xInit = self.HybOpt_DAC.buildInitialGuess()
-        # with open(self.initFile, 'rb') as f:
-        #     self.xInit = np.load(f)
+        with open(self.initFile, 'rb') as f:
+            self.xInit = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel, normVector, cntPntVector, initEEAttYang_Quat, initEEAttYin_Quat):
@@ -238,12 +238,12 @@ class PlanInterpWithTO:
                                                           self.initArmEEPos1, self.minArmEEPos1, self.maxArmEEPos1,
                                                           self.initArmEEPos2, self.minArmEEPos2, self.maxArmEEPos2, normVector)
 
-        solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector, cntPntVector)
+        # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector, cntPntVector)
 
         # solFlag, xSolution = self.HybOpt_DAC.solveProblem(self.HybProb_warmstart, self.xInit, lbx, ubx, lbg, ubg, cf, gf, normVector)
 
-        # solFlag = True
-        # xSolution = self.xInit
+        solFlag = True
+        xSolution = self.xInit
 
         # decode solution
         if (solFlag):
@@ -333,8 +333,8 @@ class PredictionWithTO():
 
         # initialize the optimization
         self.xInit_SRB = self.HybOpt3D_SRB.buildInitialGuess()
-        # with open(self.initFile, 'rb') as f:
-        #     self.xInit_SRB = np.load(f)
+        with open(self.initFile, 'rb') as f:
+            self.xInit_SRB = np.load(f)
 
 
     def solveTO(self, initObjPos, initObjVel):
@@ -345,14 +345,14 @@ class PredictionWithTO():
         start_time = time.time()
 
         # solve problem
-        preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
+        # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
         # with open(self.initFile, 'wb') as f:
         #     np.save(f, np.array(xSolution))
 
 
-        # preFlag  = True
-        # xSolution = self.xInit_SRB
+        preFlag  = True
+        xSolution = self.xInit_SRB
 
         # preFlag, xSolution = self.HybOpt3D_SRB.solveProblem(self.HybProb_warmstart, self.xInit_SRB, lbx, ubx, lbg, ubg, cf, gf)
 
@@ -569,40 +569,74 @@ if __name__=='__main__':
 
         # initObjVel = np.array([0, 2.5, 1.0, 0.0, 0.0, 0.0])
 
-
         lin_vel = initObjVel[0:3];        ang_vel = initObjVel[3:6]
+
+
+
+
+
+    # initObjPos = np.array([-0.20379008,  0.37519876,  2.0803758,  -0.05164828,  0.08298046, -0.10534183])
+    # initObjVel = np.array([ 0.13194159,  2.57259915,  1.74171117, -1.14626296, -0.15799459,  0.27280272])
+
+    initObjPos = np.array([-0.23083404,  0.31613635,  2.03795898, -0.04208222,  0.10128646,  0.03117264])
+    initObjVel = np.array([-0.03966354,  2.8114304,  1.71645929,  0.68803325, -0.29725447,  0.06570437])
+
+    # initObjPos = np.array([-0.25264935  0.355027    2.05306286  0.00973293  0.06739238 -0.02283714])
+# The estimated velocity of the object is : [-0.08697676  2.73994377  2.04167431 -0.14712662 -0.15309023  0.35696196]
+
+
+    # # a bit problem
+    # initObjPos = np.array([-0.23524875,  0.17735431 , 1.98116529, -0.01516898 , 0.11143892 , -0.13116316])
+    # initObjVel = np.array([-0.01956922 , 2.6028363  , 2.08061164 , 0.54867526 , 0.26333511 , 0.2422745])
+
+    # a bit problem
+    # initObjPos = np.array([-0.22355107,  0.23319279,  2.07365782, -0.0183553 ,  0.12210406, -0.02764792])
+    # initObjVel = np.array([-0.02715281,  2.45943634,  1.79575928,  0.45168501, -0.30703183,  0.63197129])
+
+#  good real throw
+#     [-0.23083404  0.31613635  2.03795898 -0.04208222  0.10128646  0.03117264]
+# The estimated velocity of the object is : [-0.03966354  2.8114304   1.71645929  0.68803325 -0.29725447  0.06570437]
+
+
+# The estimated pose of the object is : [-0.22828015 -0.26448975  2.11832603 -0.10442849  0.09758272  0.01223592]
+# The estimated velocity of the object is : [ 0.03140965  3.27524396  1.84822477 -1.38938265 -0.08415117  0.68243061]
+
+
 
     # get object and robot state from pybullet
     print("Manual initial pose", initObjPos)
     initObjPos, initObjVel = Initials.startEstimation()
-
-    # throw rocket filters
-    pos_low = np.array([-0.28,  0.25,  1.9, -0.5, -0.15, -0.15])
-    pos_high = np.array([-0.19,  0.35,  2.1, 0.5, 0.15, -0.15])
-    vel_low = np.array([-0.05,  2.5,  2.1, -1.0, -0.1, -0.1])
-    vel_high = np.array([0.05,  2.6,  2.2, 1.0, 0.1, 0.1])
-
+    #
+    # # throw rocket filters
+    pos_low = np.array([-5.28,  -5.25,  0.0, -1.5, -0.2, -0.8])
+    pos_high = np.array([5.20,  5.40,  5.1, 1.5, 0.2, 0.8])
+    vel_low = np.array([-5.15,  -5.2,  -5.5, -2.5, -0.75, -0.5])
+    vel_high = np.array([5.15,  5.9,  5.1, 2.5, 0.75, 0.5])
+    #
     pos_test = np.logical_and(initObjPos > pos_low, initObjPos < pos_high)
     res_pos = pos_test.all()
     vel_test = np.logical_and(initObjVel > vel_low, initObjVel < vel_high)
     res_vel = vel_test.all()
-
-    # initObjPos = np.array([-0.31106787,  0.52606625,  0.87664543, -0.03160829,  0.0184077,  -0.51332673])
+    #
     print("The estimated pose of the object is :", initObjPos)
     print("The estimated velocity of the object is :", initObjVel)
-
+    #
     if (res_pos==False):
         print("Position test ", pos_test)
         print("too big difference in position ----------------------!!!!!!!!!!")
         exit()
-
+    #
     if (res_vel==False):
         print("Velocity test ", vel_test)
         print("too big difference in velocity ----------------------!!!!!!!!!!")
         exit()
 
-    initObjPos[3] = 0.0
-    initObjVel[3] = 0.0
+
+    # initObjPos[0] = 0.25
+    initObjPos[3:] = 0.0
+    initObjVel[3:] = 0.0
+    initObjVel[0] = 0.0
+
 
 
     # if LA.norm(initObjVel[-1]) >= 0.15:
@@ -647,7 +681,7 @@ if __name__=='__main__':
 
     if commandFlag == True:
 
-        scaling_ratio = 0.0 #1.0
+        scaling_ratio = 0.1
         # # update the robot trajectory according to the force and stiffness
         delta_x1 = scaling_ratio*forLimb1[0, :]/stiffnessArray[0,-1]
         delta_x2 = scaling_ratio*forLimb2[0, :]/stiffnessArray[1,-1]
@@ -661,8 +695,17 @@ if __name__=='__main__':
 
 
         # manual adaptation
-        # posLimb1[0, :] += -0.01
-        # posLimb2[0, :] += 0.01
+        posLimb1[0, -2:] += -0.01
+        posLimb2[0, -2:] += 0.01
+
+        # cliped_posLimb1 = np.array(posLimb1[2, :])
+        # np.clip(np.array(posLimb1[2, :]), 1.39, 2.6, out=cliped_posLimb1)
+        #
+        # cliped_posLimb2 = np.array(posLimb2[2, :])
+        # np.clip(np.array(posLimb2[2, :]), 1.39, 2.6, out=cliped_posLimb2)
+        #
+        # posLimb1[2, :] = cliped_posLimb1
+        # posLimb2[2, :] = cliped_posLimb2
 
         # fix stiffness
         # stiffnessArray[:,:] = 1600
@@ -677,7 +720,7 @@ if __name__=='__main__':
         # stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
         # stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
         #
-        stiffnes_ratio = 0.5
+        stiffnes_ratio = 1.2
         stiffnessYangSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[0,-1], stiffnes_ratio*stiffnessArray[0,:])), stiffnes_ratio*stiffnessArray[0,-1])).reshape(((1, 4)))
         stiffnessYinSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[1,-1], stiffnes_ratio*stiffnessArray[1,:])), stiffnes_ratio*stiffnessArray[1,-1])).reshape(((1, 4)))
         stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
@@ -708,9 +751,10 @@ if __name__=='__main__':
 
     print('Computation time:', time.time()-start_time)
 
+    time.sleep(0.1)
 
     # activate streaming of commands
-    initIndex = initIndex-10#10 #9 #6 #5
+    initIndex = initIndex-15#10 #9 #6 #5
     # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
     if True:
         # stream the interpolated data or not
