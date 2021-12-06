@@ -20,6 +20,13 @@
         '{rpbi_work}/configs/nextage_sliding_box.yaml',
         ]
     </rosparam>
+    <!-- node names -->
+    <rosparam param="setup">
+        [
+        '{rpbi_work}/configs/nextage_sim_setup.yaml',
+        <!-- '{rpbi_work}/configs/nextage_real_setup.yaml', -->
+        ]
+    </rosparam>
     <!-- Sys dyn param -->
     <rosparam param="sliding_param_dyn">
         [

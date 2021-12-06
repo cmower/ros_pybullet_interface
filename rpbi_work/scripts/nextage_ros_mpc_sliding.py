@@ -25,23 +25,12 @@ CMD_DOF = 7
 GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 1., 0.],
                           [0., 0., 1.]])
-ROBOT_HEIGHT = 0.73
-VISUAL_OBJ_HEIGHT = 0.8
+ROBOT_HEIGHT = 0.75
+VISUAL_OBJ_HEIGHT = 0.73
 OBJECT_TARGET_FRAME_ID = "rpbi_work/nextage_sliding_box_visual"  # visual box
 WORLD_FRAME = "rpbi/world"
 SHOW_NOM_FLAG = False
 RUN_FREQ = 50
-
-OBJECT_NAME_SIM = "rpbi/pushing_box"  # real box
-ROBOT_NAME_SIM = "rpbi/nextage/REND_EFFECTOR_finger"
-END_EFFECTOR_TARGET_FRAME_ID_SIM = 'right_hand_goal' # listens for end-effector poses on this topic
-OBSTACLE_NAME_SIM = "rpbi/cylinder_obs"
-
-OBJECT_NAME_REAL = "vicon_offset/pushing_box_wood/pushing_box_wood"
-ROBOT_NAME_REAL = "nextage/ros_pybullet_interface/robot/REND_EFFECTOR_finger"
-END_EFFECTOR_TARGET_FRAME_ID_REAL = 'LWR_visual/ros_pybullet_interface/end_effector/target' # listens for end-effector poses on this
-OBSTACLE_NAME_REAL = "vicon_offset/pushing_obs_cyl_1/pushing_obs_cyl_1"
-
 
 class ROSSlidingMPC:
 
@@ -66,24 +55,14 @@ class ROSSlidingMPC:
         # Save variable for time
         self.comp_time_plot = []
 
-        self.real_setup=False
-        # check if the real_setup param exists
-        if rospy.has_param('~real_setup'):
-            self.real_setup = rospy.get_param('~real_setup')
-        else:
-            rospy.logerr(f"The real_setup parameter is not set in {rospy.get_name()}")
-            sys.exit(0)
-
-        if self.real_setup:
-            self.robot_name = ROBOT_NAME_REAL
-            self.end_effector_target_frame_id = END_EFFECTOR_TARGET_FRAME_ID_REAL
-            self.object_name = OBJECT_NAME_REAL
-            self.obstacle_name = OBSTACLE_NAME_REAL
-        else:
-            self.robot_name = ROBOT_NAME_SIM
-            self.end_effector_target_frame_id = END_EFFECTOR_TARGET_FRAME_ID_SIM
-            self.object_name = OBJECT_NAME_SIM
-            self.obstacle_name = OBSTACLE_NAME_SIM
+        # nodes and tfs setup
+        setup_file_name = rospy.get_param('~setup', [])[0]
+        setup_config = load_config(setup_file_name)
+        self.real_setup = setup_config['real_setup']
+        self.robot_name = setup_config['robot_name']
+        self.end_effector_target_frame_id = setup_config['end_effector_target_frame_id']
+        self.object_name = setup_config['object_name']
+        self.obstacle_name = setup_config['obstacle_name']
 
         # Loop till the pos and ori of the object has been read.
         while 1:
@@ -336,7 +315,7 @@ class ROSSlidingMPC:
             # np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
             rospy.signal_shutdown("End of nominal trajectory")
         else:
-            input()
+            # input()
             pass
 
         if not self.real_setup:
