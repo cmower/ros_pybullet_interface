@@ -113,6 +113,6 @@
 	args="0 0 -0.1 0 0 0 table_top table"/> <!-- DO NOT EDIT THIS -->
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="obs_tf_broadcaster"
-      args="0.5 0.3 0.7 0 0 0 rpbi/world rpbi/cylinder_obs"/> <!-- DO NOT EDIT THIS -->
+      args="0.5 0.3 0.73 0 0 0 rpbi/world rpbi/cylinder_obs"/> <!-- DO NOT EDIT THIS -->
 
 </launch>

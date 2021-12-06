@@ -1,6 +1,6 @@
 name: "pushing_box"
 base_mass: 1
-init_position: [0.425, -0.25, 0.735]
+init_position: [0.405, -0.25, 0.735]
 init_base_orient_eulerXYZ: [0, 0, 0]
 init_linear_velocity: [0, 0, 0]
 init_angular_velocity: [0, 0, 0]
