@@ -578,8 +578,8 @@ if __name__=='__main__':
     # initObjPos = np.array([-0.20379008,  0.37519876,  2.0803758,  -0.05164828,  0.08298046, -0.10534183])
     # initObjVel = np.array([ 0.13194159,  2.57259915,  1.74171117, -1.14626296, -0.15799459,  0.27280272])
 
-    initObjPos = np.array([-0.23083404,  0.31613635,  2.03795898, -0.04208222,  0.10128646,  0.03117264])
-    initObjVel = np.array([-0.03966354,  2.8114304,  1.71645929,  0.68803325, -0.29725447,  0.06570437])
+    # initObjPos = np.array([-0.23083404,  0.31613635,  2.03795898, -0.04208222,  0.10128646,  0.03117264])
+    # initObjVel = np.array([-0.03966354,  2.8114304,  1.71645929,  0.68803325, -0.29725447,  0.06570437])
 
     # initObjPos = np.array([-0.25264935  0.355027    2.05306286  0.00973293  0.06739238 -0.02283714])
 # The estimated velocity of the object is : [-0.08697676  2.73994377  2.04167431 -0.14712662 -0.15309023  0.35696196]
@@ -598,8 +598,18 @@ if __name__=='__main__':
 # The estimated velocity of the object is : [-0.03966354  2.8114304   1.71645929  0.68803325 -0.29725447  0.06570437]
 
 
-# The estimated pose of the object is : [-0.22828015 -0.26448975  2.11832603 -0.10442849  0.09758272  0.01223592]
-# The estimated velocity of the object is : [ 0.03140965  3.27524396  1.84822477 -1.38938265 -0.08415117  0.68243061]
+    initObjPos = np.array([-0.22828015, -0.26448975,  2.11832603, -0.10442849,  0.09758272,  0.01223592])
+    # initObjVel = np.array([0.03140965, 3.27524396, 1.84822477, -1.38938265, -0.08415117,  0.68243061])
+    initObjVel = np.array([0.03140965, 3.47524396, 2.084822477, -1.38938265, -0.08415117,  0.68243061])
+
+    initObjPos = np.array([-0.25828015, -0.27448975,  2.0832603, -0.10442849,  0.09758272,  0.01223592])
+    initObjVel = np.array([0.03140965, 3.427524396, 1.90822477, -1.38938265, -0.08415117,  0.68243061])
+    # initObjVel = np.array([0.03140965, 3.67524396, 1.94822477, -1.38938265, -0.08415117,  0.68243061])
+
+    #  actual catch experiment
+    #  The estimated pose of the object is : [-0.24689412 -0.27604748  2.15454411 -0.0350731   0.0783942   0.07418218]
+    #  The estimated velocity of the object is : [-0.10572191  3.30840948  2.46340422 -0.04555616 -0.29957679  0.21852897]
+    #  Time till activation of execution: 0.1206216812133789
 
 
 
@@ -610,8 +620,8 @@ if __name__=='__main__':
     # # throw rocket filters
     pos_low = np.array([-5.28,  -5.25,  0.0, -1.5, -0.2, -0.8])
     pos_high = np.array([5.20,  5.40,  5.1, 1.5, 0.2, 0.8])
-    vel_low = np.array([-5.15,  -5.2,  -5.5, -2.5, -0.75, -0.5])
-    vel_high = np.array([5.15,  5.9,  5.1, 2.5, 0.75, 0.5])
+    vel_low = np.array([-5.15,  2.9,  1.7, -2.5, -0.75, -0.85])
+    vel_high = np.array([5.15,  5.9,  5.1, 2.5, 0.75, 0.85])
     #
     pos_test = np.logical_and(initObjPos > pos_low, initObjPos < pos_high)
     res_pos = pos_test.all()
@@ -693,10 +703,27 @@ if __name__=='__main__':
         # print("delta_x1 x position:", delta_x1[0., :])
         # print("delta_x2 x position:", delta_x2[0., :])
 
-
         # manual adaptation
-        posLimb1[0, -2:] += -0.01
-        posLimb2[0, -2:] += 0.01
+
+        # further distant
+        posLimb1[0, 1] += 0.1
+        posLimb2[0, 1] += -0.1
+        posLimb1[0, 2] += 0.06
+        posLimb2[0, 2] += -0.06
+        posLimb1[0, 3] += 0.03
+        posLimb2[0, 3] += -0.03
+
+        # deeper
+        posLimb1[0, 4] += -0.0
+        posLimb2[0, 4] += 0.0
+
+        posLimb1[0, 5] += -0.005
+        posLimb2[0, 5] += 0.005
+        posLimb1[0, 6] += -0.01
+        posLimb2[0, 6] += 0.01
+        posLimb1[0, 7] += -0.015
+        posLimb2[0, 7] += 0.015
+
 
         # cliped_posLimb1 = np.array(posLimb1[2, :])
         # np.clip(np.array(posLimb1[2, :]), 1.39, 2.6, out=cliped_posLimb1)
@@ -714,13 +741,13 @@ if __name__=='__main__':
         trajObjPlan = np.vstack((np.vstack((timeSeq, posBody)), velBody))
         trajYangPlan = np.vstack((np.vstack((timeSeq, posLimb1)), velLimb1))
         trajYinPlan = np.vstack((np.vstack((timeSeq, posLimb2)), velLimb2))
-        print("force when making contact", forLimb1[0, ncf-1], forLimb1[0, ntf-1], forLimb1[0, -1])
-        print("force when making contact", forLimb2[0, ncf-1], forLimb2[0, ntf-1], forLimb2[0, -1])
+        # print("force when making contact", forLimb1[0, ncf-1], forLimb1[0, ntf-1], forLimb1[0, -1])
+        # print("force when making contact", forLimb2[0, ncf-1], forLimb2[0, ntf-1], forLimb2[0, -1])
         stiffTimeSeq = np.array([timeSeq[0], timeSeq[ncf-1]-0.0, timeSeq[ntf-1], timeSeq[-1]])
         # stiffnessYangSeq = np.hstack((np.hstack((stiffnessArray[0,-1], stiffnessArray[0,:])), stiffnessArray[0,-1])).reshape(((1, 4)))
         # stiffnessYinSeq = np.hstack((np.hstack((stiffnessArray[1,-1], stiffnessArray[1,:])), stiffnessArray[1,-1])).reshape(((1, 4)))
         #
-        stiffnes_ratio = 1.2
+        stiffnes_ratio = 1.0
         stiffnessYangSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[0,-1], stiffnes_ratio*stiffnessArray[0,:])), stiffnes_ratio*stiffnessArray[0,-1])).reshape(((1, 4)))
         stiffnessYinSeq = np.hstack((np.hstack((stiffnes_ratio*stiffnessArray[1,-1], stiffnes_ratio*stiffnessArray[1,:])), stiffnes_ratio*stiffnessArray[1,-1])).reshape(((1, 4)))
         stiffnessYangPlan = np.vstack((stiffTimeSeq, stiffnessYangSeq))
@@ -754,7 +781,7 @@ if __name__=='__main__':
     time.sleep(0.1)
 
     # activate streaming of commands
-    initIndex = initIndex-15#10 #9 #6 #5
+    # initIndex = initIndex-60 #15#10 #9 #6 #5
     # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
     if True:
         # stream the interpolated data or not

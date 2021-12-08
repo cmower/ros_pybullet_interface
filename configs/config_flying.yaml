@@ -13,7 +13,7 @@ object:
   slackObjPos: [0.2, 2.2, 0.1, 3.14, 3.14, 3.14]
   slackObjVel: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
   # reducedNode: 23 # 25 #40 #37
-  reducedNode: 26 #27 # 35 #37
+  reducedNode: 23 #26 #27 # 35 #37
 
 
 robotYin:
