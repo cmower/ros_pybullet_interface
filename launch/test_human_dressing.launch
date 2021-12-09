@@ -1,5 +1,10 @@
 <launch>
 
+  <arg name="robot_name" default="yin"/>
+
+  <!-- This node is used for the generation of the trajectory
+  by interpolation with a cubic spline. The cubic spline passes
+  from a set of waypoints that are provided from another node (see below)  -->
   <node
       name="ros_traj_consum_interpol_interface_Yin"
       pkg="ros_pybullet_interface"
@@ -14,7 +19,7 @@
 
     <param
       name="robot_name"
-      value="yin_visual"
+      value="$(arg robot_name)"
       type="str"/>
 
   </node>
@@ -22,6 +27,9 @@
 
   <arg name="dress" default="false"/>
 
+  <!-- This node is used for the generation of the waypoints of the trajectory.
+       if dress is true, these waypoints are extracted from the human body and
+       they match the wrist, elbow and shoulder position -->
   <group if="$(arg dress)">
     <!-- Testing node trajectory publisher -->
     <node name="test_human_dressing_motion"
@@ -31,15 +39,18 @@
 
        <param
           name="robot_name"
-          value="yin_visual"
+          value="$(arg robot_name)"
           type="str"/>
 
     </node>
 
   </group>
 
+  <!-- This node is used for the generation of the waypoints of the trajectory.
+       if dress is false, these waypoints are extracted set manually such that
+       the robot's end_effector goes to a prespecified location -->
   <group unless="$(arg dress)">
-    <!-- Testing node trajectory publisher -->
+
     <node name="test_move_robot_to_initial_for_dress"
         pkg="ros_pybullet_interface"
         type="test_move_robot_to_initial_dressing_motion.py"
@@ -47,7 +58,7 @@
 
        <param
           name="robot_name"
-          value="yin_visual"
+          value="$(arg robot_name)"
           type="str"/>
 
     </node>

@@ -158,32 +158,32 @@ class ROSPyBulletInterface:
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
-        # ----------------------------------------------------------------------
-        # control the avatar via the points on the right wrist and elbow
-        human_body_id = self.robots[-1]['robot'].ID
-        human_link_id_shoulder = self.robots[-1]['robot'].link_ids[17]
-        human_link_id_elbow = self.robots[-1]['robot'].link_ids[19]
-        human_link_id_hand = self.robots[-1]['robot'].link_ids[21]
-
-        shoulder = self.dynamic_collisionvisual_objects[-4]['object'].ID
-        elbow = self.dynamic_collisionvisual_objects[-3]['object'].ID
-        hand = self.dynamic_collisionvisual_objects[-2]['object'].ID
-
-        pp = pybullet_interface.getPybulletObject_hack()
-
-        constraint_id_shoulder = pp.createConstraint(human_body_id, human_link_id_shoulder, shoulder, -1, pp.JOINT_POINT2POINT,
-                                                     [0, 0, 0], [0, 0, 0.0], [0, -0.0, -0.0])
-        pp.changeConstraint(constraint_id_shoulder, erp=1.0, maxForce=1500)
-
-        offset = -0.025*0
-        constraint_id_elbow = pp.createConstraint(human_body_id, human_link_id_elbow, elbow, -1, pp.JOINT_POINT2POINT,
-                                                  [0, 0, 0], [0, 0, 0.0], [0, -0.0, offset])
-        pp.changeConstraint(constraint_id_elbow, erp=0.75, maxForce=750)
-        constraint_id_hand = pp.createConstraint(human_body_id, human_link_id_hand, hand, -1, pp.JOINT_POINT2POINT,
-                                                 [0, 0, 0], [0, 0, 0], [0, -0.0, offset])
-        pp.changeConstraint(constraint_id_hand, erp=0.75, maxForce=750)
-
-        rospy.Subscriber("ros_pybullet_interface/zono_info", WrenchStamped, self.moveAndRescaleObj)
+        # # ----------------------------------------------------------------------
+        # # control the avatar via the points on the right wrist and elbow
+        # human_body_id = self.robots[-1]['robot'].ID
+        # human_link_id_shoulder = self.robots[-1]['robot'].link_ids[17]
+        # human_link_id_elbow = self.robots[-1]['robot'].link_ids[19]
+        # human_link_id_hand = self.robots[-1]['robot'].link_ids[21]
+        #
+        # shoulder = self.dynamic_collisionvisual_objects[-4]['object'].ID
+        # elbow = self.dynamic_collisionvisual_objects[-3]['object'].ID
+        # hand = self.dynamic_collisionvisual_objects[-2]['object'].ID
+        #
+        # pp = pybullet_interface.getPybulletObject_hack()
+        #
+        # constraint_id_shoulder = pp.createConstraint(human_body_id, human_link_id_shoulder, shoulder, -1, pp.JOINT_POINT2POINT,
+        #                                              [0, 0, 0], [0, 0, 0.0], [0, -0.0, -0.0])
+        # pp.changeConstraint(constraint_id_shoulder, erp=1.0, maxForce=1500)
+        #
+        # offset = -0.025*0
+        # constraint_id_elbow = pp.createConstraint(human_body_id, human_link_id_elbow, elbow, -1, pp.JOINT_POINT2POINT,
+        #                                           [0, 0, 0], [0, 0, 0.0], [0, -0.0, offset])
+        # pp.changeConstraint(constraint_id_elbow, erp=0.75, maxForce=750)
+        # constraint_id_hand = pp.createConstraint(human_body_id, human_link_id_hand, hand, -1, pp.JOINT_POINT2POINT,
+        #                                          [0, 0, 0], [0, 0, 0], [0, -0.0, offset])
+        # pp.changeConstraint(constraint_id_hand, erp=0.75, maxForce=750)
+        #
+        # rospy.Subscriber("ros_pybullet_interface/zono_info", WrenchStamped, self.moveAndRescaleObj)
 
         # ----------------------------------------------------------------------
         # load cloth and set constraint between robot and cloth

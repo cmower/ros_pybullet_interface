@@ -1,6 +1,7 @@
 <launch>
 
   <!-- Launch ROS-PyBullet interface node -->
+  <!-- This node is spawns the simulation environment where all robots, humans and object leave -->
   <node
       name="ros_pybullet_interface"
       pkg="ros_pybullet_interface"
@@ -33,7 +34,7 @@
          value="-9.81"
          type="double"/>
 
-    <!-- Robot config (required) -->
+    <!-- Robot config (required) and human  -->
     <rosparam param="robot_config_file_names">
       [
       "{ros_pybullet_interface}/configs/yin_human.yaml",
@@ -74,7 +75,10 @@
 
   </node>
 
-  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <!--  (receiver - publisher) -->
+  <!-- This node is responsible for the IK computation of the robot
+       it receives end_effector position and or orienation and
+        publishes the joint angles of the robot -->
   <node
       name="ros_IK_interface"
       pkg="ros_pybullet_interface"
@@ -88,45 +92,12 @@
 
   </node>
 
-  <node
-      name="ros_traj_consum_interpol_interface_Yin"
-      pkg="ros_pybullet_interface"
-      type="ros_traj_consum_interpol_interface_node.py"
-      output="screen">
 
-    <!-- Traj config (required) -->
-    <param
-        name="traj_config"
-        value="{ros_pybullet_interface}/configs/traj_yin.yaml"
-        type="str"/>
-
-    <param
-      name="robot_name"
-      value="yin"
-      type="str"/>
-
-  </node>
-
-  <!-- Passive human -->
+  <!-- Passive human, not used for the moment -->
   <!-- <node name="passive_human"
       pkg="ros_pybullet_interface"
       type="make_human_passive.py"
       output="screen">
   </node> -->
-
-
-  <!-- Testing node trajectory publisher -->
-  <node name="test_human_dressing_motion"
-      pkg="ros_pybullet_interface"
-      type="test_human_dressing_motion.py"
-      output="screen">
-
-     <param
-        name="robot_name"
-        value="yin"
-        type="str"/>
-
-  </node>
-
 
 </launch>
