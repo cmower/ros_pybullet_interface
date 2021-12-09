@@ -22,7 +22,7 @@ rarm_id = [
     'RARM_JOINT4',
     'RARM_JOINT5',
 ]
-    
+
 torso_id = ['CHEST_JOINT0']
 
 head_id = [
@@ -58,7 +58,7 @@ class Node:
 
         # Setup qgoal
         self.qgoal = numpy.zeros(ndof)
-        
+
         # Set rate
         self.rate = rospy.Rate(self.hz)
         time.sleep(1.0)  # leave time for remapper to setup
@@ -84,7 +84,7 @@ class Node:
             qtarg = self.qgoal*a + (1-a)*self.qcurr
             self.publish_joint_state(qtarg)
             rospy.loginfo('moving nextage to home state [%.2f\%]', 100.0*a)
-            self.rate.sleep()                        
+            self.rate.sleep()
         rospy.loginfo('nextage reached goal configuration')
 
     def publish_joint_state(self, q):

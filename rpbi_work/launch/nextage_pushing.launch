@@ -16,6 +16,8 @@
       ]
     </rosparam>
 
+    <remap from="/rpbi/nextage_visual/joint_state/target" to="/nextagea/joint_states"/>
+
     <!-- <remap from="/rpbi/nextage/joint_state" to="/fullbody_controller/command"/> -->
     <!-- <remap from="/rpbi/nextage/joint_state" to="/nextagea/rarm_controller/command"/> -->
 
@@ -35,6 +37,7 @@
     <!-- Visual robot -->
     <rosparam param="visual_robot_config_file_names">
       [
+      "{rpbi_work}/configs/nextage_visual.yaml",
       ]
     </rosparam>
 

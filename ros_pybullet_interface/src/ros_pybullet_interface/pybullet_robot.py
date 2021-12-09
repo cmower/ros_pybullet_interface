@@ -172,6 +172,10 @@ class _PybulletRobotBase(PybulletObject):
             flags=self.pb.URDF_USE_MATERIAL_COLORS_FROM_MTL,
         )
 
+    def set_joint_state(self, position):
+        for p, j in zip(position, self.active_joints):
+            self.pb.resetJointState(self.body_unique_id, j.index, p)
+
     def target_joint_state_callback(self, msg):
         self.target_joint_state = msg.position
 
@@ -210,8 +214,7 @@ class PybulletRobot(_PybulletRobotBase):
 
         # Set initial joint state
         init_position = numpy.deg2rad(self.config.get('init_position', [0.0]*len(self.active_joints))).tolist()
-        for p, j in zip(init_position, self.active_joints):
-            self.pb.resetJointState(self.body_unique_id, j.index, p)
+        self.set_joint_state(init_position)
 
         # Initialize sensor containers
         self.sensors = {}
@@ -290,10 +293,6 @@ class PybulletVisualRobot(_PybulletRobotBase):
 
         # Set initial joint state
         self.joint_state = numpy.deg2rad(self.config.get('init_position', [0.0]*len(self.active_joints))).tolist()
-
-    def set_joint_state(self, position):
-        for p, j in zip(position, self.active_joints):
-            self.pb.resetJointState(self.body_unique_id, j.index, p)
 
     def update(self):
 

@@ -21,6 +21,7 @@ from ros_pybullet_interface.srv import PybulletBodyUniqueIds, PybulletBodyUnique
 from ros_pybullet_interface.srv import PybulletRobotJointInfo, PybulletRobotJointInfoResponse
 from ros_pybullet_interface.srv import CreateDynamicObject, CreateDynamicObjectResponse
 from ros_pybullet_interface.srv import RunCameraBulletTime, RunCameraBulletTimeResponse
+from ros_pybullet_interface.srv import MatchSimToRobot, MatchSimToRobotResponse
 
 class Node:
 
@@ -132,6 +133,7 @@ class Node:
         rospy.Service('pybullet_body_unique_ids', PybulletBodyUniqueIds, self.service_pybullet_body_unique_ids)
         rospy.Service('pybullet_robot_joint_info', PybulletRobotJointInfo, self.service_pybullet_robot_joint_info)
         rospy.Service('run_camera_bullet_time', RunCameraBulletTime, self.service_run_camera_bullet_time)
+        rospy.Service('match_sim_to_robot', MatchSimToRobot, self.service_match_sim_to_robot)
 
         # Create publisher for visualizer image if desired
         self.visualizer_publisher = None
@@ -439,6 +441,20 @@ class Node:
             rospy.logwarn('Failed to run bullet-time!\nReason: %s', info)
 
         return RunCameraBulletTimeResponse(info=info, success=success)
+
+    def service_match_sim_to_robot(self, req):
+        info = ''
+        success = True
+        try:
+            msg = rospy.wait_for_service(req.robot_joint_state_topic, JointState)
+            self.pb_objects[req.robot_name].set_joint_state(msg.position)
+        except Exception as err:
+            success = False
+            exception_type = type(err).__name__
+            msg = str(err)
+            info = f"Exception with type {exception_type} was raised with message: {msg}"
+            rospy.logwarn('Failed to service match_sim_to_robot!\nReason: %s', info)
+        return MatchSimToRobot(info=info, success=success)
 
 def main():
     Node().spin()
