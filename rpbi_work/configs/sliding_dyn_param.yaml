@@ -1,0 +1,12 @@
+#
+# Configuration file for tracking using sliding
+# 
+
+xLenght: 0.09 # [meter]
+yLenght: 0.198 # [meter]
+pusherRadious: 0.016 #  [meter]
+pusherFricCoef: 0.15
+pusherForceLim:  2.5
+pusherAngleVelLim: 5.0
+Kz_max: 50
+Kz_min: 0.1

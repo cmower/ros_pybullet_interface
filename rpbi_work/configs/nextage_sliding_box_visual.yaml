@@ -1,0 +1,14 @@
+name: "pushing_goal"
+base_mass: 1
+object_type: 'box'
+half_extends: [0.045, 0.099, 0.0325]
+rgba_color: [0.1, 0.54, 0.8, 0.5]
+lateral_friction: 0.2
+spinning_friction: 0.0
+rolling_friction: 0.0
+restitution: 0.0
+linear_damping: 0.
+angular_damping: 0.
+contact_stiffness: 10000.0
+contact_damping: 0.7
+tf_frame_id: "rpbi_work/nextage_sliding_box_visual"

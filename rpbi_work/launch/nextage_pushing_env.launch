@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <!-- ROS-Pybullet interface node simulator -->
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py" output="screen">
+
+    <!-- Config file for Pybullet -->
+    <param name="pybullet_config" value="{rpbi_work}/configs/pybullet_nextage_pushing.yaml" type="str"/>
+
+    <!-- Node frequency -->
+    <param name="ros_node_freq" value="100" type="int"/>
+
+    <!-- Simulated robot -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{rpbi_work}/configs/nextage_pushing.yaml",
+      ]
+    </rosparam>
+
+    <!-- Visual robot -->
+    <rosparam param="visual_robot_config_file_names">
+      [
+      ]
+    </rosparam>
+
+    <rosparam param="dynamic_object_config_file_names">
+      [
+      "{rpbi_work}/configs/nextage_sliding_box.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="collision_object_config_file_names">
+      [
+      "{rpbi_work}/configs/floor.yaml",
+      "{rpbi_work}/configs/table_joao.yaml",
+      "{rpbi_work}/configs/nextage_cylinder_obs.yaml",
+      ]
+    </rosparam>
+
+    <rosparam param="visual_object_config_file_names">
+      [
+      "{rpbi_work}/configs/visual_goal_left.yaml",
+      "{rpbi_work}/configs/visual_goal_right.yaml",
+      "{rpbi_work}/configs/nextage_sliding_box_visual.yaml",
+      ]
+    </rosparam>
+
+  </node>
+
+  <!-- ROS-Pybullet interface node simulator -->
+  <!-- <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node_second" type="ros_pybullet_interface_node.py" output="screen"> -->
+
+  <!--   <!-\- Node frequency -\-> -->
+  <!--   <param name="ros_node_freq" value="100" type="int"/> -->
+
+  <!--   <!-\- Simulated robot -\-> -->
+  <!--   <rosparam param="robot_config_file_names"> -->
+  <!--     [ -->
+  <!--     "{rpbi_work}/configs/nextage.yaml", -->
+  <!--     ] -->
+  <!--   </rosparam> -->
+
+  <!--   <!-\- Visual robot -\-> -->
+  <!--   <rosparam param="visual_robot_config_file_names"> -->
+  <!--     [ -->
+  <!--     ] -->
+  <!--   </rosparam> -->
+
+  <!--   <rosparam param="dynamic_object_config_file_names"> -->
+  <!--     [ -->
+  <!--     "{rpbi_work}/configs/pushing_box.yaml", -->
+  <!--     ] -->
+  <!--   </rosparam> -->
+
+  <!--   <rosparam param="collision_object_config_file_names"> -->
+  <!--     [ -->
+  <!--     "{rpbi_work}/configs/floor.yaml", -->
+  <!--     "{rpbi_work}/configs/table.yaml", -->
+  <!--     ] -->
+  <!--   </rosparam> -->
+
+  <!--   <rosparam param="visual_object_config_file_names"> -->
+  <!--     [ -->
+  <!--     "{rpbi_work}/configs/visual_goal_left.yaml", -->
+  <!--     "{rpbi_work}/configs/visual_goal_right.yaml", -->
+  <!--     ] -->
+  <!--   </rosparam> -->
+
+  <!-- Nextage pushing node (teleop) -->
+  <!-- <node pkg="rpbi_work" name="nextage_pushing_node" type="nextage_pushing_node.py" output="screen"/> -->
+
+  <!-- Nextage IK node -->
+  <node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen"/>
+
+  <!-- Target joint state topic translator -->
+  <node pkg="rpbi_work" name="remap_joint_target_state" type="remap_joint_state_positions_to_float_array_node.py" output="screen">
+    <remap from="input_joint_state_topic" to="/rpbi/nextage/joint_state/target"/>
+    <remap from="output_float_array_topic" to="/nextage/target"/> <!--     >>>> "to" attribute needs to be set correctly for the nextage robot <<<<    -->
+  </node>
+
+  <!-- Static tf frames -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
+	args="0. 0. 0.85 0 0 0 rpbi/world nextage_base"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf_broadcaster"
+	args="0 0 0 0 0 0 rpbi/world floor"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="table_top_tf_broadcaster"
+	args="0.825 0 0.7 0 0 0 rpbi/world table_top"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="table_tf_broadcaster"
+	args="0 0 -0.1 0 0 0 table_top table"/> <!-- DO NOT EDIT THIS -->
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="obs_tf_broadcaster"
+      args="0.5 0.3 0.73 0 0 0 rpbi/world rpbi/cylinder_obs"/> <!-- DO NOT EDIT THIS -->
+
+</launch>

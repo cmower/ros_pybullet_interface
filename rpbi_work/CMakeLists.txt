@@ -162,6 +162,7 @@ catkin_install_python(PROGRAMS
   scripts/nextage_ik_node.py
   scripts/move_nextage_to_home.py
   scripts/remap_joint_state_positions_to_float_array_node.py
+  scripts/nextage_ros_mpc_sliding.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
