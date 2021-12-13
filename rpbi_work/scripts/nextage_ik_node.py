@@ -9,7 +9,8 @@ from ros_pybullet_interface.tf_interface import TfInterface
 
 class Node:
 
-    hz = 50
+    # hz = 100
+    hz = 20
     dt = 1.0/float(hz)
 
     def __init__(self):

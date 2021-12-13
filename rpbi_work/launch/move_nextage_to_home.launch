@@ -1,0 +1,12 @@
+<launch>
+
+  <!-- Target joint state topic translator -->
+  <node pkg="rpbi_work" name="remap_joint_target_state" type="remap_joint_state_positions_to_float_array_node.py" output="screen">
+    <remap from="input_joint_state_topic" to="/rpbi/nextage/joint_state/target"/>
+    <remap from="output_float_array_topic" to="/nextage/target"/> <!--     >>>> "to" attribute needs to be set correctly for the nextage robot <<<<    -->
+  </node>
+
+  <!-- Send robot to home position -->
+  <node pkg="rpbi_work" name="move_nextage_to_home" type="move_nextage_to_home.py" output="screen"/>
+  
+</launch>

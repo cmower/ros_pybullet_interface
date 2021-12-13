@@ -1,0 +1,5 @@
+string robot_name
+string robot_joint_state_topic
+---
+string info
+bool success

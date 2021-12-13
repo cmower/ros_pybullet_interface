@@ -9,7 +9,8 @@
       <Scene>
         <Debug>1</Debug>
         <JointGroup>body</JointGroup>
-        <URDF>{nextagea_description}/urdf/NextageAOpen.urdf</URDF>
+        <!-- <URDF>{nextagea_description}/urdf/NextageAOpen_gazebo_intel_realsense.urdf</URDF> -->
+        <URDF>{nextage_smart_factory}/urdf/nextagea_dual_pick.urdf</URDF>        
         <SRDF>{nextagea_moveit_config}/config/NextageAOpen.srdf</SRDF>
         <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
         <Links>

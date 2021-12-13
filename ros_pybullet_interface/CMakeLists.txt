@@ -19,6 +19,7 @@ add_service_files(
   PybulletBodyUniqueIds.srv
   PybulletRobotJointInfo.srv
   RunCameraBulletTime.srv
+  MatchSimToRobot.srv
 )
 
 generate_messages(

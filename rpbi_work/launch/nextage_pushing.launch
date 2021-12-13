@@ -16,15 +16,34 @@
       ]
     </rosparam>
 
+    <remap from="/rpbi/nextage_visual/joint_state/target" to="/nextagea/joint_states"/>
+
+    <!-- <remap from="/rpbi/nextage/joint_state" to="/fullbody_controller/command"/> -->
+    <!-- <remap from="/rpbi/nextage/joint_state" to="/nextagea/rarm_controller/command"/> -->
+
+
+<!-- /head_controller/command -->
+
+<!-- /larm_torso_controller/command -->
+<!-- /nextagea/head_controller/command -->
+<!-- /nextagea/larm_controller/command -->
+<!-- /nextagea/rarm_controller/command -->
+<!-- /nextagea/torso_controller/command -->
+<!-- /rarm_controller/command -->
+<!-- /rarm_torso_controller/command -->
+<!-- /torso_controller/command -->
+    
+
     <!-- Visual robot -->
     <rosparam param="visual_robot_config_file_names">
       [
+      "{rpbi_work}/configs/nextage_visual.yaml",
       ]
     </rosparam>
 
     <rosparam param="dynamic_object_config_file_names">
       [
-      "{rpbi_work}/configs/pushing_box.yaml",
+      <!-- "{rpbi_work}/configs/pushing_box.yaml", -->
       ]
     </rosparam>
 
@@ -39,6 +58,7 @@
       [
       "{rpbi_work}/configs/visual_goal_left.yaml",
       "{rpbi_work}/configs/visual_goal_right.yaml",
+      "{rpbi_work}/configs/pushing_box_visual.yaml",      
       ]
     </rosparam>
 
@@ -107,7 +127,7 @@
   <node pkg="operator_node" name="operator_node0" type="isometric_node">
     <remap from="joy" to="joy0"/>
     <remap from="operator_node/signal" to="operator_node/signal0"/>
-    <param name="max_velocity" type="double" value="0.05"/>
+    <param name="max_velocity" type="double" value="0.02"/>
     <rosparam param="axis">[1, 0]</rosparam>
     <rosparam param="directions">[1, 1]</rosparam>
   </node>
@@ -139,22 +159,35 @@
   <node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen"/>
 
   <!-- Target joint state topic translator -->
-  <node pkg="rpbi_work" name="remap_joint_target_state" type="remap_joint_state_positions_to_float_array_node.py" output="screen">
-    <remap from="input_joint_state_topic" to="/rpbi/nextage/joint_state/target"/>
-    <remap from="output_float_array_topic" to="/nextage/target"/> <!--     >>>> "to" attribute needs to be set correctly for the nextage robot <<<<    -->
-  </node>
+  <!-- <node pkg="rpbi_work" name="remap_joint_target_state" type="remap_joint_state_positions_to_float_array_node.py" output="screen"> -->
+  <!--   <remap from="input_joint_state_topic" to="/rpbi/nextage/joint_state/target"/> -->
+  <!--   <remap from="output_float_array_topic" to="/nextage/target"/> <!-\-     >>>> "to" attribute needs to be set correctly for the nextage robot <<<<    -\-> -->
+  <!-- </node> -->
 
-  <!-- Static tf frames -->
+
+      <!-- Static tf frames -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster" -->
+  <!-- 	args="0. 0. 0.85 0 0 0 rpbi/world nextage_base"/> -->
+
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
-	args="0. 0. 0.85 0 0 0 rpbi/world nextage_base"/>
+  	args="0. 0. -0.85 0 0 0 sim/nextage_base rpbi/world"/>  
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf_broadcaster"
 	args="0 0 0 0 0 0 rpbi/world floor"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="table_top_tf_broadcaster"
-	args="0.825 0 0.8 0 0 0 rpbi/world table_top"/>
+	args="0.825 0 0.73 0 0 0 rpbi/world table_top"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="table_tf_broadcaster"
 	args="0 0 -0.1 0 0 0 table_top table"/> <!-- DO NOT EDIT THIS -->
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="connect_vicon_nextage_base_and_nextage_base_tf_broadcaster"
+	args="-0.375 -0.00525 -0.01 3.141592653589793 0 0 vicon/nextage_vicon_base/nextage_vicon_base sim/nextage_base"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="sliding_box_center_tf_broadcaster"
+	args="0. 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
+
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="push_visual_box_tf_broadcaster" -->
+  <!-- 	args="0. 0 0. 0 0 0 rpbi/world pushing_box_visual"/> -->
 
 </launch>
