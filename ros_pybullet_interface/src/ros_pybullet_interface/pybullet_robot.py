@@ -101,22 +101,36 @@ class _PybulletRobotBase(PybulletObject):
 
     def init_robot(self):
 
-        # Load robot
+        # Get tf frame id (defines the robot base in rpbi/world frame)
+        self.tf_frame_id = self.config['tf_frame_id']
+
+        # Get base tf
         self.use_fixed_base = self.config.get('use_fixed_base', True)
-        self.body_unique_id = self.pb.loadURDF(
-            replace_package(self.config['urdf_filename']),
+        base_pos, base_rot = None, None
+        if self.use_fixed_base:
+            max_iter = 100
+            for i in range(max_iter):
+                base_pos, base_rot = self.tf.get_tf('rpbi/world', self.tf_frame_id)
+                if (base_pos is not None) and (base_rot is not None):
+                    break
+
+        # Load robot
+        load_urdf_input = dict(
+            fileName=replace_package(self.config['urdf_filename']),
             useFixedBase=self.use_fixed_base,
             flags=self.pb.URDF_USE_MATERIAL_COLORS_FROM_MTL,
         )
+        if base_pos is not None:
+            load_urdf_input['basePosition'] = base_pos
+        if base_rot is not None:
+            load_urdf_input['baseOrientation'] = base_rot
+        self.body_unique_id = self.pb.loadURDF(**load_urdf_input)
         self.ndof = self.pb.getNumJoints(self.body_unique_id)
 
         # Init joints
         self.joints = [Joint(self.body_unique_id, jidx, self.pb) for jidx in range(self.ndof)]
         self.active_joints = [j for j in self.joints if j.is_active()]
         self.ndof_active = len(self.active_joints)
-
-        # Get tf frame id (defines the robot base in rpbi/world frame)
-        self.tf_frame_id = self.config['tf_frame_id']
 
         # Set alpha - i.e. user can adjust robot transparency without writing a whole new URDF
         alpha = self.config.get('alpha', None)  #
