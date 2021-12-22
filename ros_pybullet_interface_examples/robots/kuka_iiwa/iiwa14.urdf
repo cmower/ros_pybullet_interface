@@ -50,14 +50,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_0.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_0.stl"/>
       </geometry>
       <material name="Grey"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_0.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_0.stl"/>
       </geometry>
       <material name="Grey"/>
     </collision>
@@ -87,14 +87,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_1.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_1.stl"/>
       </geometry>
       <material name="Orange"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_1.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_1.stl"/>
       </geometry>
       <material name="Orange"/>
     </collision>
@@ -118,14 +118,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_2.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_2.stl"/>
       </geometry>
       <material name="Orange"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_2.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_2.stl"/>
       </geometry>
       <material name="Orange"/>
     </collision>
@@ -149,14 +149,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_3.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_3.stl"/>
       </geometry>
       <material name="Orange"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_3.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_3.stl"/>
       </geometry>
       <material name="Orange"/>
     </collision>
@@ -180,14 +180,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_4.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_4.stl"/>
       </geometry>
       <material name="Orange"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_4.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_4.stl"/>
       </geometry>
       <material name="Orange"/>
     </collision>
@@ -211,14 +211,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_5.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_5.stl"/>
       </geometry>
       <material name="Orange"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_5.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_5.stl"/>
       </geometry>
       <material name="Orange"/>
     </collision>
@@ -242,14 +242,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_6.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_6.stl"/>
       </geometry>
       <material name="Orange"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_6.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_6.stl"/>
       </geometry>
       <material name="Orange"/>
     </collision>
@@ -273,14 +273,14 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/visual/link_7.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/link_7.stl"/>
       </geometry>
       <material name="Grey"/>
     </visual>
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="meshes/iiwa14/collision/link_7.stl"/>
+        <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/collision/link_7.stl"/>
       </geometry>
       <material name="Grey"/>
     </collision>
@@ -311,7 +311,7 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/adaptor_kuka.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/adaptor_kuka.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name="Black"/>
         </visual>
@@ -319,7 +319,7 @@
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/adaptor_kuka.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/adaptor_kuka.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
     </link>
@@ -338,7 +338,7 @@
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <material name="Silver"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/force_sensor.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/force_sensor.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </visual>
 
@@ -364,13 +364,13 @@
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <material name="Black"/>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/adaptor_endeffector.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/adaptor_endeffector.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name="Black"/>
         </visual>
         <collision>
             <geometry>
-                <mesh filename="meshes/iiwa14/visual/adaptor_endeffector.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://ros_pybullet_interface_examples/robots/kuka_iiwa/meshes/iiwa14/visual/adaptor_endeffector.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
     </link>
