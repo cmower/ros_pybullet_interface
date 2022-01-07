@@ -65,11 +65,13 @@ class Node:
         # if self.q_prev is not None:
         #     self.problem.start_state = self.q_prev
 
-        # Solve problem
-        q = self.solver.solve()[0]
+        if (self.lgoal is not None) or (self.rgoal is not None):
 
-        # Publish joint state
-        self.publish_joint_state(q)
+            # Solve problem
+            q = self.solver.solve()[0]
+
+            # Publish joint state
+            self.publish_joint_state(q)
 
     def publish_joint_state(self, q_exo):
         msg = JointState()
