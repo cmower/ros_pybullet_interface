@@ -164,6 +164,7 @@ catkin_install_python(PROGRAMS
   scripts/remap_joint_state_positions_to_float_array_node.py
   scripts/nextage_ros_mpc_sliding.py
   scripts/match_real_robot_to_pybullet.py
+  scripts/match_pybullet_to_real_robot.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
