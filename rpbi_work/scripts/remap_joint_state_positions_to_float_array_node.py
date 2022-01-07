@@ -23,7 +23,7 @@ from std_msgs.msg import Float64MultiArray
 #     'RARM_JOINT4',
 #     'RARM_JOINT5',
 # ]
-    
+
 # torso_id = ['CHEST_JOINT0']
 
 # head_id = [
@@ -36,7 +36,7 @@ controller_joints_head = ['HEAD_JOINT0', 'HEAD_JOINT1']
 controller_joints_arm_left = ['LARM_JOINT0', 'LARM_JOINT1', 'LARM_JOINT2', 'LARM_JOINT3', 'LARM_JOINT4', 'LARM_JOINT5']
 controller_joints_arm_right = ['RARM_JOINT0', 'RARM_JOINT1', 'RARM_JOINT2', 'RARM_JOINT3', 'RARM_JOINT4', 'RARM_JOINT5']
 controller_joints = controller_joints_arm_left + controller_joints_arm_right + controller_joints_torso + controller_joints_head
-        
+
 class Node:
 
 
@@ -47,9 +47,9 @@ class Node:
 
         # Setup publisher
         self.pub = rospy.Publisher('nextagea/streaming_controller/command', Float64MultiArray, queue_size=10)
-        
+
         # Setup subscriber
-        rospy.Subscriber('/rpbi/nextage/joint_state', JointState, self.callback)        
+        rospy.Subscriber('/rpbi/nextage/joint_state', JointState, self.callback)
 
         rospy.loginfo('Remapper JointState.position -> Float64MultiArray initialized.')
 
