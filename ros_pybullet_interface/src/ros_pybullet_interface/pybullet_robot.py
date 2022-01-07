@@ -177,7 +177,11 @@ class _PybulletRobotBase(PybulletObject):
             self.pb.resetJointState(self.body_unique_id, j.index, p)
 
     def target_joint_state_callback(self, msg):
-        self.target_joint_state = msg.position
+        if len(msg.name) > 0:
+            use_position = [msg.position[msg.name.index(j.name)] for j in self.active_joints]
+        else:
+            use_position = msg.position
+        self.target_joint_state = use_position
 
 
 class PybulletRobot(_PybulletRobotBase):
