@@ -446,15 +446,16 @@ class Node:
         info = ''
         success = True
         try:
-            msg = rospy.wait_for_service(req.robot_joint_state_topic, JointState)
-            self.pb_objects[req.robot_name].set_joint_state(msg.position)
+            msg = rospy.wait_for_message(req.robot_joint_state_topic, JointState)
+            self.pb_objects[req.robot_name].target_joint_state_callback(msg)
+            # self.pb_objects[req.robot_name].set_joint_state(msg.position)
         except Exception as err:
             success = False
             exception_type = type(err).__name__
             msg = str(err)
             info = f"Exception with type {exception_type} was raised with message: {msg}"
             rospy.logwarn('Failed to service match_sim_to_robot!\nReason: %s', info)
-        return MatchSimToRobot(info=info, success=success)
+        return MatchSimToRobotResponse(info=info, success=success)
 
 def main():
     Node().spin()
