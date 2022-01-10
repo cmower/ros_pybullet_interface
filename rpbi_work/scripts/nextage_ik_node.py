@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import rospy
 import numpy
 import signal
@@ -25,7 +26,16 @@ class Node:
 
         # Setup exotica
         exo.Setup.init_ros()
-        xml_filename = '{rpbi_work}/configs/nextage_ik.xml'
+        arm = rospy.get_param('~arm')  # left/right
+        if arm == 'left':
+            xml_filename = '{rpbi_work}/configs/nextage_ik_left.xml'
+        elif arm == 'right':
+            xml_filename = '{rpbi_work}/configs/nextage_ik_right.xml'
+        else:
+            rospy.logerr('Given arm parameter was not recognized (%s), should be "left" or "right"!', arm)
+            sys.exit(0)
+        rospy.loginfo('loading xml: %s', xml_filename)
+
         # xml_filename = '{rpbi_work}/configs/nextage_exotica_config.xml'
         self.solver = exo.Setup.load_solver(xml_filename)
         self.problem = self.solver.get_problem()

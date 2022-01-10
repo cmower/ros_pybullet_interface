@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<IKSolverDemoConfig>
+
+  <SnoptIKUnconstrainedSolver Name="MySolver" MaxIterations="20" />
+
+  <UnconstrainedEndPoseProblem Name="MyProblem">
+
+    <PlanningScene>
+      <Scene>
+        <Debug>1</Debug>
+        <JointGroup>body</JointGroup>
+        <URDF>{nextage_smart_factory}/urdf/nextagea_dual_pick.urdf</URDF>
+        <SRDF>{nextagea_moveit_config}/config/NextageAOpen.srdf</SRDF>
+        <SetRobotDescriptionRosParams>1</SetRobotDescriptionRosParams>
+        <Links>
+            <Link Name="TargetLeft" Parent="base_link"/>
+            <Link Name="TargetRight" Parent="base_link"/>
+        </Links>
+      </Scene>
+    </PlanningScene>
+
+    <Maps>
+      <EffFrame Name="PositionLeft">
+        <EndEffector>
+            <Frame Link="LEND_EFFECTOR_finger" Base="TargetLeft"/>
+        </EndEffector>
+      </EffFrame>
+      <EffPosition Name="PositionRight">
+        <EndEffector>
+            <Frame Link="REND_EFFECTOR_finger" Base="TargetRight"/>
+        </EndEffector>
+      </EffPosition>
+      <JointVelocityBackwardDifference Name="JointAcc">
+        <dt>0.02</dt>
+        <StartState>0 0 0 0 0 0 -1.57 0 0.2618 -0.1745 0 -0.349 1.57</StartState>
+      </JointVelocityBackwardDifference>
+      <JointPose Name="Pose" />
+      <JointLimit Name="Limits" SafePercentage="0.05"/>
+    </Maps>
+
+    <Cost>
+      <Task Task="PositionLeft" Rho="1e5"/>
+      <Task Task="PositionRight" Rho="0."/>
+      <Task Task="Pose" Rho="0."/>
+      <Task Task="JointAcc" Rho="1e0"/>
+      <Task Task="Limits" Rho="1e7"/>
+    </Cost>
+
+    <StartState>0 0 0 0 0 0 0 0 0.2618 -0.1745 0 -0.349 1.57 </StartState>
+    <NominalState>0 0 0 0 0 0 -1.57 0 0 0 0 0 1.57</NominalState>
+    <W> 1 1 1 1 1 1 1 1 1 1 1 1 1</W>
+
+  </UnconstrainedEndPoseProblem>
+
+</IKSolverDemoConfig>

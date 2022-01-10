@@ -2,8 +2,12 @@
 
 <launch>
 
+  <arg name="arm" default="right"/>
+
 <!-- Nextage IK node -->
-<node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen"/>
+<node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen">
+  <param name="arm" value="$(arg arm)" type="string"/>  
+</node>
 
 <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
 <node
