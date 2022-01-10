@@ -1,5 +1,5 @@
-real_setup: False
-robot_name: "nextage/ros_pybullet_interface/robot/REND_EFFECTOR_finger"
-end_effector_target_frame_id: "LWR_visual/ros_pybullet_interface/end_effector/target"
-object_name: "vicon_offset/pushing_box_wood/pushing_box_wood"
-obstacle_name: "vicon_offset/pushing_obs_cyl_1/pushing_obs_cyl_1"
+real_setup: True
+robot_name: "rpbi/nextage/REND_EFFECTOR_finger"
+end_effector_target_frame_id: "right_hand_goal"
+object_name: "pushing_box_visual"
+obstacle_name: "rpbi/cylinder_obs"
