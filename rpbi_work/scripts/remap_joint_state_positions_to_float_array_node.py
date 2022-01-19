@@ -52,7 +52,7 @@ class Node:
         self.sub = None
         self.sub_on = False
         rospy.loginfo('Remapper JointState.position -> Float64MultiArray initialized.')
-        rospy.Service('toggle_ik', ToggleIK, self.toggle_callback)
+        rospy.Service('toggle_remaper', Toggle, self.toggle_callback)
 
     def toggle_callback(self, req):
         if req.switch == 'on':

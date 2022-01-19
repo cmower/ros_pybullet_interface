@@ -58,7 +58,7 @@ class Node:
         # Setup services
         self.timer = None
         self.running_ik = False
-        rospy.Service('toggle_ik', ToggleIK, self.toggle_ik)
+        rospy.Service('toggle_ik_%s' % arm, ToggleIK, self.toggle_ik)
 
     def toggle_ik(self, req):
         if req.switch == 'on':
