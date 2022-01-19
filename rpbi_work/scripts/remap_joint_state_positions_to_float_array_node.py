@@ -2,7 +2,7 @@
 import rospy
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
-
+from rpbi_work.srv import Toggle, ToggleResponse
 
 """Map JointState positions messages onto Float64MultiArray messages."""
 
@@ -48,10 +48,57 @@ class Node:
         # Setup publisher
         self.pub = rospy.Publisher('nextagea/streaming_controller/command', Float64MultiArray, queue_size=10)
 
-        # Setup subscriber
-        rospy.Subscriber('/rpbi/nextage/joint_state', JointState, self.callback)
-
+        # Setup service
+        self.sub = None
+        self.sub_on = False
         rospy.loginfo('Remapper JointState.position -> Float64MultiArray initialized.')
+        rospy.Service('toggle_ik', ToggleIK, self.toggle_callback)
+
+    def toggle_callback(self, req):
+        if req.switch == 'on':
+            success, info = self.start_callback(req)
+        elif req.switch == 'off':
+            success, info = self.stop_callback(req)
+        else:
+            info = 'failed to turn %s remapper' % req.switch
+            rospy.logerr(info)
+            success = False
+        return ToggleResponse(success=success, info=info)
+
+    def start_callback(self):
+
+        success = True
+        info = ''
+
+        if self.sub_on:
+            info = "recieved request to start remapper, but it is already running!"
+            success = False
+            rospy.logerr(info)
+            return success, info
+
+        # Start callback
+        self.sub = rospy.Subscriber('/rpbi/nextage/joint_state', JointState, self.callback)
+        self.sub_on = True
+        rospy.loginfo('switched on remapper')
+        return success, info
+
+    def stop_callback(self, req):
+
+        success = True
+        info = ''
+
+        if not self.running_ik:
+            info = 'recieved request to stop remapper, but it is not running anyway!'
+            success = False
+            rospy.logerr(info)
+            return success, info
+
+        # Stop main loop
+        self.sub.unregister()
+        self.sub = None
+        self.sub_on = False
+        rospy.loginfo('switched off remapper')
+        return success, info
 
     def callback(self, msg):
         # print(msg.name)
