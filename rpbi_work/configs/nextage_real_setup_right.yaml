@@ -1,0 +1,5 @@
+real_setup: True
+robot_name: "rpbi/nextage/REND_EFFECTOR_finger"
+end_effector_target_frame_id: "right_hand_goal"
+object_name: "pushing_box_visual"
+obstacle_name: "rpbi/cylinder_obs"

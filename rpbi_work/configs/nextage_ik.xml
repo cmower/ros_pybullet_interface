@@ -2,6 +2,7 @@
 <IKSolverDemoConfig>
 
   <SnoptIKUnconstrainedSolver Name="MySolver" MaxIterations="20" />
+  <!-- <SnoptIKConstrainedSolver Name="MySolver" MaxIterations="20" /> -->
 
   <UnconstrainedEndPoseProblem Name="MyProblem">
 
@@ -42,6 +43,11 @@
       </JointVelocityBackwardDifference>
       <JointPose Name="Pose" />
       <JointLimit Name="Limits" SafePercentage="0.05"/>
+      <!-- <EffBox Name="EffBox" Debug="1"> -->
+      <!--   <EndEffector> -->
+      <!--     <FrameWithBoxLimits Link="base_link" XLim="-10 10" YLim="-10 10" ZLim="0.5 10"/> -->
+      <!--   </EndEffector> -->
+      <!-- </EffBox> -->
     </Maps>
 
     <Cost>
@@ -51,6 +57,10 @@
       <Task Task="JointAcc" Rho="1e0"/>
       <Task Task="Limits" Rho="1e7"/>
     </Cost>
+
+    <!-- <Inequality> -->
+    <!--   <Task Task="EffBox"/> -->
+    <!-- </Inequality> -->
 
 
     <StartState>0 0 0 0 0 0 0 0 0.2618 -0.1745 0 -0.349 1.57 </StartState>

@@ -2,6 +2,8 @@
 
 <launch>
 
+  <arg name="arm" default="right"/>
+
   <!-- Joystick -->
   <node respawn="true" pkg="joy" type="joy_node" name="joy0" >
     <remap from="/joy" to="/joy0/raw"/>
@@ -50,7 +52,7 @@
 
   <!-- Nextage IK node -->
   <node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen">
-    <param name="arm" type="string" value="right"/>
+    <param name="arm" type="string" value="$(arg arm)"/>
   </node>
 
 </launch>

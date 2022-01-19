@@ -58,8 +58,16 @@ class ROSSlidingMPC:
         # Save variable for time
         self.comp_time_plot = []
 
-        # nodes and tfs setup
-        setup_file_name = rospy.get_param('~setup', [])[0]
+        # get working arm
+        arm = rospy.get_param('~arm')  # left/right
+        # get configs for opt
+        if arm == 'left':
+            setup_file_name = '{rpbi_work}/configs/nextage_real_setup_left.yaml'
+        elif arm == 'right':
+            setup_file_name = '{rpbi_work}/configs/nextage_real_setup_right.yaml'
+        else:
+            rospy.logerr('Given arm parameter was not recognized (%s), should be "left" or "right"!', arm)
+            sys.exit(0)
         setup_config = load_config(setup_file_name)
         self.real_setup = setup_config['real_setup']
         self.robot_name = setup_config['robot_name']
@@ -88,7 +96,13 @@ class ROSSlidingMPC:
         tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
         tracking_config = load_config(tracking_traj_file_name)
         # nom traj file for planning
-        nom_traj_file_name = rospy.get_param('~sliding_param_nom_traj', [])[0]
+        if arm == 'left':
+            nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_left.yaml'
+        elif arm == 'right':
+            nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_right.yaml'
+        else:
+            rospy.logerr('Given arm parameter was not recognized (%s), should be "left" or "right"!', arm)
+            sys.exit(0)
         nom_config = load_config(nom_traj_file_name)
         #  -------------------------------------------------------------------
 

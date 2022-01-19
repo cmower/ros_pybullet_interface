@@ -315,7 +315,7 @@ class ROSSlidingMPC:
             # np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
             rospy.signal_shutdown("End of nominal trajectory")
         else:
-            # input()
+            input()
             pass
 
         if not self.real_setup:

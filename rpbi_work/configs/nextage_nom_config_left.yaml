@@ -11,13 +11,12 @@ W_u: [0., 0., 0., 0.]  # diagonal control weights
 K_goal: 100
 # X_goal: [0.80, -0.15, 0., 0.]
 # X_goal: [0.80, -0.05, 0., 0.]
-X_goal: [0.80, -0.25, 0., 0.]
-# X_goal_right: [0.80, -0.20, 0., 0.]
-# X_goal_left: [0.80, 0.20, 0., 0.]
+# X_goal: [0.80, -0.25, 0., 0.]
+X_goal: [0.4, 0.23, 0., 0.]
 numObs: 0
 linDynFlag: False
 # codeGenFlag: True
 codeGenFlag: False
 noPrintingFlag: False
 phases: null
-TimeHorizon: 12 # time horizon
+TimeHorizon: 4 # time horizon
