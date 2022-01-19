@@ -73,19 +73,19 @@ class Node:
             info = 'Failed to retrieve goal from server'
             return MoveNextageToPrePushPoseResponse(success=False, info)
 
-        goal = numpy.array(resp['position'])
+        goal = numpy.array(resp.position)
 
         # Move robot
         # NOTE: robot will move as follows:
         # 1. from where ever it is to a pre-pre push pose (above/behind object), this is to prevent robot colliding with object
         # 2. from pre-pre-push pose to object
         pre_pre_offset = np.array([0.05, 0, 0.05])  # NOTE: this may need to be tuned
-        if self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax):
+        if not self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax):
             # move to above/behind object (pre-pre pose)
             info = 'Failed to move nextage to pre-pre eff goal pose'
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
-        if self.move_robot(goal, req.arm, 1.0):
+        if not self.move_robot(goal, req.arm, 1.0):
             # move to requested position
             info = 'Failed to move nextage to pre eff goal pose'
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
