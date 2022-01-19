@@ -7,7 +7,7 @@ import pyexotica as exo
 from sensor_msgs.msg import JointState
 from pyexotica.publish_trajectory import sig_int_handler
 from ros_pybullet_interface.tf_interface import TfInterface
-from rpbi_work.srv import TogglePbIK, TogglePbIKResponse
+from rpbi_work.srv import Toggle, ToggleResponse
 
 class Node:
 
@@ -58,7 +58,7 @@ class Node:
         # Setup services
         self.timer = None
         self.running_ik = False
-        rospy.Service('toggle_pb_ik', TogglePbIK)
+        rospy.Service('toggle_ik', ToggleIK)
 
     def toggle_ik(self, req):
         if req.switch == 'on':
@@ -69,7 +69,7 @@ class Node:
             info = 'failed to turn %s IK' % req.switch
             rospy.logerr(info)
             success = False
-        return TogglePbIKResponse(success=success, info=info)
+        return ToggleResponse(success=success, info=info)
 
     def start_ik(self, req):
 
