@@ -4,11 +4,26 @@ import rospy
 from rpbi_work.srv import MoveNextageToPrePushPose, MoveNextageToPrePushPoseRequest
 from rpbi_work.srv import Toggle, ToggleRequest
 from ros_pybullet_interface.srv import MatchSimToRobot, MatchSimToRobotRequest
+from rpbi_work.srv import MoveNextageToState, MoveNextageToStateRequest
 
 class Node:
 
     def __init__(self):
         rospy.init_node('test_automation_joao_chris_side')
+
+    def _move_to_state(self, q):
+        success = True
+        srv = 'move_nextage_to_state'
+        rospy.wait_for_service(srv)
+        try:
+            req = MoveNextageToState(goal_position=q)
+            handle = rospy.ServiceProxy(srv, MoveNextageToState)
+            resp = handle(req)
+            success = resp.success
+        except:
+            success = False
+        return success
+
 
     def _switch_on_remapper(self):
         success = True
@@ -114,16 +129,20 @@ class Node:
         return success
 
     def reorient_box_with_left_arm(self):
-        pass
+        pass  # REQUIRES JOAO CODE TO BE CALLABLE VIA SERVICE
 
     def move_left_arm_away(self):
-        pass
+
+        # turn on remapper
+        if not self._switch_on_remapper():
+            success = False
+            return success
 
     def send_robot_right_arm_to_pre_pushing_pose(self):
         pass
 
     def push_box_to_goal_position(self):
-        pass
+        pass # REQUIRES JOAO CODE TO BE CALLABLE VIA SERVICE
 
     def move_robot_to_horray_pose(self):
         pass
