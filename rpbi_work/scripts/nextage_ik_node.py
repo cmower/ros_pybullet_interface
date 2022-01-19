@@ -7,6 +7,7 @@ import pyexotica as exo
 from sensor_msgs.msg import JointState
 from pyexotica.publish_trajectory import sig_int_handler
 from ros_pybullet_interface.tf_interface import TfInterface
+from rpbi_work.srv import TogglePbIK, TogglePbIKResponse
 
 class Node:
 
@@ -25,7 +26,7 @@ class Node:
         self.q_prev = None
 
         # Setup exotica
-        exo.Setup.init_ros()
+        # exo.Setup.init_ros()  # we can now instantiate two ik nodes (1 for each arm), no need for exotica-ros since we do our own publishing here
         arm = rospy.get_param('~arm')  # left/right
         if arm == 'left':
             xml_filename = '{rpbi_work}/configs/nextage_ik_left.xml'
@@ -54,8 +55,56 @@ class Node:
         # Setup joint state publisher
         self.joint_state_pub = rospy.Publisher('rpbi/nextage/joint_state/target', JointState, queue_size=10)
 
+        # Setup services
+        self.timer = None
+        self.running_ik = False
+        rospy.Service('toggle_pb_ik', TogglePbIK)
+
+    def toggle_ik(self, req):
+        if req.switch == 'on':
+            success, info = self.start_ik(req)
+        elif req.switch == 'off':
+            success, info = self.stop_ik(req)
+        else:
+            info = 'failed to turn %s IK' % req.switch
+            rospy.logerr(info)
+            success = False
+        return TogglePbIKResponse(success=success, info=info)
+
+    def start_ik(self, req):
+
+        success = True
+        info = ''
+
+        if self.running_ik:
+            info = "recieved request to start IK, but it is already running!"
+            success = False
+            rospy.logerr(info)
+            return success, info
+
         # Start main loop
-        rospy.Timer(rospy.Duration(self.dt), self.main_loop)
+        self.timer = rospy.Timer(rospy.Duration(self.dt), self.main_loop)
+        self.running_ik = True
+        rospy.loginfo('switched on IK')
+        return success, info
+
+    def stop_ik(self, req):
+
+        success = True
+        info = ''
+
+        if not self.running_ik:
+            info = 'recieved request to stop IK, but it is not running anyway!'
+            success = False
+            rospy.logerr(info)
+            return success, info
+
+        # Stop main loop
+        self.timer.shutdown()
+        self.timer = None
+        self.running_ik = False
+        rospy.loginfo('switched off IK')
+        return success, info
 
     def main_loop(self, event):
 
