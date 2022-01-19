@@ -52,7 +52,7 @@ class Node:
         self.joint_state_pub = rospy.Publisher('rpbi/nextage/joint_state/target', JointState, queue_size=10)
 
         # Setup service
-        rospy.Service('move_nextage_to_pre_push_pose', MoveNextageToPrePushPose)
+        rospy.Service('move_nextage_to_pre_push_pose', MoveNextageToPrePushPose, self.move_nextage_to_pre_push_pose)
 
     def move_nextage_to_pre_push_pose(self, req):
 
