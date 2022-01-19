@@ -36,6 +36,12 @@
       </JointVelocityBackwardDifference>
       <JointPose Name="Pose" />
       <JointLimit Name="Limits" SafePercentage="0.05"/>
+      <LookAt Name="LookAt">
+        <EndEffector>
+          <!-- EndEffector #1 => Target to look at, in relative frame of EffPoint -->
+          <Frame Link="TargetRight" Base="HEAD_JOINT1_Link"/> <!-- Needs to make sure this is correct -->
+        </EndEffector>
+      </LookAt>
     </Maps>
 
     <Cost>
@@ -44,6 +50,7 @@
       <Task Task="Pose" Rho="0."/>
       <Task Task="JointAcc" Rho="1e0"/>
       <Task Task="Limits" Rho="1e7"/>
+      <Task Task="LookAt" Rho="1.0"/>
     </Cost>
 
 
