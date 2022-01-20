@@ -8,6 +8,7 @@ from sensor_msgs.msg import JointState
 from pyexotica.publish_trajectory import sig_int_handler
 from ros_pybullet_interface.tf_interface import TfInterface
 from rpbi_work.srv import Toggle, ToggleResponse
+from rpbi_work.srv import SolveIK, SolveIKResponse
 
 class Node:
 
@@ -60,6 +61,23 @@ class Node:
         self.running_ik = False
         rospy.Service('toggle_ik_%s' % arm, ToggleIK, self.toggle_ik)
 
+        rospy.Service('solve_ik_%s' % arm, SolveIK, self.solve_ik_service)
+
+    def solve_ik_service(self, req):
+        lgoal = None
+        rgoal = None
+        success = True
+        if len(req.lgoal) == 3:
+            lgoal = np.array(req.lgoal)
+        if len(req.rgoal) == 3:
+            rgoal = np.array(req.rgoal)
+        q = self.solve_ik(lgoal, rgoal)
+        if q is not None:
+            return SolveIKResponse(q=q, success=success)
+        else:
+            success = False
+            return SolveIKResponse(q=np.zeros(len(controller_joints)), success=success)
+
     def toggle_ik(self, req):
         if req.switch == 'on':
             success, info = self.start_ik(req)
@@ -106,6 +124,23 @@ class Node:
         rospy.loginfo('switched off IK')
         return success, info
 
+    def solve_ik(self, lgoal, rgoal):
+        q = None
+        if lgoal is not None:
+            self.scene.attach_object_local('TargetLeft', 'base_link', lgoal)
+        if rgoal is not None:
+            self.scene.attach_object_local('TargetRight', 'base_link', rgoal)
+        if (lgoal is not None) or (rgoal is not None):
+
+            # Solve problem
+            q = self.solver.solve()[0]
+
+        if q is None:
+            rospy.logwarn('Solving IK failed!')
+
+        return q
+
+
     def main_loop(self, event):
 
         # Get goals
@@ -113,10 +148,10 @@ class Node:
         self.rgoal, _ = self.tf.get_tf('rpbi/nextage/nextage_base', 'right_hand_goal')
 
         # Setup problem
-        if self.lgoal is not None:
-            self.scene.attach_object_local('TargetLeft', 'base_link', self.lgoal)
-        if self.rgoal is not None:
-            self.scene.attach_object_local('TargetRight', 'base_link', self.rgoal)
+        # if self.lgoal is not None:
+        #     self.scene.attach_object_local('TargetLeft', 'base_link', self.lgoal)
+        # if self.rgoal is not None:
+        #     self.scene.attach_object_local('TargetRight', 'base_link', self.rgoal)
         # if self.lgoal is not None:
         #     self.problem.set_goal('LPosition', self.lgoal)
         # if self.rgoal is not None:
@@ -124,10 +159,12 @@ class Node:
         # if self.q_prev is not None:
         #     self.problem.start_state = self.q_prev
 
-        if (self.lgoal is not None) or (self.rgoal is not None):
+        # if (self.lgoal is not None) or (self.rgoal is not None):
 
-            # Solve problem
-            q = self.solver.solve()[0]
+        #     # Solve problem
+        #     q = self.solver.solve()[0]
+        q = self.solve_ik(self.lgoal, self.rgoal)
+        if q is not None:
 
             # Publish joint state
             self.publish_joint_state(q)

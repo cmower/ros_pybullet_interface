@@ -58,6 +58,7 @@ add_service_files(
   EffPoseFromObject.srv
   MoveNextageToPrePushPose.srv
   Toggle.srv
+  SolveIK.srv
 )
 
 ## Generate actions in the 'action' folder
