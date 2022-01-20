@@ -1,5 +1,6 @@
 string object_frame_id
 string parent_frame_id
+string arm
 ---
 bool success
 float64 box_lx

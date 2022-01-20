@@ -1,0 +1,4 @@
+float64[] goal_position
+---
+bool success
+string info

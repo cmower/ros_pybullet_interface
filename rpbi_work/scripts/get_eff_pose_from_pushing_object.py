@@ -3,12 +3,15 @@ import rospy
 import numpy
 from rpbi_work.srv import EffPoseFromObject, EffPoseFromObjectResponse
 from ros_pybullet_interface.tf_interface import TfInterface
+import tf_conversions
 
 """
 Need from Christian
 - box dimensions, Lx, Ly, Lz as ROS parameters (see below)
 - TF frame ID for object linked to the necessary parent frame
 """
+
+quaternion_matrix = tf_conversions.transformations.quaternion_matrix
 
 class Node:
 
@@ -30,6 +33,8 @@ class Node:
         self.box_ly = rospy.get_param('box_LY')  # float
         self.box_lz = rospy.get_param('box_LZ')  # float
 
+        self.offset += numpy.array([-self.box_lx, 0, 0])
+
         # Setup tf interface
         self.tf = TfInterface()
 
@@ -48,8 +53,11 @@ class Node:
 
         pos, rot = self.tf.get_tf(req.parent_frame_id, req.object_frame_id)
         if pos is not None:
-            resp_input['position'] = numpy.array(pos) + self.offset
+            R = quaternion_matrix(rot)[:3,:3]
+            resp_input['position'] = numpy.array(pos) + R@self.offset
             resp_input['rotation'] = rot
+            frame = '%s_hand_goal' % req.arm
+            self.tf.set_tf(req.parent_frame_id, frame, resp_input['position'], rot)
             rospy.loginfo('Successfully recieved TF frame %s in %s', req.object_frame_id, req.parent_frame_id)
         else:
             resp_input['success'] = False

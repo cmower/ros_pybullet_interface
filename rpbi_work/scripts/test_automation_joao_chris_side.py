@@ -25,7 +25,7 @@ class Node:
         srv = 'move_nextage_to_state'
         rospy.wait_for_service(srv)
         try:
-            req = MoveNextageToState(goal_position=q)
+            req = MoveNextageToStateRequest(goal_position=q)
             handle = rospy.ServiceProxy(srv, MoveNextageToState)
             resp = handle(req)
             success = resp.success
@@ -57,6 +57,12 @@ class Node:
         return success
 
     def _switch_on_remapper(self):
+
+        # DEBUG
+        if True:
+            return True
+        # DEBUG
+
         success = True
         srv = 'toggle_remaper'
         rospy.wait_for_service(srv)
@@ -65,7 +71,7 @@ class Node:
             req = ToggleRequest(switch='on')
             resp = handle(req)
         except rospy.ServiceException as e:
-            ropsy.logerr('Service call failed: %s' % e)
+            rospy.logerr('Service call failed: %s' % e)
             success = False
             return success
 
@@ -75,6 +81,13 @@ class Node:
         return success
 
     def _switch_off_remapper(self):
+
+        # DEBUG
+        if True:
+            return True
+        # DEBUG
+
+
         success = True
         srv = 'toggle_remaper'
         rospy.wait_for_service(srv)
@@ -83,7 +96,7 @@ class Node:
             req = ToggleRequest(switch='off')
             resp = handle(req)
         except rospy.ServiceException as e:
-            ropsy.logerr('Service call failed: %s' % e)
+            rospy.logerr('Service call failed: %s' % e)
             success = False
             return success
 
@@ -143,15 +156,15 @@ class Node:
             handle = rospy.ServiceProxy(srv, MoveNextageToPrePushPose)
 
             req = MoveNextageToPrePushPoseRequest(
-                object_frame_id='',  # TODO
-                parent_frame_id='',  # TODO
+                object_frame_id='pushing_box_visual',
+                parent_frame_id='sim/nextage_base',
                 arm='left',
                 Tmax=5.0,
             )
             resp = handle(req)
 
         except rospy.ServiceException as e:
-            ropsy.logerr('Service call failed: %s' % e)
+            rospy.logerr('Service call failed: %s' % e)
             success = False
             self._switch_off_remapper()
             return success
@@ -219,7 +232,7 @@ class Node:
             resp = handle(req)
 
         except rospy.ServiceException as e:
-            ropsy.logerr('Service call failed: %s' % e)
+            rospy.logerr('Service call failed: %s' % e)
             success = False
             self._switch_off_remapper()
             return success
@@ -265,13 +278,14 @@ def main():
 
     # Run the automation test
     def run(handle):
-        if not handle():
+        success = handle()
+        if not success:
             rospy.logerr('TEST FAILED, QUITTING...')
             sys.exit(0)
         input()
 
-    # run(node.snap_pybullet_to_robot)
-    # run(node.send_robot_left_arm_to_pre_pushing_pose)
+    run(node.snap_pybullet_to_robot)
+    run(node.send_robot_left_arm_to_pre_pushing_pose)
     # run(node.reorient_box_with_left_arm)
     # run(node.move_left_arm_away)
     # run(node.send_robot_right_arm_to_pre_pushing_pose)

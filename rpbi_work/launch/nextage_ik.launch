@@ -1,30 +1,30 @@
 <launch>
 
-  <!-- Box parameters NEEDS TUNING -->
+  <!-- Box parameters TODO: NEEDS TUNING -->
   <param name="box_LX" type="double" value="0.045"/>
   <param name="box_LY" type="double" value="0.099"/>
   <param name="box_LZ" type="double" value="0.034"/>
 
   <!-- Nextage IK nodes -->
-  <node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen">
+  <node pkg="rpbi_work" name="nextage_ik_node_left" type="nextage_ik_node.py" output="screen">
     <param name="arm" type="string" value="left"/>
   </node>
 
-  <node pkg="rpbi_work" name="nextage_ik_node" type="nextage_ik_node.py" output="screen">
+  <node pkg="rpbi_work" name="nextage_ik_node_right" type="nextage_ik_node.py" output="screen">
     <param name="arm" type="string" value="right"/>
   </node>
 
-  <!-- get IK from box -->
+  <!-- get IK from box, TODO: check offset frame --> 
   <node pkg="rpbi_work" name="get_eff_pose_from_pushing_object" type="get_eff_pose_from_pushing_object.py" output="screen">
-    <param name="offset_x" type="double" value="0.05"/>
+    <param name="offset_x" type="double" value="-0.02"/>
     <param name="offset_y" type="double" value="0.0"/>
-    <param name="offset_z" type="double" value="0.025"/>
+    <param name="offset_z" type="double" value="0.02"/>
   </node>
 
   <!-- Move nextage to pre push pose -->
   <node type="move_nextage_to_pre_push_pose.py" pkg="rpbi_work" name="move_nextage_to_pre_push_pose" output="screen"/>
 
   <!-- Remapper node -->
-  <node name="remapper_node" pkg="rpbi_work" type="remap_joint_state_positions_to_float_array_node.py"/>
+  <!-- <node name="remapper_node" pkg="rpbi_work" type="remap_joint_state_positions_to_float_array_node.py"/> -->
 
 </launch>

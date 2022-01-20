@@ -64,8 +64,10 @@ class Node:
     def publish_joint_state(self, q_exo):
         msg = JointState()
         msg.header.stamp = rospy.Time.now()
-        msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
-        msg.position += q_exo[1:].tolist()
+        # msg.name = self.scene.get_controlled_joint_names()
+        msg.position = q_exo.tolist()
+        # msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
+        # msg.position += q_exo[1:].tolist()
         self.joint_state_pub.publish(msg)
 
     def spin(self):

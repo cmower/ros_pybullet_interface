@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import rospy
+import numpy
+import numpy as np
 import pyexotica as exo
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 from rpbi_work.srv import MoveNextageToPrePushPose, MoveNextageToPrePushPoseResponse
 from rpbi_work.srv import EffPoseFromObject, EffPoseFromObjectRequest
-
+from ros_pybullet_interface.tf_interface import TfInterface
 
 controller_joints_torso = ['CHEST_JOINT0']
 controller_joints_head = ['HEAD_JOINT0', 'HEAD_JOINT1']
@@ -63,36 +65,48 @@ class Node:
         rospy.wait_for_service('get_eff_pose_from_pushing_object')
         try:
             handle = rospy.ServiceProxy('get_eff_pose_from_pushing_object', EffPoseFromObject)
-            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id))
+            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id, arm=req.arm))
         except rospy.ServiceException as e:
             rospy.logerr('Service error: %s', str(e))
             info = 'Failed to retrieve goal from server'
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
-        if not resp['success']:
+        if not resp.success:
             info = 'Failed to retrieve goal from server'
-            return MoveNextageToPrePushPoseResponse(success=False, info)
+            return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
         goal = numpy.array(resp.position)
+
+        # rospy.loginfo('Does this goal look good?')
+        # import sys
+        # sys.exit(0)
+
+        # Get current joint position
+        msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
+        qstart = self.resolve_joint_msg_order(msg)
 
         # Move robot
         # NOTE: robot will move as follows:
         # 1. from where ever it is to a pre-pre push pose (above/behind object), this is to prevent robot colliding with object
         # 2. from pre-pre-push pose to object
-        pre_pre_offset = np.array([0.05, 0, 0.05])  # NOTE: this may need to be tuned
-        if not self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax):
+        pre_pre_offset = np.array([0, 0, 0.0])  # TODO: NOTE: this may need to be tuned
+        q, success = self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax, qstart)
+        if not success:
             # move to above/behind object (pre-pre pose)
             info = 'Failed to move nextage to pre-pre eff goal pose'
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
-        if not self.move_robot(goal, req.arm, 1.0):
+        rospy.logwarn('Robot should be at pre-pre grasp pose now')
+        sys.exit(0)
+
+        if not self.move_robot(goal, req.arm, 1.0, q)[1]:
             # move to requested position
             info = 'Failed to move nextage to pre eff goal pose'
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
         return MoveNextageToPrePushPoseResponse(success=True, info=info)
 
-    def move_robot(self, pos, arm, Tmax):
+    def move_robot(self, pos, arm, Tmax, qstart):
 
         success = True
 
@@ -100,13 +114,9 @@ class Node:
 
             rospy.loginfo('Robot will start moving to a goal state.')
 
-            # Get current joint position
-            msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
-            qstart = self.resolve_joint_msg_order(msg)
-
             # Solve exotica
             e = getattr(self, 'exo_%s' % arm)
-            e.set_goal(goal)
+            e.set_goal(pos)
             e.problem.start_state = qstart
             qgoal = e.solver.solve()[0]
 
@@ -118,16 +128,18 @@ class Node:
                 tcurr = rospy.Time.now().to_sec() - start_time
                 alpha = tcurr/Tmax
                 q = alpha*qgoal + (1-alpha)*qstart
-                self.publish_joint_state(q)
+                self.publish_joint_state(q, arm)
                 rospy.loginfo('Commanded robot, %.2f percent complete', 100.*alpha)
                 if alpha > 1.0:
                     keep_running = False
                     rospy.loginfo('Robot has reached goal state.')
 
-        except:
+        except Exception as e:
+            rospy.logerr("Failed to move robot: %s", e)
+
             success = False
 
-        return success
+        return qgoal, success
 
 
     def resolve_joint_msg_order(self, msg):
@@ -138,12 +150,13 @@ class Node:
             cmd.append(joint_position)
         return np.array(cmd)
 
-
-    def publish_joint_state(self, q_exo):
+    def publish_joint_state(self, q_exo, arm):
         msg = JointState()
         msg.header.stamp = rospy.Time.now()
-        msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
-        msg.position += q_exo[1:].tolist()
+        msg.name = getattr(self, 'exo_%s' % arm).scene.get_controlled_joint_names()
+        msg.position = q_exo.tolist()
+        # msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
+        # msg.position += q_exo[1:].tolist()
         self.joint_state_pub.publish(msg)
 
     def spin(self):

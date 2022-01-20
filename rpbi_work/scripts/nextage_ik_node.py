@@ -29,6 +29,7 @@ class Node:
         # Setup exotica
         # exo.Setup.init_ros()  # we can now instantiate two ik nodes (1 for each arm), no need for exotica-ros since we do our own publishing here
         arm = rospy.get_param('~arm')  # left/right
+        self.arm = arm
         if arm == 'left':
             xml_filename = '{rpbi_work}/configs/nextage_ik_left.xml'
         elif arm == 'right':
@@ -59,7 +60,7 @@ class Node:
         # Setup services
         self.timer = None
         self.running_ik = False
-        rospy.Service('toggle_ik_%s' % arm, ToggleIK, self.toggle_ik)
+        rospy.Service('toggle_ik_%s' % arm, Toggle, self.toggle_ik)
 
         rospy.Service('solve_ik_%s' % arm, SolveIK, self.solve_ik_service)
 
@@ -172,8 +173,10 @@ class Node:
     def publish_joint_state(self, q_exo):
         msg = JointState()
         msg.header.stamp = rospy.Time.now()
-        msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
-        msg.position += q_exo[1:].tolist()
+        msg.name = self.scene.get_controlled_joint_names()
+        msg.position = q_exo.tolist()
+        # msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
+        # msg.position += q_exo[1:].tolist()
         self.joint_state_pub.publish(msg)
 
     def spin(self):
