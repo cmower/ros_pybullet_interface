@@ -278,10 +278,13 @@ def main():
 
     # Run the automation test
     def run(handle):
+        rospy.loginfo('-'*80)
+        rospy.loginfo('Running step: %s', handle.__name__)
         success = handle()
         if not success:
             rospy.logerr('TEST FAILED, QUITTING...')
             sys.exit(0)
+        rospy.loginfo('Step successfully completed, continue?')
         input()
 
     run(node.snap_pybullet_to_robot)
