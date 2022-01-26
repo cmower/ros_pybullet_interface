@@ -16,7 +16,6 @@ controller_joints_arm_left = ['LARM_JOINT0', 'LARM_JOINT1', 'LARM_JOINT2', 'LARM
 controller_joints_arm_right = ['RARM_JOINT0', 'RARM_JOINT1', 'RARM_JOINT2', 'RARM_JOINT3', 'RARM_JOINT4', 'RARM_JOINT5']
 controller_joints = controller_joints_arm_left + controller_joints_arm_right + controller_joints_torso + controller_joints_head
 
-
 class ExoticaInterface:
 
     def __init__(self, arm):
@@ -32,6 +31,11 @@ class ExoticaInterface:
         self.solver = exo.Setup.load_solver(xml_filename)
         self.problem = self.solver.get_problem()
         self.scene = self.problem.get_scene()
+
+        # print("arm (%s):" % arm, self.scene.get_controlled_joint_names())
+
+    def resolve_joint_state_msg(self, msg):
+        return np.array([msg.position[msg.name.index(name)] for name in self.scene.get_controlled_joint_names()])
 
     def set_goal(self, pos):
         self.scene.attach_object_local(self.target, 'base_link', pos)
@@ -122,8 +126,9 @@ class Node:
         # sys.exit(0)
 
         # Get current joint position
-        msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
-        qstart = self.resolve_joint_msg_order(msg)
+        # msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
+        msg = rospy.wait_for_message('/rpbi/nextage/joint_state', JointState)
+        qstart = getattr(self, 'exo_%s'%req.arm).resolve_joint_state_msg(msg)
 
         # Move robot
         # NOTE: robot will move as follows:
