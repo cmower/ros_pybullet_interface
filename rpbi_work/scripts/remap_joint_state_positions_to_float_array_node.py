@@ -65,7 +65,7 @@ class Node:
             success = False
         return ToggleResponse(success=success, info=info)
 
-    def start_callback(self):
+    def start_callback(self, req):
 
         success = True
         info = ''
@@ -87,7 +87,7 @@ class Node:
         success = True
         info = ''
 
-        if not self.running_ik:
+        if not self.sub_on:
             info = 'recieved request to stop remapper, but it is not running anyway!'
             success = False
             rospy.logerr(info)
