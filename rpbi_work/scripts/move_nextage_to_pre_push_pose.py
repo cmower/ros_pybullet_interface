@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import rospy
 import numpy
 import numpy as np
@@ -98,7 +99,7 @@ class Node:
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
         rospy.logwarn('Robot should be at pre-pre grasp pose now')
-        sys.exit(0)
+        # sys.exit(0)
 
         if not self.move_robot(goal, req.arm, 1.0, q)[1]:
             # move to requested position
