@@ -16,9 +16,11 @@
 
   <!-- get IK from box, TODO: check offset frame --> 
   <node pkg="rpbi_work" name="get_eff_pose_from_pushing_object" type="get_eff_pose_from_pushing_object.py" output="screen">
-    <param name="offset_x" type="double" value="-0.02"/>
+    <!-- <param name="offset_x" type="double" value="-0.02"/> -->
+    <param name="offset_x" type="double" value="-0.012"/>
     <param name="offset_y" type="double" value="0.0"/>
-    <param name="offset_z" type="double" value="0.02"/>
+    <!-- <param name="offset_z" type="double" value="0.02"/> -->
+    <param name="offset_z" type="double" value="0.03"/>
   </node>
 
   <!-- Move nextage to pre push pose -->
