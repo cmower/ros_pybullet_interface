@@ -74,8 +74,11 @@
 	args="0. 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
 -->
 
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="sliding_box_center_tf_broadcaster" -->
+	<!-- args="-0.012 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/> -->
+
   <node pkg="tf2_ros" type="static_transform_publisher" name="sliding_box_center_tf_broadcaster"
-	args="-0.012 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
+	args="-0.01 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
 
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="cylinder_obstacle_tf_broadcaster"
