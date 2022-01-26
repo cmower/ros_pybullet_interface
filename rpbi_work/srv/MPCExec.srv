@@ -1,0 +1,6 @@
+string arm
+float time_horizon
+float[] goal_pose
+---
+string info
+bool success
