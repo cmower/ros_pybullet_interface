@@ -59,8 +59,45 @@ class Node:
         # Setup service
         rospy.Service('move_nextage_to_pre_push_pose', MoveNextageToPrePushPose, self.move_nextage_to_pre_push_pose)
 
-    def move_nextage_to_pre_push_pose(self, req):
+        rospy.Service('move_nextage_to_pre_push_pose_rev', MoveNextageToPrePushPose, self.move_nextage_to_pre_push_pose_rev)
 
+    def move_nextage_to_pre_push_pose_rev(self, req):
+
+        info = ''
+
+        # Get goal position
+        rospy.wait_for_service('get_eff_pose_from_pushing_object')
+        try:
+            handle = rospy.ServiceProxy('get_eff_pose_from_pushing_object', EffPoseFromObject)
+            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id, arm=req.arm))
+        except rospy.ServiceException as e:
+            rospy.logerr('Service error: %s', str(e))
+            info = 'Failed to retrieve goal from server'
+            return MoveNextageToPrePushPoseResponse(success=False, info=info)
+
+        if not resp.success:
+            info = 'Failed to retrieve goal from server'
+            return MoveNextageToPrePushPoseResponse(success=False, info=info)
+
+        goal = numpy.array(resp.position)
+
+        # Get current joint position
+        # msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
+        msg = rospy.wait_for_message('/rpbi/nextage/joint_state', JointState)
+        qstart = getattr(self, 'exo_%s'%req.arm).resolve_joint_state_msg(msg)
+
+        # Move robot
+        # NOTE: robot will move as follows:
+        # 1. from where ever it is to a pre-pre push pose (above/behind object), this is to prevent robot colliding with object
+        q, success = self.move_robot(goal+self.pre_pre_offset, req.arm, req.Tmax, qstart)
+        if not success:
+            # move to above/behind object (pre-pre pose)
+            info = 'Failed to move nextage to pre-pre eff goal pose'
+            return MoveNextageToPrePushPoseResponse(success=False, info=info)
+
+        return MoveNextageToPrePushPoseResponse(success=True, info=info)
+
+    def move_nextage_to_pre_push_pose(self, req):
 
         info = ''
 
