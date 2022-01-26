@@ -25,6 +25,6 @@
   <node type="move_nextage_to_pre_push_pose.py" pkg="rpbi_work" name="move_nextage_to_pre_push_pose" output="screen"/>
 
   <!-- Remapper node -->
-  <!-- <node name="remapper_node" pkg="rpbi_work" type="remap_joint_state_positions_to_float_array_node.py"/> -->
+  <node name="remapper_node" pkg="rpbi_work" type="remap_joint_state_positions_to_float_array_node.py"/>
 
 </launch>
