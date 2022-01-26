@@ -38,6 +38,8 @@ class ExoticaInterface:
 
 class Node:
 
+    pre_pre_offset = np.array([-0.02, 0, 0.1])  # TODO: NOTE: this may need to be tuned
+
     def __init__(self):
 
         # Init node
@@ -89,8 +91,7 @@ class Node:
         # NOTE: robot will move as follows:
         # 1. from where ever it is to a pre-pre push pose (above/behind object), this is to prevent robot colliding with object
         # 2. from pre-pre-push pose to object
-        pre_pre_offset = np.array([0, 0, 0.0])  # TODO: NOTE: this may need to be tuned
-        q, success = self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax, qstart)
+        q, success = self.move_robot(goal+self.pre_pre_offset, req.arm, req.Tmax, qstart)
         if not success:
             # move to above/behind object (pre-pre pose)
             info = 'Failed to move nextage to pre-pre eff goal pose'
