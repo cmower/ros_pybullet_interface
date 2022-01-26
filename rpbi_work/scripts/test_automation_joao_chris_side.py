@@ -17,6 +17,8 @@ controller_joints = controller_joints_arm_left + controller_joints_arm_right + c
 
 class Node:
 
+    USE_REAL_ROBOT = True
+
     def __init__(self):
         rospy.init_node('test_automation_joao_chris_side')
 
@@ -58,10 +60,10 @@ class Node:
 
     def _switch_on_remapper(self):
 
-        # DEBUG
-        if True:
+        rospy.loginfo('Going to switch on remapper')
+
+        if not self.USE_REAL_ROBOT:
             return True
-        # DEBUG
 
         success = True
         srv = 'toggle_remaper'
@@ -82,11 +84,10 @@ class Node:
 
     def _switch_off_remapper(self):
 
-        # DEBUG
-        if True:
-            return True
-        # DEBUG
+        rospy.loginfo('Going to switch off remapper')
 
+        if not self.USE_REAL_ROBOT:
+            return True
 
         success = True
         srv = 'toggle_remaper'
@@ -138,10 +139,10 @@ class Node:
             success = False
         return success
 
-    def send_robot_left_arm_to_pre_pushing_pose(self):
+    def _send_robot_arm_to_pre_pushing_pose(self, arm):
 
         success = True
-        rospy.loginfo('Sending robot left arm to pre-pushing pose')
+        rospy.loginfo('Sending robot %s arm to pre-pushing pose', arm)
 
         # turn on remapper
         if not self._switch_on_remapper():
@@ -158,7 +159,7 @@ class Node:
             req = MoveNextageToPrePushPoseRequest(
                 object_frame_id='pushing_box_visual',
                 parent_frame_id='sim/nextage_base',
-                arm='left',
+                arm=arm,
                 Tmax=5.0,
             )
             resp = handle(req)
@@ -180,36 +181,19 @@ class Node:
 
         return success
 
+    def send_robot_left_arm_to_pre_pushing_pose(self):
+        return self._send_robot_arm_to_pre_pushing_pose('left')
+
+    def send_robot_right_arm_to_pre_pushing_pose(self):
+        return self._send_robot_arm_to_pre_pushing_pose('right')
+
     def reorient_box_with_left_arm(self):
         pass  # REQUIRES JOAO CODE TO BE CALLABLE VIA SERVICE
 
-    def move_left_arm_away(self):
+    def _move_arm_away(self, arm):
 
         success = True
-
-        # turn on remapper
-        if not self._switch_on_remapper():
-            success = False
-            return success
-
-        # Move arm to position
-        pos = [0,0,0] # TODO
-        success = self._move_arm_to_pos(pos, 'left')
-
-        if not success:
-            self._switch_off_remapper()
-            return
-
-        # turn off remapper
-        if not self._switch_off_remapper():
-            success = False
-            return success
-
-        return success
-
-    def send_robot_right_arm_to_pre_pushing_pose(self):
-        success = True
-        rospy.loginfo('Sending robot right arm to pre-pushing pose')
+        rospy.loginfo('Sending robot %s arm away', arm)
 
         # turn on remapper
         if not self._switch_on_remapper():
@@ -217,17 +201,17 @@ class Node:
             return success
 
         # Move robot to pre push pose
-        srv = 'move_nextage_to_pre_push_pose'
+        srv = 'move_nextage_to_pre_push_pose_rev'
         rospy.wait_for_service(srv)
         try:
 
             handle = rospy.ServiceProxy(srv, MoveNextageToPrePushPose)
 
             req = MoveNextageToPrePushPoseRequest(
-                object_frame_id='',  # TODO
-                parent_frame_id='',  # TODO
-                arm='right',
-                Tmax=5.0,
+                object_frame_id='pushing_box_visual',
+                parent_frame_id='sim/nextage_base',
+                arm=arm,
+                Tmax=1.0,
             )
             resp = handle(req)
 
@@ -247,6 +231,12 @@ class Node:
             success = False
 
         return success
+
+    def move_left_arm_away(self):
+        return self._move_arm_away('left')
+
+    def move_right_arm_away(self):
+        return self._move_arm_away('right')
 
     def push_box_to_goal_position(self):
         pass # REQUIRES JOAO CODE TO BE CALLABLE VIA SERVICE
@@ -278,20 +268,22 @@ def main():
 
     # Run the automation test
     def run(handle):
-        rospy.loginfo('-'*80)
+        rospy.loginfo('-'*60)
         rospy.loginfo('Running step: %s', handle.__name__)
+        rospy.loginfo('Continue? [ENTER]')
+        input()
         success = handle()
         if not success:
             rospy.logerr('TEST FAILED, QUITTING...')
             sys.exit(0)
-        rospy.loginfo('Step successfully completed, continue?')
-        input()
+        rospy.loginfo('Step successfully completed, moving on to next step.')
 
     run(node.snap_pybullet_to_robot)
-    run(node.send_robot_left_arm_to_pre_pushing_pose)
+    # run(node.send_robot_left_arm_to_pre_pushing_pose)
     # run(node.reorient_box_with_left_arm)
     # run(node.move_left_arm_away)
-    # run(node.send_robot_right_arm_to_pre_pushing_pose)
+    run(node.send_robot_right_arm_to_pre_pushing_pose)
+    run(node.move_right_arm_away)
     # run(node.push_box_to_goal_position)
     # run(node.move_robot_to_horray_pose)
 
