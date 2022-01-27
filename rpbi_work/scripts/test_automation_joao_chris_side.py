@@ -335,24 +335,6 @@ class Node:
             return False
         return True
 
-    def move_robot_to_horray_pose(self):
-
-        success = True
-
-        # turn on remapper
-        if not self._switch_on_remapper():
-            success = False
-            return success
-
-        # Move to state
-        qhorray = np.zeros(len(controller_joints))  # TODO
-        self._move_to_state(qhorray)
-
-        # turn on remapper
-        if not self._switch_off_remapper():
-            success = False
-            return success
-
 def main():
 
     # Setup
@@ -379,7 +361,6 @@ def main():
     run(node.send_robot_right_arm_to_pre_pushing_pose)
     run(node.move_right_arm_away)
     # run(node.push_box_to_goal_position)
-    # run(node.move_robot_to_horray_pose)
 
     rospy.loginfo('Successfully completed automation test!')
 
