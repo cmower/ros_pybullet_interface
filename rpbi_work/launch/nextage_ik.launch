@@ -32,7 +32,7 @@
   <!-- Joao MPC node -->
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
-      name="mpc_sliding_node"
+      name="mpc_sliding_node_left"
       pkg="rpbi_work"
       type="nextage_ros_mpc_sliding_real_robot.py"
       required="true"
@@ -62,7 +62,7 @@
 
   <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
   <node
-      name="mpc_sliding_node"
+      name="mpc_sliding_node_right"
       pkg="rpbi_work"
       type="nextage_ros_mpc_sliding_real_robot.py"
       required="true"

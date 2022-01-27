@@ -25,16 +25,20 @@ class Node:
         rospy.init_node('test_automation_joao_chris_side')
 
     def _toggle_ik(self, arm, switch):
+        rospy.loginfo("going to switch IK %s for %s arm", switch, arm)
         success = True
         srv ='toggle_ik_%s' % arm
         rospy.wait_for_service(srv)
         try:
-            req = Toggle(switch=switch)
+            req = ToggleRequest(switch=switch)
             handle = rospy.ServiceProxy(srv, Toggle)
             resp = handle(req)
             success = resp.success
-        except:
+        except Exception as e:
+            rospy.logwarn("Failed to toggle IK: %s", e)
             success = False
+        if success:
+            rospy.loginfo("IK switched on")
         return success
 
     def _move_to_state(self, q):
@@ -95,6 +99,9 @@ class Node:
         if not resp.success:
             success = False
             rospy.logerr('Failed to turn on remapper!')
+
+        if success:
+            rospy.loginfo('remapper switched on')
         return success
 
     def _switch_off_remapper(self):
@@ -119,6 +126,9 @@ class Node:
         if not resp.success:
             success = False
             rospy.logerr('Failed to turn off remapper!')
+
+        if success:
+            rospy.loginfo('remapper switched off')
         return success
 
     def _resolve_joint_msg_order(self, msg):
@@ -236,6 +246,8 @@ class Node:
 
         success = True
 
+        rospy.loginfo("starting to execute MPC")
+
         # turn on remapper
         if not self._switch_on_remapper():
             success = False
@@ -256,17 +268,21 @@ class Node:
                 info='',
             )
             resp = handle(req)
-
-        msg = None
-        max_time = 30 # in seconds
-        try:
-            msg = rospy.wait_for_message('/mpc_completion_flag', Int8, timeout=max_time)
-            if msg.data != 0:
-                rospy.logerr('MPC failed with flag: %d', msg.data)
-                success = False
-        except rospy.ROSException as e:
-            rospy.logerr('MPC timeout exceeded %d seconds: %s', max_time, e)
+        except rospy.ServiceException as e:
+            rospy.logerr("executing MPC failed: %s", e)
             success = False
+
+        if success:
+            msg = None
+            max_time = 30 # in seconds
+            try:
+                msg = rospy.wait_for_message('/mpc_completion_flag', Int8, timeout=max_time)
+                if msg.data != 0:
+                    rospy.logerr('MPC failed with flag: %d', msg.data)
+                    success = False
+            except rospy.ROSException as e:
+                rospy.logerr('MPC timeout exceeded %d seconds: %s', max_time, e)
+                success = False
 
         # Switch off remapper
         if not self._switch_off_remapper():
@@ -359,8 +375,8 @@ def main():
     # run(node.reorient_box_with_left_arm)
     # run(node.move_left_arm_away)
     run(node.send_robot_right_arm_to_pre_pushing_pose)
+    run(node.push_box_to_goal_position)
     run(node.move_right_arm_away)
-    # run(node.push_box_to_goal_position)
 
     rospy.loginfo('Successfully completed automation test!')
 

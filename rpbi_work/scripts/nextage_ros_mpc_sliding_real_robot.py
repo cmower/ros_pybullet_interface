@@ -15,6 +15,8 @@ from rpbi_work.srv import PusherSlider, PusherSliderResponse
 
 import rospy
 
+import matplotlib.pyplot as plt
+
 # ROS message types
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
@@ -46,7 +48,7 @@ class ROSSlidingMPC:
         rospy.loginfo("%s: node started.", self.name)
 
         # Flag for debugging plot
-        self.plotFlag = True
+        self.plotFlag = False
 
         # start subcriber
         self.mpc_listen_buff = tf2_ros.Buffer()
@@ -68,7 +70,7 @@ class ROSSlidingMPC:
         arm = rospy.get_param('~arm')  # left/right
 
         # get configuration file for opt setup
-        setup_file_name = '{rpbi_work}/configs/nextage_real_setup_%.yaml' % arm
+        setup_file_name = '{rpbi_work}/configs/nextage_real_setup_%s.yaml' % arm
         setup_config = load_config(setup_file_name)
         # get setup configurations
         self.real_setup = setup_config['real_setup']
@@ -78,8 +80,9 @@ class ROSSlidingMPC:
         self.obstacle_name = setup_config['obstacle_name']
 
         # nominal trajectory file for planning
-        nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_%.yaml' % arm
+        nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_%s.yaml' % arm
         nom_config = load_config(nom_traj_file_name)
+        self.nom_config = nom_config
 
         # Get config files
         #  -------------------------------------------------------------------
@@ -87,6 +90,7 @@ class ROSSlidingMPC:
         dyn_config = load_config(sliding_dyn_file_name)
         tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
         tracking_config = load_config(tracking_traj_file_name)
+        self.tracking_config = tracking_config
         #  -------------------------------------------------------------------
 
         # Initialize internal variables
@@ -100,21 +104,23 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        self.T = nom_config['TimeHorizon']  # time of the simulation is seconds
+        self.T = self.nom_config['TimeHorizon']  # time of the simulation is seconds
         self.freq = 25  # number of increments per second
         N_MPC = 25  # time horizon for the MPC controller
+        self.N_MPC = N_MPC
         #  -------------------------------------------------------------------
         # Computing Problem constants
         #  -------------------------------------------------------------------
-        self.dt = 1.0/freq # sampling time
-        N = int(T*freq) # total number of iterations
+        self.dt = 1.0/self.freq # sampling time
+        N = int(self.T*self.freq) # total number of iterations
+        self.N = N
         self.Nidx = int(N)
         #  -------------------------------------------------------------------
         # define system dynamics
         #  -------------------------------------------------------------------
         self.dyn = sliding_pack.dyn.Sys_sq_slider_quasi_static_ellip_lim_surf(
                 dyn_config, 
-                tracking_config['contactMode']
+                self.tracking_config['contactMode']
         )
 
         # Setup timers
@@ -125,12 +131,13 @@ class ROSSlidingMPC:
         self._mpc_completion_pub = rospy.Publisher('/mpc_completion_flag', Int8, queue_size=1)
 
         # Setup services
-        selt.runningMPC = False
-        selt.planningDone = False
+        self.runningMPC = False
+        self.planningDone = False
         rospy.Service('planning_sliding_%s' % arm, PusherSlider, self.plan_sliding_service)
         rospy.Service('executing_mpc_%s' % arm, PusherSlider, self.start_mpc_service)
 
     def plan_sliding_service(self, req):
+        info = ''
         rospy.loginfo("I am planning")
         # Loop till the pos and ori of the object has been read.
         try:
@@ -151,8 +158,8 @@ class ROSSlidingMPC:
         except:
             rospy.logwarn(f"{self.name}: /tf topic does NOT have 456 {self.obstacle_name}")
         # 
-        X_goal = nom_config['X_goal']
-        x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], N, N_MPC)
+        X_goal = self.nom_config['X_goal']
+        x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], self.N, self.N_MPC)
         x0_nom = x0_nom + obj_pos0[0]
         x1_nom = x1_nom + obj_pos0[1]
         X_nom_val_temp, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
@@ -160,7 +167,7 @@ class ROSSlidingMPC:
         #  ------------------------------------------------------------------
         print('i am going to build')
         optObj = sliding_pack.to.buildOptObj(
-                self.dyn, N+N_MPC, nom_config, X_nom_val_temp, dt=self.dt)
+                self.dyn, self.N+self.N_MPC, self.nom_config, X_nom_val_temp, dt=self.dt)
         print('i built')
         # read obstacle position
         if optObj.numObs == 0:
@@ -181,11 +188,11 @@ class ROSSlidingMPC:
             X_nom_val_plot = np.array(X_nom_val)
             ax.plot(X_nom_val_plot[0, :], X_nom_val_plot[1, :], color='blue',
                     linewidth=2.0, linestyle='dashed')
-            import matplotlib.pyplot as plt
-            if optObj.numObs > 0:
-                for i in range(len(obsCentre)):
-                    circle_i = plt.Circle(obsCentre[i], obsRadius[i], color='b')
-                    ax.add_patch(circle_i)
+            
+            # if optObj.numObs > 0:
+            #     for i in range(len(obsCentre)):
+            #         circle_i = plt.Circle(obsCentre[i], obsRadius[i], color='b')
+            #         ax.add_patch(circle_i)
             # ax.set_xlim((-0.5, 0.5))
             # ax.set_ylim((-1.0, -0.3))
             plt.show()
@@ -201,7 +208,7 @@ class ROSSlidingMPC:
         # define optimization problem
         #  -------------------------------------------------------------------
         self.optObj = sliding_pack.to.buildOptObj(
-                self.dyn, N_MPC, tracking_config,
+                self.dyn, self.N_MPC, self.tracking_config,
                 self.X_nom_val, dt=self.dt)
         #  -------------------------------------------------------------------
         success = True
