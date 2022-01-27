@@ -29,4 +29,66 @@
   <!-- Remapper node -->
   <node name="remapper_node" pkg="rpbi_work" type="remap_joint_state_positions_to_float_array_node.py"/>
 
+  <!-- Joao MPC node -->
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <node
+      name="mpc_sliding_node"
+      pkg="rpbi_work"
+      type="nextage_ros_mpc_sliding_real_robot.py"
+      required="true"
+      output="screen">
+    <param name="real_setup" value="true" type="bool"/>
+    <param name="arm" value="left" type="string"/>
+    <!-- List visual objects (optional) -->
+    <rosparam param="object_config_file_name">
+      [
+      '{rpbi_work}/configs/nextage_sliding_box_visual.yaml',
+      '{rpbi_work}/configs/nextage_sliding_box.yaml',
+      ]
+    </rosparam>
+    <!-- Sys dyn param -->
+    <rosparam param="sliding_param_dyn">
+      [
+      '{rpbi_work}/configs/sliding_dyn_param.yaml',
+      ]
+    </rosparam>
+    <!-- Tracking to param -->
+    <rosparam param="sliding_param_tracking_traj">
+      [
+      '{rpbi_work}/configs/nextage_tracking_config.yaml',
+      ]
+    </rosparam>
+  </node>
+
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <node
+      name="mpc_sliding_node"
+      pkg="rpbi_work"
+      type="nextage_ros_mpc_sliding_real_robot.py"
+      required="true"
+      output="screen">
+    <param name="real_setup" value="true" type="bool"/>
+    <param name="arm" value="right" type="string"/>
+    <!-- List visual objects (optional) -->
+    <rosparam param="object_config_file_name">
+      [
+      '{rpbi_work}/configs/nextage_sliding_box_visual.yaml',
+      '{rpbi_work}/configs/nextage_sliding_box.yaml',
+      ]
+    </rosparam>
+    <!-- Sys dyn param -->
+    <rosparam param="sliding_param_dyn">
+      [
+      '{rpbi_work}/configs/sliding_dyn_param.yaml',
+      ]
+    </rosparam>
+    <!-- Tracking to param -->
+    <rosparam param="sliding_param_tracking_traj">
+      [
+      '{rpbi_work}/configs/nextage_tracking_config.yaml',
+      ]
+    </rosparam>
+  </node>
+
+
 </launch>

@@ -3,6 +3,7 @@ import sys
 import time
 import math
 import numpy as np
+from std_msgs.msg import Int8
 from scipy.spatial.transform import Rotation as R
 import tf2_ros
 import casadi as cs
@@ -10,6 +11,7 @@ from ros_pybullet_interface.config import load_config
 np.set_printoptions(precision=3)
 # service for stepping the simulation from code
 from ros_pybullet_interface.srv import ManualPybullet, ManualPybulletRequest
+from rpbi_work.srv import PusherSlider, PusherSliderResponse
 
 import rospy
 
@@ -41,6 +43,10 @@ class ROSSlidingMPC:
 
         # Name of node
         self.name = rospy.get_name()
+        rospy.loginfo("%s: node started.", self.name)
+
+        # Flag for debugging plot
+        self.plotFlag = True
 
         # start subcriber
         self.mpc_listen_buff = tf2_ros.Buffer()
@@ -60,34 +66,20 @@ class ROSSlidingMPC:
 
         # get working arm
         arm = rospy.get_param('~arm')  # left/right
-        # get configs for opt
-        if arm == 'left':
-            setup_file_name = '{rpbi_work}/configs/nextage_real_setup_left.yaml'
-        elif arm == 'right':
-            setup_file_name = '{rpbi_work}/configs/nextage_real_setup_right.yaml'
-        else:
-            rospy.logerr('Given arm parameter was not recognized (%s), should be "left" or "right"!', arm)
-            sys.exit(0)
+
+        # get configuration file for opt setup
+        setup_file_name = '{rpbi_work}/configs/nextage_real_setup_%.yaml' % arm
         setup_config = load_config(setup_file_name)
+        # get setup configurations
         self.real_setup = setup_config['real_setup']
         self.robot_name = setup_config['robot_name']
         self.end_effector_target_frame_id = setup_config['end_effector_target_frame_id']
         self.object_name = setup_config['object_name']
         self.obstacle_name = setup_config['obstacle_name']
 
-        # Loop till the pos and ori of the object has been read.
-        while 1:
-            try:
-                # Read the position and orientation of the robot from the /tf topic
-                trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{self.object_name}", rospy.Time())
-                # replaces base_position = config['base_position']
-                obj_pos0 = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
-                obj_ori_quat0 = np.array([trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w])
-                obj_ori0 = R.from_quat(obj_ori_quat0).as_euler('xyz', degrees=False)[2]
-
-                break
-            except:
-                rospy.logwarn(f"{self.name}: /tf topic does NOT have 123 {self.object_name}")
+        # nominal trajectory file for planning
+        nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_%.yaml' % arm
+        nom_config = load_config(nom_traj_file_name)
 
         # Get config files
         #  -------------------------------------------------------------------
@@ -95,15 +87,6 @@ class ROSSlidingMPC:
         dyn_config = load_config(sliding_dyn_file_name)
         tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
         tracking_config = load_config(tracking_traj_file_name)
-        # nom traj file for planning
-        if arm == 'left':
-            nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_left.yaml'
-        elif arm == 'right':
-            nom_traj_file_name = '{rpbi_work}/configs/nextage_nom_config_right.yaml'
-        else:
-            rospy.logerr('Given arm parameter was not recognized (%s), should be "left" or "right"!', arm)
-            sys.exit(0)
-        nom_config = load_config(nom_traj_file_name)
         #  -------------------------------------------------------------------
 
         # Initialize internal variables
@@ -117,9 +100,8 @@ class ROSSlidingMPC:
 
         # Set Problem constants
         #  -------------------------------------------------------------------
-        # T = 8  # time of the simulation is seconds
-        T = nom_config['TimeHorizon']  # time of the simulation is seconds
-        freq = 25  # number of increments per second
+        self.T = nom_config['TimeHorizon']  # time of the simulation is seconds
+        self.freq = 25  # number of increments per second
         N_MPC = 25  # time horizon for the MPC controller
         #  -------------------------------------------------------------------
         # Computing Problem constants
@@ -135,49 +117,70 @@ class ROSSlidingMPC:
                 tracking_config['contactMode']
         )
 
-        planning_flag = True
-        if planning_flag:
-            print('I am planning.')
-            while 1:
-                try:
-                    # Read the position and orientation of the robot from the /tf topic
-                    trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{self.obstacle_name}", rospy.Time())
-                    # replaces base_position = config['base_position']
-                    obs_pos0 = [trans.transform.translation.x, trans.transform.translation.y]
-                    break
-                except:
-                    rospy.logwarn(f"{self.name}: /tf topic does NOT have 456 {self.obstacle_name}")
-            print('I received info.')
-            X_goal = nom_config['X_goal']
-            x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], N, N_MPC)
-            x0_nom = x0_nom + obj_pos0[0]
-            x1_nom = x1_nom + obj_pos0[1]
-            X_nom_val_temp, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
-            # Compute nominal actions for sticking contact
-            #  ------------------------------------------------------------------
-            print('i am going to build')
-            optObj = sliding_pack.to.buildOptObj(
-                    self.dyn, N+N_MPC, nom_config, X_nom_val_temp, dt=self.dt)
-            print('i built')
-            # read obstacle position
-            if optObj.numObs == 0:
-                obsCentre = None
-                obsRadius = None
-            elif optObj.numObs == 1:
-                obsCentre = [obs_pos0]
-                obsRadius = [0.065]
-            print('about to start planning')
-            resultFlag, X_nom_val, U_nom_val, other_opt, _, t_opt = optObj.solveProblem(
-                    0, [obj_pos0[0], obj_pos0[1], obj_ori0, 0],
-                    obsCentre=obsCentre, obsRadius=obsRadius)
-            #  ---------------------------------------------------------------
+        # Setup timers
+        self.dur_pubsub = rospy.Duration(1./RUN_FREQ)
+        rospy.Timer(self.dur_pubsub, self.readTFs)
+
+        # publisher for MPC completion
+        self._mpc_completion_pub = rospy.Publisher('/mpc_completion_flag', Int8, queue_size=1)
+
+        # Setup services
+        selt.runningMPC = False
+        selt.planningDone = False
+        rospy.Service('planning_sliding_%s' % arm, PusherSlider, self.plan_sliding_service)
+        rospy.Service('executing_mpc_%s' % arm, PusherSlider, self.start_mpc_service)
+
+    def plan_sliding_service(self, req):
+        rospy.loginfo("I am planning")
+        # Loop till the pos and ori of the object has been read.
+        try:
+            # Read the position and orientation of the robot from the /tf topic
+            trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{self.object_name}", rospy.Time())
+            # replaces base_position = config['base_position']
+            obj_pos0 = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+            obj_ori_quat0 = np.array([trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w])
+            obj_ori0 = R.from_quat(obj_ori_quat0).as_euler('xyz', degrees=False)[2]
+        except:
+            rospy.logerr(f"{self.name}: /tf topic does NOT have 123 {self.object_name}")
+        # read obstacle pose
+        try:
+            # Read the position and orientation of the robot from the /tf topic
+            trans = self.mpc_listen_buff.lookup_transform(WORLD_FRAME, f"{self.obstacle_name}", rospy.Time())
+            # replaces base_position = config['base_position']
+            obs_pos0 = [trans.transform.translation.x, trans.transform.translation.y]
+        except:
+            rospy.logwarn(f"{self.name}: /tf topic does NOT have 456 {self.obstacle_name}")
+        # 
+        X_goal = nom_config['X_goal']
+        x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], N, N_MPC)
+        x0_nom = x0_nom + obj_pos0[0]
+        x1_nom = x1_nom + obj_pos0[1]
+        X_nom_val_temp, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
+        # Compute nominal actions for sticking contact
+        #  ------------------------------------------------------------------
+        print('i am going to build')
+        optObj = sliding_pack.to.buildOptObj(
+                self.dyn, N+N_MPC, nom_config, X_nom_val_temp, dt=self.dt)
+        print('i built')
+        # read obstacle position
+        if optObj.numObs == 0:
+            obsCentre = None
+            obsRadius = None
+        elif optObj.numObs == 1:
+            obsCentre = [obs_pos0]
+            obsRadius = [0.065]
+        print('about to start planning')
+        resultFlag, X_nom_val, U_nom_val, other_opt, _, t_opt = optObj.solveProblem(
+                0, [obj_pos0[0], obj_pos0[1], obj_ori0, 0],
+                obsCentre=obsCentre, obsRadius=obsRadius)
+        #  ---------------------------------------------------------------
+        if self.plotFlag:
             fig, ax = sliding_pack.plots.plot_nominal_traj(
                         cs.DM(x0_nom), cs.DM(x1_nom))
             # add computed nominal trajectory
             X_nom_val_plot = np.array(X_nom_val)
             ax.plot(X_nom_val_plot[0, :], X_nom_val_plot[1, :], color='blue',
                     linewidth=2.0, linestyle='dashed')
-            # add obstacles
             import matplotlib.pyplot as plt
             if optObj.numObs > 0:
                 for i in range(len(obsCentre)):
@@ -186,30 +189,13 @@ class ROSSlidingMPC:
             # ax.set_xlim((-0.5, 0.5))
             # ax.set_ylim((-1.0, -0.3))
             plt.show()
-            self.X_nom_val = X_nom_val
-            # set object goal transform
-            visual_obj_pose_2d = np.array(X_goal)
-            visual_obj_pos = np.hstack((visual_obj_pose_2d[0:2], VISUAL_OBJ_HEIGHT))
-            visual_obj_ori = R.from_rotvec(np.array([0., 0., X_goal[2]]))
-            visual_obj_ori_quat = visual_obj_ori.as_quat()
-            self._cmd_goal_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
-        else:
-            #  -------------------------------------------------------------------
-            # Generate Nominal Trajectory
-            #  -------------------------------------------------------------------
-            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0., N, N_MPC)
-            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0., 0.3, N, N_MPC)
-            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(0.5, 0.3, N, N_MPC)
-            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_eight(0.11, N, N_MPC)
-            # x0_nom, x1_nom = sliding_pack.traj.generate_traj_circle(0., -2*np.pi, 0.1, N, N_MPC)
-            x0_nom, x1_nom = sliding_pack.traj.generate_traj_ellipse(0., -2*np.pi, 0.3, 0.09, N, N_MPC)
-            #  -------------------------------------------------------------------
-            x0_nom = x0_nom + obj_pos0[0]
-            x1_nom = x1_nom + obj_pos0[1]
-            # stack state and derivative of state
-            self.X_nom_val, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
-
-
+        self.X_nom_val = X_nom_val
+        # set object goal transform
+        visual_obj_pose_2d = np.array(X_goal)
+        visual_obj_pos = np.hstack((visual_obj_pose_2d[0:2], VISUAL_OBJ_HEIGHT))
+        visual_obj_ori = R.from_rotvec(np.array([0., 0., X_goal[2]]))
+        visual_obj_ori_quat = visual_obj_ori.as_quat()
+        self._cmd_goal_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
 
         #  ------------------------------------------------------------------
         # define optimization problem
@@ -218,8 +204,34 @@ class ROSSlidingMPC:
                 self.dyn, N_MPC, tracking_config,
                 self.X_nom_val, dt=self.dt)
         #  -------------------------------------------------------------------
+        success = True
+        self.planningDone = True
+        return PusherSliderResponse(success=success, info=info)
 
-        time.sleep(2.0)  # wait for initialisation to complete
+    def start_mpc_service(self, rep):
+
+        success = True
+        info = ''
+
+        if not self.planningDone:
+            info = "need to call plan_sliding_service first!"
+            success = False
+            rospy.logerr(info)
+            return PusherSliderResponse(success=success, info=info)
+        if self.runningMPC:
+            info = "recieved request to start MPC, but it is already running!"
+            success = False
+            rospy.logerr(info)
+            return PusherSliderResponse(success=success, info=info)
+
+        # Create timer for periodic publisher
+        self.publishRobotObjectPoseTimer = rospy.Timer(self.dur_pubsub, self.publishRobotObjectPose)
+        # Start main loop
+        dur = rospy.Duration(self.dt)
+        self.solveMPCCallbackTimer = rospy.Timer(dur, self.solveMPC)
+        self.runningMPC = True
+        rospy.loginfo('Switched on MPC')
+        return PusherSliderResponse(success=success, info=info)
 
     def publishPose(self, pose, frame_id):
         """ Publish 6D information for the respective rigid body """
@@ -271,7 +283,11 @@ class ROSSlidingMPC:
     def solveMPC(self, event):
 
         if self._obj_pose is None or self._robot_pose is None:
-            return -1
+            self._mpc_completion_pub.publish(Int8(data=-1))
+            self.solveMPCCallbackTimer.shutdown()
+            self.publishRobotObjectPoseTimer.shutdown()
+            rospy.logerr("Object or pose does not exist!")
+            return
 
         # read object position and orientation
         obj_pos_2d_read = self._obj_pose[0:2]
@@ -297,7 +313,6 @@ class ROSSlidingMPC:
         elif self.optObj.numObs == 1:
             obsCentre = [self._obs_pose[0:2]]
             obsRadius = [0.065]
-        
         # build initial state for optimizer: TODO: get this from dyn function
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], float(obj_ori_2d_read), psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
@@ -338,7 +353,12 @@ class ROSSlidingMPC:
         if self.idx_nom > self.Nidx:
             # np.save('/home/kuka-lwr/pybullet_ws/files/comp_time', np.asarray(self.comp_time_plot))
             # np.save('/home/kuka-lwr/pybullet_ws/files/nominal_traj', self.X_nom_val)
-            rospy.signal_shutdown("End of nominal trajectory")
+            # publish completion
+            self._mpc_completion_pub.publish(Int8(data=0))
+            # shutdown timers
+            self.solveMPCCallbackTimer.shutdown()
+            self.publishRobotObjectPoseTimer.shutdown()
+            rospy.loginfo("End of nominal trajectory")
         else:
             # input()
             pass
@@ -353,27 +373,12 @@ class ROSSlidingMPC:
             except rospy.ServiceException as e:
                 print("It failed to step with error: %s"%e)
 
-        return solFlag
-
-
 if __name__=='__main__':
 
-    time.sleep(2.)
     # --- setup the ros interface --- #
     rospy.init_node('test_ros_traj_opt_obj3D', anonymous=True)
     rospy.logwarn("ATTENTION: This node will not run without the impact-TO library!")
     # Initialize node class
-    ROSSlidingMPC = ROSSlidingMPC()
-
-    rospy.loginfo("%s: node started.", ROSSlidingMPC.name)
-
-    # Create timer for periodic subscriber
-    dur_pubsub = rospy.Duration(1./RUN_FREQ)
-    ROSSlidingMPC.readTFSCallbackTimer = rospy.Timer(dur_pubsub, ROSSlidingMPC.readTFs)
-
-    # Create timer for periodic publisher
-    ROSSlidingMPC.writePoseCallbackTimer = rospy.Timer(dur_pubsub, ROSSlidingMPC.publishRobotObjectPose)
-    dur = rospy.Duration(ROSSlidingMPC.dt)
-    ROSSlidingMPC.solveMPCCallbackTimer = rospy.Timer(dur, ROSSlidingMPC.solveMPC)
+    ROSSlidingMPC()
 
     rospy.spin()

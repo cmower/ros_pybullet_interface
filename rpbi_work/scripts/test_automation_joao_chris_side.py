@@ -2,11 +2,13 @@
 import sys
 import rospy
 import numpy as np
+from std_msgs.msg import Int8
 from rpbi_work.srv import MoveNextageToPrePushPose, MoveNextageToPrePushPoseRequest
 from rpbi_work.srv import Toggle, ToggleRequest
 from ros_pybullet_interface.srv import MatchSimToRobot, MatchSimToRobotRequest
 from rpbi_work.srv import MoveNextageToState, MoveNextageToStateRequest
 from rpbi_work.srv import SolveIK, SolveIKRequest
+from rpbi_work.srv import PusherSlider, PusherSliderRequest
 
 controller_joints_torso = ['CHEST_JOINT0']
 controller_joints_head = ['HEAD_JOINT0', 'HEAD_JOINT1']
@@ -21,6 +23,19 @@ class Node:
 
     def __init__(self):
         rospy.init_node('test_automation_joao_chris_side')
+
+    def _toggle_ik(self, arm, switch):
+        success = True
+        srv ='toggle_ik_%s' % arm
+        rospy.wait_for_service(srv)
+        try:
+            req = Toggle(switch=switch)
+            handle = rospy.ServiceProxy(srv, Toggle)
+            resp = handle(req)
+            success = resp.success
+        except:
+            success = False
+        return success
 
     def _move_to_state(self, q):
         success = True
@@ -188,7 +203,82 @@ class Node:
         return self._send_robot_arm_to_pre_pushing_pose('right')
 
     def reorient_box_with_left_arm(self):
-        pass  # REQUIRES JOAO CODE TO BE CALLABLE VIA SERVICE
+        if not self._plan_mpc('left'):
+            return False
+        if not self._exec_mpc('left'):
+            return False
+        return True
+
+    def _plan_mpc(self, arm):
+
+        success = True
+        rospy.loginfo('Planning sliding for robot %s arm', arm)
+
+        # Plan sliding trajectory
+        srv = 'planning_sliding_%s' % arm
+        rospy.wait_for_service(srv)
+        try:
+            handle = rospy.ServiceProxy(srv, PusherSlider)
+
+            req = PusherSliderRequest(
+                info='',
+            )
+            resp = handle(req)
+
+        except rospy.ServiceException as e:
+            rospy.logerr('Service call failed: %s' % e)
+            success = False
+            return success
+
+        return success
+
+    def _exec_mpc(self, arm):
+
+        success = True
+
+        # turn on remapper
+        if not self._switch_on_remapper():
+            success = False
+            return success
+
+        # Turn on IK
+        if not self._toggle_ik(arm, 'on'):
+            success = False
+            return success
+
+        # Start MPC execution
+        srv = 'executing_mpc_%s' % arm
+        rospy.wait_for_service(srv)
+        try:
+            handle = rospy.ServiceProxy(srv, PusherSlider)
+
+            req = PusherSliderRequest(
+                info='',
+            )
+            resp = handle(req)
+
+        msg = None
+        max_time = 30 # in seconds
+        try:
+            msg = rospy.wait_for_message('/mpc_completion_flag', Int8, timeout=max_time)
+            if msg.data != 0:
+                rospy.logerr('MPC failed with flag: %d', msg.data)
+                success = False
+        except rospy.ROSException as e:
+            rospy.logerr('MPC timeout exceeded %d seconds: %s', max_time, e)
+            success = False
+
+        # Switch off remapper
+        if not self._switch_off_remapper():
+            success = False
+
+        # Turn on IK
+        if not self._toggle_ik(arm, 'off'):
+            success = False
+            return success
+
+        return success
+
 
     def _move_arm_away(self, arm):
 
@@ -239,7 +329,11 @@ class Node:
         return self._move_arm_away('right')
 
     def push_box_to_goal_position(self):
-        pass # REQUIRES JOAO CODE TO BE CALLABLE VIA SERVICE
+        if not self._plan_mpc('right'):
+            return False
+        if not self._exec_mpc('right'):
+            return False
+        return True
 
     def move_robot_to_horray_pose(self):
 

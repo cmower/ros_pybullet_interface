@@ -61,7 +61,7 @@ add_service_files(
   Toggle.srv
   SolveIK.srv
   MoveNextageToState.srv
-  MPCExec.srv
+  PusherSlider.srv
 )
 
 ## Generate actions in the 'action' folder
