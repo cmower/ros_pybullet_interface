@@ -167,6 +167,7 @@ catkin_install_python(PROGRAMS
   scripts/nextage_pushing_node.py
   scripts/nextage_ik_node.py
   scripts/move_nextage_to_home.py
+  scripts/move_nextage_to_state.py
   scripts/remap_joint_state_positions_to_float_array_node.py
   scripts/nextage_ros_mpc_sliding.py
   scripts/match_real_robot_to_pybullet.py

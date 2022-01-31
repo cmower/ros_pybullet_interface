@@ -29,6 +29,7 @@ class Node:
             msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
             qstart = self.resolve_joint_msg_order(msg)
             qgoal = np.array(req.goal_position)
+            Tmax = req.Tmax
 
             # Interpolate
             keep_running = True
@@ -46,9 +47,10 @@ class Node:
         except Exception as e:
             success = False
             info = str(e)
+            rospy.logerr('failed to move robot to state: %s', info)
 
 
-        return MoveNextageToState(success=success, info=info)
+        return MoveNextageToStateResponse(success=success, info=info)
 
 
 
@@ -64,7 +66,7 @@ class Node:
     def publish_joint_state(self, q_exo):
         msg = JointState()
         msg.header.stamp = rospy.Time.now()
-        # msg.name = self.scene.get_controlled_joint_names()
+        msg.name = controller_joints #self.scene.get_controlled_joint_names()
         msg.position = q_exo.tolist()
         # msg.position = [q_exo[0], 0, 0]  # chest, head0, head1
         # msg.position += q_exo[1:].tolist()
@@ -72,3 +74,9 @@ class Node:
 
     def spin(self):
         rospy.spin()
+
+def main():
+    Node().spin()
+
+if __name__ == '__main__':
+    main()
