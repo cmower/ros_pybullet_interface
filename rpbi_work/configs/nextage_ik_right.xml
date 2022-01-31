@@ -15,6 +15,7 @@
         <Links>
             <Link Name="TargetLeft" Parent="base_link"/>
             <Link Name="TargetRight" Parent="base_link"/>
+            <Link Name="HEAD_JOINT1_Link_alt" Parent="HEAD_JOINT1_Link" Transform="0 0 0 0 1.57 0"/>
         </Links>
       </Scene>
     </PlanningScene>
@@ -39,7 +40,7 @@
       <LookAt Name="LookAt">
         <EndEffector>
           <!-- EndEffector #1 => Target to look at, in relative frame of EffPoint -->
-          <Frame Link="TargetRight" Base="HEAD_JOINT1_Link"/> <!-- Needs to make sure this is correct -->
+          <Frame Link="TargetRight" Base="HEAD_JOINT1_Link_alt"/> <!-- Needs to make sure this is correct -->
         </EndEffector>
       </LookAt>
     </Maps>
@@ -50,12 +51,12 @@
       <Task Task="Pose" Rho="0."/>
       <Task Task="JointAcc" Rho="1e0"/>
       <Task Task="Limits" Rho="1e7"/>
-      <!-- <Task Task="LookAt" Rho="1.0"/> -->
+      <Task Task="LookAt" Rho="0.5e2"/>
     </Cost>
 
 
     <StartState>0 0 0 0 -0.28 -0.33 0 0 -1.57 0 -0.28 -0.33 0 0 1.57 </StartState>
-    <NominalState>0 0 0 0 -0.28 -0.33 0 0 -1.57 0 -0.28 -0.33 0 0 1.57 </NominalState>
+    <!-- <NominalState>0 0 0 0 -0.28 -0.33 0 0 -1.57 0 -0.28 -0.33 0 0 1.57 </NominalState> -->
     <W> 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</W>
 
   </UnconstrainedEndPoseProblem>
