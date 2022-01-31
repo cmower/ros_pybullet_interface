@@ -181,11 +181,12 @@ class ROSSlidingMPC:
                 0, [obj_pos0[0], obj_pos0[1], obj_ori0, 0],
                 obsCentre=obsCentre, obsRadius=obsRadius)
         #  ---------------------------------------------------------------
+        X_nom_val_plot = np.array(X_nom_val)
         if self.plotFlag:
             fig, ax = sliding_pack.plots.plot_nominal_traj(
                         cs.DM(x0_nom), cs.DM(x1_nom))
             # add computed nominal trajectory
-            X_nom_val_plot = np.array(X_nom_val)
+            
             ax.plot(X_nom_val_plot[0, :], X_nom_val_plot[1, :], color='blue',
                     linewidth=2.0, linestyle='dashed')
             
@@ -213,7 +214,7 @@ class ROSSlidingMPC:
         #  -------------------------------------------------------------------
         success = True
         self.planningDone = True
-        return PusherSliderResponse(success=success, info=info)
+        return PusherSliderResponse(success=success, info=info, x_traj=X_nom_val_plot[0, :], y_traj=X_nom_val_plot[1, :])
 
     def start_mpc_service(self, rep):
 

@@ -2,3 +2,5 @@ string info
 ---
 bool success
 string info
+float64[] x_traj
+float64[] y_traj
