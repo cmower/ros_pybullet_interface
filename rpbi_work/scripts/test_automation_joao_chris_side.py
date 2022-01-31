@@ -41,19 +41,41 @@ class Node:
             rospy.loginfo("IK switched on")
         return success
 
-    def _move_to_state(self, q):
+    def _move_to_state(self, q, Tmax):
         success = True
+
+
+        # turn on remapper
+        if not self._switch_on_remapper():
+            success = False
+            return success
+
         srv = 'move_nextage_to_state'
         rospy.wait_for_service(srv)
         try:
-            req = MoveNextageToStateRequest(goal_position=q)
+            req = MoveNextageToStateRequest(goal_position=q, Tmax=Tmax)
             handle = rospy.ServiceProxy(srv, MoveNextageToState)
             resp = handle(req)
             success = resp.success
         except:
             success = False
+
+        # turn off remapper
+        if not self._switch_off_remapper():
+            success = False
+            return success
+
         return success
 
+    def move_to_desk(self):
+        q = np.array([0.0, -0.43, -0.31, 0.0, 0.75, -1.57, 0.0, -0.43, -0.31, 0.0, 0.75, 1.57, 0.0, 0.0, 0.2])
+        Tmax = 5.0
+        return self._move_to_state(q, Tmax)
+
+    def move_to_conveyor(self):
+        q = np.array([0.0, -0.43, -0.31, 0.0, 0.75, -1.57, 0.0, -0.43, -0.31, 0.0, 0.75, 1.57, 1.57, 0.0, 0.2])
+        Tmax = 5.0
+        return self._move_to_state(q, Tmax)
 
     def _move_arm_to_pos(self, pos, arm):
         success = True
@@ -374,9 +396,11 @@ def main():
     # run(node.send_robot_left_arm_to_pre_pushing_pose)
     # run(node.reorient_box_with_left_arm)
     # run(node.move_left_arm_away)
-    run(node.send_robot_right_arm_to_pre_pushing_pose)
-    run(node.push_box_to_goal_position)
-    run(node.move_right_arm_away)
+    run(node.move_to_desk)
+    # run(node.move_to_conveyor)
+    # run(node.send_robot_right_arm_to_pre_pushing_pose)
+    # run(node.push_box_to_goal_position)
+    # run(node.move_right_arm_away)
 
     rospy.loginfo('Successfully completed automation test!')
 
