@@ -12,7 +12,9 @@ K_goal: 100
 # X_goal: [0.80, -0.15, 0., 0.]
 # X_goal: [0.80, -0.05, 0., 0.]
 # X_goal: [0.80, -0.25, 0., 0.]
-X_goal: [0.4, 0.23, 0., 0.]
+# X_goal: [0.4, 0.23, 0., 0.]  # old
+# X_goal: [0.80, 0.20, 0., 0.]  # temp forward
+X_goal: [0.4, 0.27, 0., 0.]  # temp reorient
 numObs: 0
 linDynFlag: False
 # codeGenFlag: True
@@ -20,3 +22,4 @@ codeGenFlag: False
 noPrintingFlag: False
 phases: null
 TimeHorizon: 4 # time horizon
+# TimeHorizon: 12 # time horizon

@@ -68,6 +68,7 @@ class ROSSlidingMPC:
 
         # get working arm
         arm = rospy.get_param('~arm')  # left/right
+        self.arm = arm
 
         # get configuration file for opt setup
         setup_file_name = '{rpbi_work}/configs/nextage_real_setup_%s.yaml' % arm
@@ -122,6 +123,13 @@ class ROSSlidingMPC:
                 dyn_config, 
                 self.tracking_config['contactMode']
         )
+        #  -------------------------------------------------------------------
+        # build optimization problem for planning
+        #  -------------------------------------------------------------------
+        print('i am going to build')
+        self.optObjPlan = sliding_pack.to.buildOptObj(
+                self.dyn, self.N+self.N_MPC, self.nom_config, dt=self.dt, useGoalFlag=True)
+        print('i built')
 
         # Setup timers
         self.dur_pubsub = rospy.Duration(1./RUN_FREQ)
@@ -158,28 +166,29 @@ class ROSSlidingMPC:
         except:
             rospy.logwarn(f"{self.name}: /tf topic does NOT have 456 {self.obstacle_name}")
         # 
-        X_goal = self.nom_config['X_goal']
+        if self.arm == 'right':
+            X_goal = self.nom_config['X_goal']
+        elif self.arm == 'left':
+            X_goal = [obj_pos0[0]+0.01, obj_pos0[1], 0.0, 0.0]
         x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], self.N, self.N_MPC)
         x0_nom = x0_nom + obj_pos0[0]
         x1_nom = x1_nom + obj_pos0[1]
         X_nom_val_temp, _ = sliding_pack.traj.compute_nomState_from_nomTraj(x0_nom, x1_nom, self.dt)
         # Compute nominal actions for sticking contact
         #  ------------------------------------------------------------------
-        print('i am going to build')
-        optObj = sliding_pack.to.buildOptObj(
-                self.dyn, self.N+self.N_MPC, self.nom_config, X_nom_val_temp, dt=self.dt)
-        print('i built')
         # read obstacle position
-        if optObj.numObs == 0:
+        if self.optObjPlan.numObs == 0:
             obsCentre = None
             obsRadius = None
-        elif optObj.numObs == 1:
+        elif self.optObjPlan.numObs == 1:
             obsCentre = [obs_pos0]
             obsRadius = [0.065]
         print('about to start planning')
-        resultFlag, X_nom_val, U_nom_val, other_opt, _, t_opt = optObj.solveProblem(
+        resultFlag, X_nom_val, U_nom_val, other_opt, _, t_opt = self.optObjPlan.solveProblem(
                 0, [obj_pos0[0], obj_pos0[1], obj_ori0, 0],
-                obsCentre=obsCentre, obsRadius=obsRadius)
+                X_warmStart=X_nom_val_temp,
+                obsCentre=obsCentre, obsRadius=obsRadius,
+                X_goal_val=X_goal)
         #  ---------------------------------------------------------------
         X_nom_val_plot = np.array(X_nom_val)
         if self.plotFlag:
@@ -190,7 +199,7 @@ class ROSSlidingMPC:
             ax.plot(X_nom_val_plot[0, :], X_nom_val_plot[1, :], color='blue',
                     linewidth=2.0, linestyle='dashed')
             
-            # if optObj.numObs > 0:
+            # if optObjPlan.numObs > 0:
             #     for i in range(len(obsCentre)):
             #         circle_i = plt.Circle(obsCentre[i], obsRadius[i], color='b')
             #         ax.add_patch(circle_i)
@@ -208,7 +217,7 @@ class ROSSlidingMPC:
         #  ------------------------------------------------------------------
         # define optimization problem
         #  -------------------------------------------------------------------
-        self.optObj = sliding_pack.to.buildOptObj(
+        self.optObjMPC = sliding_pack.to.buildOptObj(
                 self.dyn, self.N_MPC, self.tracking_config,
                 self.X_nom_val, dt=self.dt)
         #  -------------------------------------------------------------------
@@ -308,23 +317,23 @@ class ROSSlidingMPC:
             obj_ori_2d_read -= 2.*np.pi
         robot_pos_2d_read = self._robot_pose[0:2]
         # compute relative angle between pusher (robot) and slider (object)
-        psi0 = self.optObj.dyn.psi(np.array([
+        psi0 = self.optObjMPC.dyn.psi(np.array([
             obj_pos_2d_read[0],
             obj_pos_2d_read[1],
             obj_ori_2d_read,
             0.]),
             robot_pos_2d_read).elements()[0]
         # read obstacle position
-        if self.optObj.numObs == 0:
+        if self.optObjMPC.numObs == 0:
             obsCentre = None
             obsRadius = None
-        elif self.optObj.numObs == 1:
+        elif self.optObjMPC.numObs == 1:
             obsCentre = [self._obs_pose[0:2]]
             obsRadius = [0.065]
         # build initial state for optimizer: TODO: get this from dyn function
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], float(obj_ori_2d_read), psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
-        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObj.solveProblem(self.idx_nom, x0,
+        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObjMPC.solveProblem(self.idx_nom, x0,
                 obsCentre=obsCentre, obsRadius=obsRadius)
         # saving computation times
         self.comp_time_plot.append(t_opt)
@@ -337,7 +346,7 @@ class ROSSlidingMPC:
             # TODO: later replace with call of func from dyn class
             obj_pose_2d = np.array(self.X_nom_val[:, self.idx_nom].T)[0]
         else:
-            obj_pose_2d = np.array(self.optObj.dyn.s(x_next).elements())
+            obj_pose_2d = np.array(self.optObjMPC.dyn.s(x_next).elements())
         obj_pos = np.hstack((obj_pose_2d[0:2], ROBOT_HEIGHT))
         obj_ori = np.array([0., 0., obj_pose_2d[2]])
         obj_ori = R.from_rotvec(obj_ori)
@@ -353,7 +362,7 @@ class ROSSlidingMPC:
         self._cmd_nom_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
         if solFlag:
             # compute robot pose
-            robot_pos_2d = np.array(self.optObj.dyn.p(x_next).elements())
+            robot_pos_2d = np.array(self.optObjMPC.dyn.p(x_next).elements())
             robot_pos = np.hstack((robot_pos_2d, ROBOT_HEIGHT))
             robot_ori = R.from_matrix(GLB_ORI_ROBOT)
             robot_ori_quat = robot_ori.as_quat()
