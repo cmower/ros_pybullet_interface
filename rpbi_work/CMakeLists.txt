@@ -172,6 +172,7 @@ catkin_install_python(PROGRAMS
   scripts/nextage_ros_mpc_sliding.py
   scripts/match_real_robot_to_pybullet.py
   scripts/match_pybullet_to_real_robot.py
+  scripts/boxes_tf_filter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -93,5 +93,9 @@
   <!-- Move nextage to state node -->
   <node pkg="rpbi_work" name="move_nextage_to_state" type="move_nextage_to_state.py" output="screen"/>
 
+  <!-- Node for filtering box-->
+  <node pkg="rpbi_work" name="boxes_tf_filter" type="boxes_tf_filter.py" output="screen"/>
+
+
 
 </launch>
