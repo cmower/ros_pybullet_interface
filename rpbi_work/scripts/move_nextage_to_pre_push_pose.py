@@ -4,6 +4,7 @@ import rospy
 import numpy
 import numpy as np
 import pyexotica as exo
+import tf_conversions
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64MultiArray
 from rpbi_work.srv import MoveNextageToPrePushPose, MoveNextageToPrePushPoseResponse
@@ -44,6 +45,7 @@ class ExoticaInterface:
 class Node:
 
     # pre_pre_offset = np.array([-0.02, 0, 0.1])
+    # pre_pre_offset = np.array([-0.04, 0, 0.1])
     pre_pre_offset = np.array([-0.04, 0, 0.1])
 
     def __init__(self):
@@ -85,6 +87,7 @@ class Node:
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
         goal = numpy.array(resp.position)
+        R = tf_conversions.transformations.quaternion_matrix(numpy.array(resp.rotation))[:3,:3]
 
         # Get current joint position
         # msg = rospy.wait_for_message('/nextagea/joint_states', JointState)
@@ -94,7 +97,8 @@ class Node:
         # Move robot
         # NOTE: robot will move as follows:
         # 1. from where ever it is to a pre-pre push pose (above/behind object), this is to prevent robot colliding with object
-        q, success = self.move_robot(goal+self.pre_pre_offset, req.arm, req.Tmax, qstart)
+        pre_pre_offset = R@self.pre_pre_offset
+        q, success = self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax, qstart)
         if not success:
             # move to above/behind object (pre-pre pose)
             info = 'Failed to move nextage to pre-pre eff goal pose'
@@ -121,6 +125,7 @@ class Node:
             return MoveNextageToPrePushPoseResponse(success=False, info=info)
 
         goal = numpy.array(resp.position)
+        R = tf_conversions.transformations.quaternion_matrix(numpy.array(resp.rotation))[:3,:3]
 
         # rospy.loginfo('Does this goal look good?')
         # import sys
@@ -135,7 +140,8 @@ class Node:
         # NOTE: robot will move as follows:
         # 1. from where ever it is to a pre-pre push pose (above/behind object), this is to prevent robot colliding with object
         # 2. from pre-pre-push pose to object
-        q, success = self.move_robot(goal+self.pre_pre_offset, req.arm, req.Tmax, qstart)
+        pre_pre_offset = R@self.pre_pre_offset
+        q, success = self.move_robot(goal+pre_pre_offset, req.arm, req.Tmax, qstart)
         if not success:
             # move to above/behind object (pre-pre pose)
             info = 'Failed to move nextage to pre-pre eff goal pose'
