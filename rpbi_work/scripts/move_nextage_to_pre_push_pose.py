@@ -43,7 +43,8 @@ class ExoticaInterface:
 
 class Node:
 
-    pre_pre_offset = np.array([-0.02, 0, 0.1])  # TODO: NOTE: this may need to be tuned
+    # pre_pre_offset = np.array([-0.02, 0, 0.1])
+    pre_pre_offset = np.array([-0.04, 0, 0.1])
 
     def __init__(self):
 
@@ -73,7 +74,7 @@ class Node:
         rospy.wait_for_service('get_eff_pose_from_pushing_object')
         try:
             handle = rospy.ServiceProxy('get_eff_pose_from_pushing_object', EffPoseFromObject)
-            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id, arm=req.arm))
+            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id, arm=req.arm, xlength=req.xlength, ylength=req.ylength))
         except rospy.ServiceException as e:
             rospy.logerr('Service error: %s', str(e))
             info = 'Failed to retrieve goal from server'
@@ -109,7 +110,7 @@ class Node:
         rospy.wait_for_service('get_eff_pose_from_pushing_object')
         try:
             handle = rospy.ServiceProxy('get_eff_pose_from_pushing_object', EffPoseFromObject)
-            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id, arm=req.arm))
+            resp = handle(EffPoseFromObjectRequest(object_frame_id=req.object_frame_id, parent_frame_id=req.parent_frame_id, arm=req.arm, xlength=req.xlength, ylength=req.ylength))
         except rospy.ServiceException as e:
             rospy.logerr('Service error: %s', str(e))
             info = 'Failed to retrieve goal from server'

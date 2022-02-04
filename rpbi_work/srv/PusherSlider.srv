@@ -1,4 +1,7 @@
 string info
+string object_name
+float64 xlength
+float64 ylength
 ---
 bool success
 string info

@@ -28,13 +28,6 @@ class Node:
             rospy.get_param('~offset_z'),
         ])
 
-        # Get box dimensions
-        self.box_lx = rospy.get_param('box_LX')  # float
-        self.box_ly = rospy.get_param('box_LY')  # float
-        self.box_lz = rospy.get_param('box_LZ')  # float
-
-        self.offset += numpy.array([-self.box_lx, 0, 0])
-
         # Setup tf interface
         self.tf = TfInterface()
 
@@ -44,17 +37,19 @@ class Node:
 
     def get_eff_pose_from_pushing_object(self, req):
 
+        offset = self.offset + numpy.array([-0.5*req.xlength, 0, 0])
+
         resp_input = dict(
             success=True,
-            box_lx=self.box_lx,
-            box_ly=self.box_ly,
-            box_lz=self.box_lz,
+            box_lx=req.xlength,
+            box_ly=req.ylength,
+            box_lz=0,
         )
 
         pos, rot = self.tf.get_tf(req.parent_frame_id, req.object_frame_id)
         if pos is not None:
             R = quaternion_matrix(rot)[:3,:3]
-            resp_input['position'] = numpy.array(pos) + R@self.offset
+            resp_input['position'] = numpy.array(pos) + R@offset
             resp_input['rotation'] = rot
             frame = '%s_hand_goal' % req.arm
             self.tf.set_tf(req.parent_frame_id, frame, resp_input['position'], rot)

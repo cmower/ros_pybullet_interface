@@ -50,6 +50,9 @@ class ROSSlidingMPC:
         # Flag for debugging plot
         self.plotFlag = False
 
+        # beta
+        self.beta = None
+
         # start subcriber
         self.mpc_listen_buff = tf2_ros.Buffer()
         _ = tf2_ros.TransformListener(self.mpc_listen_buff)
@@ -88,7 +91,7 @@ class ROSSlidingMPC:
         # Get config files
         #  -------------------------------------------------------------------
         sliding_dyn_file_name = rospy.get_param('~sliding_param_dyn', [])[0]
-        dyn_config = load_config(sliding_dyn_file_name)
+        self.dyn_config = load_config(sliding_dyn_file_name)
         tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
         tracking_config = load_config(tracking_traj_file_name)
         self.tracking_config = tracking_config
@@ -120,7 +123,7 @@ class ROSSlidingMPC:
         # define system dynamics
         #  -------------------------------------------------------------------
         self.dyn = sliding_pack.dyn.Sys_sq_slider_quasi_static_ellip_lim_surf(
-                dyn_config, 
+                self.dyn_config, 
                 self.tracking_config['contactMode']
         )
         #  -------------------------------------------------------------------
@@ -146,6 +149,7 @@ class ROSSlidingMPC:
 
     def plan_sliding_service(self, req):
         info = ''
+        self.object_name = req.object_name
         rospy.loginfo("I am planning")
         # Loop till the pos and ori of the object has been read.
         try:
@@ -183,9 +187,19 @@ class ROSSlidingMPC:
         elif self.optObjPlan.numObs == 1:
             obsCentre = [obs_pos0]
             obsRadius = [0.065]
+        # beta = [
+        #     self.dyn_config['xLenght'],
+        #     self.dyn_config['yLenght'],
+        #     self.dyn_config['pusherRadious']
+        # ]
+        beta = [
+            req.xlength,
+            req.ylength,
+            self.dyn_config['pusherRadious']
+        ]
         print('about to start planning')
         resultFlag, X_nom_val, U_nom_val, other_opt, _, t_opt = self.optObjPlan.solveProblem(
-                0, [obj_pos0[0], obj_pos0[1], obj_ori0, 0],
+                0, [obj_pos0[0], obj_pos0[1], obj_ori0, 0], beta,
                 X_warmStart=X_nom_val_temp,
                 obsCentre=obsCentre, obsRadius=obsRadius,
                 X_goal_val=X_goal)
@@ -225,10 +239,16 @@ class ROSSlidingMPC:
         self.planningDone = True
         return PusherSliderResponse(success=success, info=info, x_traj=X_nom_val_plot[0, :], y_traj=X_nom_val_plot[1, :])
 
-    def start_mpc_service(self, rep):
+    def start_mpc_service(self, req):
 
         success = True
         info = ''
+        self.object_name = req.object_name
+        self.beta = [
+            req.xlength,
+            req.ylength,
+            self.dyn_config['pusherRadious']
+        ]
 
         if not self.planningDone:
             info = "need to call plan_sliding_service first!"
@@ -299,6 +319,13 @@ class ROSSlidingMPC:
 
     def solveMPC(self, event):
 
+        # beta = [
+        #     self.dyn_config['xLenght'],
+        #     self.dyn_config['yLenght'],
+        #     self.dyn_config['pusherRadious']
+        # ]
+        beta = self.beta
+
         if self._obj_pose is None or self._robot_pose is None:
             self._mpc_completion_pub.publish(Int8(data=-1))
             self.solveMPCCallbackTimer.shutdown()
@@ -322,7 +349,7 @@ class ROSSlidingMPC:
             obj_pos_2d_read[1],
             obj_ori_2d_read,
             0.]),
-            robot_pos_2d_read).elements()[0]
+            robot_pos_2d_read, beta).elements()[0]
         # read obstacle position
         if self.optObjMPC.numObs == 0:
             obsCentre = None
@@ -333,7 +360,7 @@ class ROSSlidingMPC:
         # build initial state for optimizer: TODO: get this from dyn function
         x0 = [obj_pos_2d_read[0], obj_pos_2d_read[1], float(obj_ori_2d_read), psi0]
         # we can store those as self._robot_pose and self._obj_pose # ---- solve problem ----
-        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObjMPC.solveProblem(self.idx_nom, x0,
+        solFlag, x_opt, u_opt, del_opt, f_opt, t_opt = self.optObjMPC.solveProblem(self.idx_nom, x0, beta,
                 obsCentre=obsCentre, obsRadius=obsRadius)
         # saving computation times
         self.comp_time_plot.append(t_opt)
@@ -362,7 +389,7 @@ class ROSSlidingMPC:
         self._cmd_nom_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
         if solFlag:
             # compute robot pose
-            robot_pos_2d = np.array(self.optObjMPC.dyn.p(x_next).elements())
+            robot_pos_2d = np.array(self.optObjMPC.dyn.p(x_next, beta).elements())
             robot_pos = np.hstack((robot_pos_2d, ROBOT_HEIGHT))
             robot_ori = R.from_matrix(GLB_ORI_ROBOT)
             robot_ori_quat = robot_ori.as_quat()
