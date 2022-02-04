@@ -91,7 +91,7 @@
 	      args="0 0 -0.125 0 0 0 vicon/easy_oats1/easy_oats1 oats_visual"/>
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="jaffa_center_tf_broadcaster"
-	      args="0.05 0 -0.135 0 0.15707963267948966 0 vicon/jaffa_cakes1/jaffa_cakes1 jaffa_visual"/>
+	      args="0.05 0 -0.135 3.141592 -0.15707963267948966 0 vicon/jaffa_cakes1/jaffa_cakes1 jaffa_visual"/>
 
   <!-- 1deg: 0.017453292519943295 -->
   <!-- 3deg: 0.05235987755982989 -->

@@ -17,7 +17,7 @@
   <!-- get IK from box, TODO: check offset frame --> 
   <node pkg="rpbi_work" name="get_eff_pose_from_pushing_object" type="get_eff_pose_from_pushing_object.py" output="screen">
     <!-- <param name="offset_x" type="double" value="-0.02"/> -->
-    <param name="offset_x" type="double" value="-0.018"/>
+    <param name="offset_x" type="double" value="-0.016"/>
     <param name="offset_y" type="double" value="0.0"/>
     <!-- <param name="offset_z" type="double" value="0.02"/> -->
     <param name="offset_z" type="double" value="0.02"/>
@@ -95,7 +95,7 @@
 
   <!-- Node for filtering box-->
   <node pkg="rpbi_work" name="boxes_tf_filter" type="boxes_tf_filter.py">
-    <param name="threshold_radius" type="double" value="0.6"/>
+    <param name="threshold_radius" type="double" value="0.7"/>
     <param name="base_frame" type="str" value="sim/nextage_base"/>
     <param name="object_1_frame" type="str" value="vicon/sliding_box_nextage/sliding_box_nextage"/>
     <param name="object_2_frame" type="str" value="vicon/jaffa_cakes1/jaffa_cakes1"/>

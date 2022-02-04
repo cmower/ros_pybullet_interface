@@ -1,5 +1,5 @@
 name: "threshold_filter_visual"
 tf_frame_id: "sim/nextage_base"
 object_type: "sphere"
-radius: 0.6
+radius: 0.7
 rgba_color: [0, 0.6, 1, 0.2]
