@@ -46,11 +46,11 @@ class Node:
         # Start main loop
         rospy.Timer(rospy.Duration(self.dt), self.main_loop)
 
-    def main_loop(self):
+    def main_loop(self, event):
         flag = 0  # i.e. nothing within threshold
         distances = []
         for i, frame in enumerate(self.objects_frame):
-            pos, rot = self.tf.get_frame(self.base_frame, frame)
+            pos, rot = self.tf.get_tf(self.base_frame, frame)
             if pos is None:
                 distances.append(100000.0)
             else:
