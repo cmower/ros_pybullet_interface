@@ -78,11 +78,25 @@
 	<!-- args="-0.012 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/> -->
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="sliding_box_center_tf_broadcaster"
-	args="-0.01 0. -0.131 0 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
+	args="-0.01 0. -0.131 -0.06981317007977318 0 0 vicon/sliding_box_nextage/sliding_box_nextage pushing_box_visual"/>
 
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="cylinder_obstacle_tf_broadcaster"
-	args="0. 0. 2. 0 0 0 rpbi/world rpbi/cylinder_obs"/>
+	      args="0. 0. 2. 0 0 0 rpbi/world rpbi/cylinder_obs"/>
 
+  <node pkg="tf2_ros" type="static_transform_publisher" name="oats_center_tf_broadcaster"
+	      args="0 0 -0.125 0 0 0 vicon/easy_oats1/easy_oats1 oats_visual"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="jaffa_center_tf_broadcaster"
+	      args="0.05 0 -0.135 0 0.15707963267948966 0 vicon/jaffa_cakes1/jaffa_cakes1 jaffa_visual"/>
+
+  <!-- 1deg: 0.017453292519943295 -->
+  <!-- 3deg: 0.05235987755982989 -->
+  <!-- 4deg: 0.06981317007977318 -->
+  <!-- 5deg: 0.0872665 -->
+  <!-- 6deg: 0.10471975511965978 -->
+  <!-- 7deg: 0.12217304763960307 -->
+  <!-- 8deg: 0.13962634015954636 -->
+  <!-- 9deg: 0.15707963267948966 -->
 
 </launch>
