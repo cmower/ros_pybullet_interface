@@ -17,6 +17,25 @@ controller_joints_arm_left = ['LARM_JOINT0', 'LARM_JOINT1', 'LARM_JOINT2', 'LARM
 controller_joints_arm_right = ['RARM_JOINT0', 'RARM_JOINT1', 'RARM_JOINT2', 'RARM_JOINT3', 'RARM_JOINT4', 'RARM_JOINT5']
 controller_joints = controller_joints_arm_left + controller_joints_arm_right + controller_joints_torso + controller_joints_head
 
+# Order of joint in Exotica
+# [
+#     'CHEST_JOINT0',
+#     'HEAD_JOINT0',
+#     'HEAD_JOINT1',
+#     'LARM_JOINT0',
+#     'LARM_JOINT1',
+#     'LARM_JOINT2',
+#     'LARM_JOINT3',
+#     'LARM_JOINT4',
+#     'LARM_JOINT5',
+#     'RARM_JOINT0',
+#     'RARM_JOINT1',
+#     'RARM_JOINT2',
+#     'RARM_JOINT3',
+#     'RARM_JOINT4',
+#     'RARM_JOINT5'
+# ]
+
 class ExoticaInterface:
 
     def __init__(self, arm):
@@ -34,6 +53,8 @@ class ExoticaInterface:
         self.scene = self.problem.get_scene()
 
         # print("arm (%s):" % arm, self.scene.get_controlled_joint_names())
+
+        print(self.scene.get_controlled_joint_names())
 
     def resolve_joint_state_msg(self, msg):
         return np.array([msg.position[msg.name.index(name)] for name in self.scene.get_controlled_joint_names()])
