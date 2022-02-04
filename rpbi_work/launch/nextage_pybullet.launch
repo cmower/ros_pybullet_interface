@@ -45,7 +45,10 @@
       "{rpbi_work}/configs/visual_goal_right.yaml",
       "{rpbi_work}/configs/pushing_box_visual.yaml",      
       "{rpbi_work}/configs/pushing_box_visual_nom.yaml",      
-      "{rpbi_work}/configs/pushing_box_visual_goal.yaml",      
+      "{rpbi_work}/configs/pushing_box_visual_goal.yaml",
+      "{rpbi_work}/configs/oats_visual.yaml",
+      "{rpbi_work}/configs/jaffa_visual.yaml",
+      "{rpbi_work}/configs/threshold_filter_sphere.yaml",
       ]
     </rosparam>
 
