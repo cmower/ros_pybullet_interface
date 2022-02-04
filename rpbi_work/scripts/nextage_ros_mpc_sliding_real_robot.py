@@ -88,14 +88,14 @@ class ROSSlidingMPC:
         nom_config = load_config(nom_traj_file_name)
         self.nom_config = nom_config
 
-        # Get config files
-        #  -------------------------------------------------------------------
+        # config for the dynamics
         sliding_dyn_file_name = rospy.get_param('~sliding_param_dyn', [])[0]
         self.dyn_config = load_config(sliding_dyn_file_name)
-        tracking_traj_file_name = rospy.get_param('~sliding_param_tracking_traj', [])[0]
+
+        # config for the tracking mpc
+        tracking_traj_file_name = '{rpbi_work}/configs/nextage_tracking_config_%s.yaml' % arm
         tracking_config = load_config(tracking_traj_file_name)
         self.tracking_config = tracking_config
-        #  -------------------------------------------------------------------
 
         # Initialize internal variables
         self._cmd_robot_pose = None
@@ -173,7 +173,7 @@ class ROSSlidingMPC:
         if self.arm == 'right':
             X_goal = self.nom_config['X_goal']
         elif self.arm == 'left':
-            X_goal = [obj_pos0[0]+0.01, obj_pos0[1], 0.0, 0.0]
+            X_goal = [obj_pos0[0], obj_pos0[1]+0.002, 1.57, 0.0]
         x0_nom, x1_nom = sliding_pack.traj.generate_traj_line(X_goal[0]-obj_pos0[0], X_goal[1]-obj_pos0[1], self.N, self.N_MPC)
         x0_nom = x0_nom + obj_pos0[0]
         x1_nom = x1_nom + obj_pos0[1]
@@ -227,6 +227,7 @@ class ROSSlidingMPC:
         visual_obj_ori = R.from_rotvec(np.array([0., 0., X_goal[2]]))
         visual_obj_ori_quat = visual_obj_ori.as_quat()
         self._cmd_goal_visual_obj_pose = np.hstack((visual_obj_pos, visual_obj_ori_quat))
+        self.publishPose(self._cmd_goal_visual_obj_pose, OBJECT_GOAL_FRAME_ID)
 
         #  ------------------------------------------------------------------
         # define optimization problem
@@ -296,7 +297,6 @@ class ROSSlidingMPC:
 
         self.publishPose(self._cmd_robot_pose, self.end_effector_target_frame_id)
         self.publishPose(self._cmd_nom_visual_obj_pose, OBJECT_NOM_FRAME_ID)
-        self.publishPose(self._cmd_goal_visual_obj_pose, OBJECT_GOAL_FRAME_ID)
 
     def readTFs(self, event):
         """ Read robot and object pose periodically """
