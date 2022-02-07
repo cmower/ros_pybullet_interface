@@ -5,9 +5,10 @@
 contactMode: 'sliding_cc_slack'  # 'sticking', 'sliding_cc', or 'sliding_mi'
 solverName: 'knitro'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
 # solverName: 'ipopt'  # 'ipopt', 'snopt', 'gurobi', 'qpoases', 'knitro'
-W_x: [1.0, 1.0, 0.008, 0.]  # diagonal state weights
-W_u: [0., 0., 0., 0.]  # diagonal control weights
-# W_u: [0.01, 0.01, 0.001, 0.001]  # diagonal control weights
+W_x: [1., 1.0, 0.008, 0.]  # diagonal state weights
+# W_u: [0., 0., 0., 0.]  # diagonal control weights
+W_u: [0.01, 0.01, 0.001, 0.001]  # diagonal control weights
+# W_u: [10.0, 10.0, 0.001, 0.001]  # diagonal control weights
 K_goal: 100
 # X_goal: [0.80, -0.15, 0., 0.]
 # X_goal: [0.80, -0.05, 0., 0.]
@@ -19,4 +20,4 @@ linDynFlag: False
 codeGenFlag: False
 noPrintingFlag: False
 phases: null
-TimeHorizon: 12 # time horizon
+TimeHorizon: 14 # time horizon

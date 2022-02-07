@@ -1,3 +1,4 @@
+float64[] x_goal
 string info
 string object_name
 float64 xlength

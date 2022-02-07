@@ -4,6 +4,8 @@ import rospy
 import numpy
 import signal
 import pyexotica as exo
+from std_msgs.msg import Float64
+import exotica_core_task_maps_py
 from sensor_msgs.msg import JointState
 from pyexotica.publish_trajectory import sig_int_handler
 from ros_pybullet_interface.tf_interface import TfInterface
@@ -43,6 +45,7 @@ class Node:
         self.solver = exo.Setup.load_solver(xml_filename)
         self.problem = self.solver.get_problem()
         self.scene = self.problem.get_scene()
+        self.task_maps = self.problem.get_task_maps()
         signal.signal(signal.SIGINT, sig_int_handler)
 
         # Re-set target to current end-effectors poses
@@ -57,12 +60,19 @@ class Node:
         # Setup joint state publisher
         self.joint_state_pub = rospy.Publisher('rpbi/nextage/joint_state/target', JointState, queue_size=10)
 
+        # Setup wrist subscriber
+        self.wrist_angle = None
+        rospy.Subscriber('wrist_value', Float64, self.wrist_callback)
+
         # Setup services
         self.timer = None
         self.running_ik = False
         rospy.Service('toggle_ik_%s' % arm, Toggle, self.toggle_ik)
 
         rospy.Service('solve_ik_%s' % arm, SolveIK, self.solve_ik_service)
+
+    def wrist_callback(self, msg):
+        self.wrist_angle = msg.data
 
     def solve_ik_service(self, req):
         lgoal = None
@@ -133,6 +143,15 @@ class Node:
             self.scene.attach_object_local('TargetRight', 'base_link', rgoal)
         if (lgoal is not None) or (rgoal is not None):
 
+            # Add previous joint state
+            if self.q_prev is not None:
+                self.task_maps['JointDamp'].set_previous_joint_state(self.q_prev)
+
+
+            # Set joint pose for wrist
+            if self.wrist_angle is not None and self.arm == 'right':
+                self.task_maps['Wrist'].joint_ref = [self.wrist_angle]
+
             # Solve problem
             q = self.solver.solve()[0]
 
@@ -169,6 +188,7 @@ class Node:
 
             # Publish joint state
             self.publish_joint_state(q)
+            self.q_prev = q
 
     def publish_joint_state(self, q_exo):
         msg = JointState()
