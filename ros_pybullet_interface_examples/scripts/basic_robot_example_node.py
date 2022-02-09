@@ -38,6 +38,7 @@ class Node:
             rospy.logerr("Service call failed: %s", e)
             sys.exit(0)
         self.ndof = res.ndof_active
+        self.name = res.active_joint_name
 
         # Setup for joint updates
         self.joint_index = 0
@@ -74,7 +75,7 @@ class Node:
     def publish_joint_state(self, event):
         if not self.active: return
         self.position[self.joint_index] = self.joint_traj[self.traj_index]
-        self.pub.publish(JointState(position=self.position))
+        self.pub.publish(JointState(name=self.name, position=self.position))
         self.update_trajectory_index()
 
     def spin(self):
