@@ -1,0 +1,5 @@
+name: "oats_visual"
+tf_frame_id: "oats_visual"
+object_type: "box"
+half_extends: [0.0635, 0.105, 0.03]  # 0.09,0.0198,0.068]
+rgba_color: [1, 0, 0, 0.5]

@@ -1,0 +1,5 @@
+name: "jaffa_visual"
+tf_frame_id: "jaffa_visual"
+object_type: "box"
+half_extends: [0.085, 0.085, 0.03]  # 0.09,0.0198,0.068]
+rgba_color: [1, 0, 0, 0.5]

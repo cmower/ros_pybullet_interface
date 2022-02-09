@@ -1,0 +1,5 @@
+float64[] lgoal
+float64[] rgoal
+---
+bool success
+float64[] q

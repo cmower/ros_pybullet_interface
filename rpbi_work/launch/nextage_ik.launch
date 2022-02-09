@@ -1,0 +1,16 @@
+<launch>
+
+  <!-- Nextage IK nodes -->
+  <node pkg="rpbi_work" name="nextage_ik_node_left" type="nextage_ik_node.py" output="screen">
+    <param name="arm" type="string" value="left"/>
+  </node>
+
+  <node pkg="rpbi_work" name="nextage_ik_node_right" type="nextage_ik_node.py" output="screen">
+    <param name="arm" type="string" value="right"/>
+  </node>
+
+
+
+
+
+</launch>

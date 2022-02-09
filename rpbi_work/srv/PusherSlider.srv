@@ -1,0 +1,10 @@
+float64[] x_goal
+string info
+string object_name
+float64 xlength
+float64 ylength
+---
+bool success
+string info
+float64[] x_traj
+float64[] y_traj

@@ -1,0 +1,9 @@
+string object_frame_id
+string parent_frame_id
+string arm
+float64 Tmax
+float64 xlength
+float64 ylength
+---
+bool success
+string info
