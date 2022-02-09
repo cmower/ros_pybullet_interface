@@ -65,9 +65,9 @@ class ROSSlidingMPC:
         self.trajObjPlan = np.empty(0)
         self.trajRobotPlan = np.empty(0)
 
-        # Nominal trajectory indexing 
+        # Nominal trajectory indexing
         self.idx_nom = 0
-        
+
         # Save variable for time
         self.comp_time_plot = []
 
@@ -129,7 +129,7 @@ class ROSSlidingMPC:
         # define system dynamics
         #  -------------------------------------------------------------------
         self.dyn = sliding_pack.dyn.Sys_sq_slider_quasi_static_ellip_lim_surf(
-                self.dyn_config, 
+                self.dyn_config,
                 self.tracking_config['contactMode']
         )
         #  -------------------------------------------------------------------
@@ -175,7 +175,7 @@ class ROSSlidingMPC:
             obs_pos0 = [trans.transform.translation.x, trans.transform.translation.y]
         except:
             rospy.logwarn(f"{self.name}: /tf topic does NOT have 456 {self.obstacle_name}")
-        # 
+        #
         if self.arm == 'right':
             # X_goal = self.nom_config['X_goal']
             X_goal = req.x_goal
@@ -225,10 +225,10 @@ class ROSSlidingMPC:
             fig, ax = sliding_pack.plots.plot_nominal_traj(
                         cs.DM(x0_nom), cs.DM(x1_nom))
             # add computed nominal trajectory
-            
+
             ax.plot(X_nom_val_plot[0, :], X_nom_val_plot[1, :], color='blue',
                     linewidth=2.0, linestyle='dashed')
-            
+
             # if optObjPlan.numObs > 0:
             #     for i in range(len(obsCentre)):
             #         circle_i = plt.Circle(obsCentre[i], obsRadius[i], color='b')
@@ -257,6 +257,7 @@ class ROSSlidingMPC:
 
     def start_mpc_service(self, req):
 
+        self.idx_nom = 0
         success = True
         info = ''
         self.object_name = req.object_name
@@ -371,6 +372,7 @@ class ROSSlidingMPC:
             if self._obj_pose is None or self._robot_pose is None:
                 self._mpc_completion_pub.publish(Int8(data=-1))
                 self.solveMPCCallbackTimer.shutdown()
+                self.runningMPC = False
                 self.publishRobotObjectPoseTimer.shutdown()
                 rospy.logerr("Object or pose does not exist!")
                 return
@@ -445,6 +447,7 @@ class ROSSlidingMPC:
             self._mpc_completion_pub.publish(Int8(data=0))
             # shutdown timers
             self.solveMPCCallbackTimer.shutdown()
+            self.runningMPC = False
             self.publishRobotObjectPoseTimer.shutdown()
             rospy.loginfo("End of nominal trajectory")
         else:
