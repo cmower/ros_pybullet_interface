@@ -9,6 +9,9 @@
     <!-- Node frequency -->
     <param name="ros_node_freq" value="100" type="int"/>
 
+    <remap from="rpbi/LWR/joint_state/target" to="joint_states/target/command"/>
+
+
     <!-- Simulated robot -->
     <rosparam param="robot_config_file_names">
       [
@@ -42,6 +45,7 @@
   <!-- Example node -->
   <node pkg="ros_pybullet_interface_examples" name="basic_robot_example_node" type="basic_robot_example_node.py">
     <param name="robot_name" type="str" value="LWR"/>
+    <remap from="rpbi/LWR/joint_state/target" to="joint_states/target"/>
   </node>
 
   <!-- Static tf frames -->
