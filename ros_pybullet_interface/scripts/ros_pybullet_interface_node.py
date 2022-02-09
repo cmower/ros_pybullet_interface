@@ -355,6 +355,7 @@ class Node:
         joint_index = []
         joint_name = []
         joint_type = []
+        active_joint_name = []
         try:
             robot = self.pb_objects[req.robot_name]
             for joint in robot.joints:
@@ -363,6 +364,7 @@ class Node:
                 joint_type.append(joint.type_as_string)
             ndof = robot.ndof
             ndof_active = robot.ndof_active
+            active_joint_name = [joint.name for joint in robot.active_joints]
             rospy.loginfo('Succesfully collected joint information for robot "%s"', req.robot_name)
         except Exception as err:
             exception_type = type(err).__name__
@@ -373,6 +375,7 @@ class Node:
             joint_index=joint_index,
             joint_name=joint_name,
             joint_type=joint_type,
+            active_joint_name=active_joint_name,
             ndof=ndof,
             ndof_active=ndof_active,
             info=info,
