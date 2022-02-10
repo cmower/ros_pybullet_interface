@@ -5,11 +5,12 @@ import rospy
 from std_msgs.msg import Int64
 from sensor_msgs.msg import JointState
 from ros_pybullet_interface.srv import PybulletRobotJointInfo
-
+from rpbi_work.srv import Toggle, ToggleRequest
 
 class Node:
 
-    hz = 50
+    # hz = 50
+    hz = 30
     dt = 1.0/float(hz)
 
     def __init__(self):
@@ -45,13 +46,30 @@ class Node:
         self.position = [0.0]*self.ndof
         self.d = 1
         self.traj_index = 0
-        self.joint_traj = [math.sin(0.5*2.0*math.pi*float(i)/100.0) for i in range(200)]
+        self.joint_traj = [math.sin(0.5*2.0*math.pi*float(i)/100.0) for i in range(100)]
 
         # Setup joint target state publisher
         self.pub = rospy.Publisher(target_joint_state_topic, JointState, queue_size=10)
 
         # Start timer
+        input("Start robot example? [ENTER]")
         rospy.Timer(dur, self.publish_joint_state)
+
+        success = True
+        srv = 'toggle_remaper'
+        rospy.wait_for_service(srv)
+        try:
+            handle = rospy.ServiceProxy(srv, Toggle)
+            req = ToggleRequest(switch='on')
+            resp = handle(req)
+        except rospy.ServiceException as e:
+            rospy.logerr('Service call failed: %s' % e)
+            success = False
+
+        if success:
+            rospy.loginfo('started remapper')
+
+
 
     def active_callback(self, msg):
         self.active = bool(msg.data)
