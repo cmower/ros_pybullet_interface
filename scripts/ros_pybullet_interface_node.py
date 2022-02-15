@@ -101,10 +101,8 @@ class ROSPyBulletInterface:
 
         self.visframes = rospy.get_param("~visframes", [])
 
-        if rospy.has_param('~Z_gravity'):
-            grav = [0., 0., rospy.get_param('~Z_gravity')]
-        else:
-            grav = [0., 0., 0.]
+        grav = [0.0, 0.0, rospy.get_param('~Z_gravity', 0.0)]
+
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
 
