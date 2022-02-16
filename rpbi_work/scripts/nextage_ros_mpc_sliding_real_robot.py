@@ -29,7 +29,7 @@ GLB_ORI_ROBOT = np.array([[1., 0., 0.],
                           [0., 1., 0.],
                           [0., 0., 1.]])
 # ROBOT_HEIGHT = 0.75
-ROBOT_HEIGHT = -0.05
+ROBOT_HEIGHT = -0.06
 VISUAL_OBJ_HEIGHT = -0.08
 # OBJECT_TARGET_FRAME_ID = "rpbi_work/nextage_sliding_box_visual"  # visual box
 OBJECT_NOM_FRAME_ID = "pushing_box_visual_nom"  # visual box

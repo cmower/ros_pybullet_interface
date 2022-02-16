@@ -3,6 +3,7 @@ import sys
 import rospy
 import numpy
 import signal
+import numpy as np
 import pyexotica as exo
 from std_msgs.msg import Float64
 import exotica_core_task_maps_py
@@ -111,11 +112,22 @@ class Node:
             rospy.logerr(info)
             return success, info
 
+        # Reset joint state
+        self.q_prev = self.get_current_joint_state()
+
         # Start main loop
         self.timer = rospy.Timer(rospy.Duration(self.dt), self.main_loop)
         self.running_ik = True
         rospy.loginfo('switched on IK')
         return success, info
+
+    def get_current_joint_state(self):
+        msg = rospy.wait_for_message('nextagea/joint_states', JointState)
+        q = []
+        for joint_name in self.scene.get_controlled_joint_names():
+            idx = msg.name.index(joint_name)
+            q.append(msg.position[idx])
+        return np.array(q)
 
     def stop_ik(self, req):
 
@@ -146,7 +158,6 @@ class Node:
             # Add previous joint state
             if self.q_prev is not None:
                 self.task_maps['JointDamp'].set_previous_joint_state(self.q_prev)
-
 
             # Set joint pose for wrist
             if self.wrist_angle is not None and self.arm == 'right':

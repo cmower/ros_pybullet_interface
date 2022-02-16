@@ -36,6 +36,13 @@
         <!-- <StartState>0 0 0 0 -0.28 -0.33 0 0 -1.57 0 -0.28 -0.33 0 0 1.57 </StartState> -->
     <StartState>0 0 0 0 -0.43 -0.31 0 0.75 -1.57 0 -0.43 -0.31 0 0.75 1.57 </StartState>
       </JointVelocityBackwardDifference>
+
+      <!-- <JointVelocityBackwardDifference Name="JointVelSmooth"> -->
+      <!--   <dt>0.01</dt> -->
+      <!--   <!-\- <StartState>0 0 0 0 -0.28 -0.33 0 0 -1.57 0 -0.28 -0.33 0 0 1.57 </StartState> -\-> -->
+      <!--   <StartState>0 0 0 0 -0.43 -0.31 0 0.75 -1.57 0 -0.43 -0.31 0 0.75 1.57 </StartState> -->
+      <!-- </JointVelocityBackwardDifference> -->
+      
       <JointPose Name="Pose" />
       <JointLimit Name="Limits" SafePercentage="0.05"/>
       <LookAt Name="LookAt">
@@ -57,9 +64,10 @@
 
 
       <JointVelocityBackwardDifference Name="JointDamp">
-        <dt>0.02</dt>
+        <dt>0.01</dt>
+    <StartState>0 0 0 0 -0.43 -0.31 0 0.75 -1.57 0 -0.43 -0.31 0 0.75 1.57 </StartState>
         <!-- <StartState>0 0 0 0 -0.28 -0.33 0 0 -1.57 0 -0.28 -0.33 0 0 1.57 </StartState> -->
-        <StartState>0 0 0 0 -0.43 -0.31 0 0.75 -1.57 0 -0.43 -0.31 0 0.75 1.57 </StartState>
+        <!-- <StartState>0 0 0 0 -0.43 -0.31 0 0.75 -1.57 0 -0.43 -0.31 0 0.75 1.57 </StartState> -->
       </JointVelocityBackwardDifference>
     </Maps>
 
@@ -74,6 +82,7 @@
       <!-- <!-\- <Task Task="JointDamp" Rho="5e0"/> -\-> -->
       <!-- <Task Task="Wrist" Rho="1e2"/> -->
 
+      <Task Task="JointDamp" Rho="1.0"/>
       <Task Task="PositionLeft" Rho="0."/>
       <Task Task="PositionRight" Rho="1e5"/>
       <Task Task="Pose" Rho="0."/>
