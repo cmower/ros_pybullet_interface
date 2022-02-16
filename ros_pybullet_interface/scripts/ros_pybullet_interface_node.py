@@ -9,6 +9,7 @@ from geometry_msgs.msg import WrenchStamped
 
 
 from ros_pybullet_interface.config import load_config
+from ros_pybullet_interface.utils import UniqueDict
 from ros_pybullet_interface.tf_interface import TfInterface
 from ros_pybullet_interface.pybullet_instance import PybulletInstance
 from ros_pybullet_interface.pybullet_robot import PybulletRobot, PybulletVisualRobot
