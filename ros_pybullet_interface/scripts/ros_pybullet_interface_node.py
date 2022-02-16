@@ -34,7 +34,7 @@ class Node:
         ros_node_dur = rospy.Duration(1.0/float(rospy.get_param('~ros_node_freq')))
 
         # Setup ros status publisher
-        self.status_pub = rospy.Publisher('rpbi/active', Int64, queue_size=10)
+        self.status_pub = rospy.Publisher('rpbi/status', Int64, queue_size=10)
 
         # Setup tf interface
         self.tf = TfInterface()
