@@ -9,8 +9,8 @@
     <!-- Node frequency -->
     <param name="ros_node_freq" value="100" type="int"/>
 
-    <remap from="rpbi/nextage/joint_state/target" to="joint_states/target/command"/>
-    <remap from="rpbi/nextage_visual/joint_state/target" to="joint_states/target"/>
+    <remap from="rpbi/nextage/joint_state/target" to="safe/joint_states/target/command"/>
+    <remap from="rpbi/nextage_visual/joint_state/target" to="safe/joint_states/target"/>
 
     <!-- Simulated robot -->
     <rosparam param="robot_config_file_names">
@@ -47,17 +47,19 @@
   <!-- Example node -->
   <node pkg="ros_pybullet_interface_examples" name="basic_robot_example_node" type="basic_robot_example_node.py" output="screen">
     <param name="robot_name" type="str" value="nextage"/>
-    <remap from="rpbi/nextage/joint_state/target" to="joint_states/target"/>
+    <remap from="rpbi/nextage/joint_state/target" to="safe/joint_states/target"/>
   </node>
 
   <!-- Static tf frames -->
   <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster" -->
   <!-- 	args="0.0 0.0 0.85 0 0 0 rpbi/world nextage_base"/> -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="simulated_robot_base_tf_broadcaster"
-	args="0.0 0.0 0. 0 0 0 rpbi/world nextage_base"/>
+        args="0.0 0.0 0. 0 0 0 rpbi/world nextage_base"/>
 
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="box_tf" -->
+	<!-- args="0.0 0.0 0.35 0 0 0 rpbi/world box_frame"/> -->
   <node pkg="tf2_ros" type="static_transform_publisher" name="box_tf"
-	args="0.0 0.0 0.35 0 0 0 rpbi/world box_frame"/>
+        args="0.0 0.0 1.2 0 0 0 rpbi/world box_frame"/>
 
   <!-- Remapper -->
   <node name="remapper_node" pkg="rpbi_work" type="remap_joint_state_positions_to_float_array_node.py"/>

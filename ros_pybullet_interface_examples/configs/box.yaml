@@ -2,4 +2,4 @@ name: "box"
 object_type: 'box'
 tf_frame_id: 'box_frame'
 half_extends: [0.5, 0.5, 0.45]
-rgba_color: [0., 0., 0.8, 0.4]
+rgba_color: [0., 0., 0.8, 0.1]

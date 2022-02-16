@@ -10,7 +10,7 @@ from rpbi_work.srv import Toggle, ToggleRequest
 class Node:
 
     # hz = 50
-    hz = 30
+    hz = 20
     dt = 1.0/float(hz)
 
     def __init__(self):
