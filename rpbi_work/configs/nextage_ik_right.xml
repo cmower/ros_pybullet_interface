@@ -82,13 +82,13 @@
       <!-- <!-\- <Task Task="JointDamp" Rho="5e0"/> -\-> -->
       <!-- <Task Task="Wrist" Rho="1e2"/> -->
 
-      <Task Task="JointDamp" Rho="1.0"/>
+      <Task Task="JointDamp" Rho="1e1"/>
       <Task Task="PositionLeft" Rho="0."/>
       <Task Task="PositionRight" Rho="1e5"/>
       <Task Task="Pose" Rho="0."/>
       <Task Task="JointAcc" Rho="1e2"/>
       <Task Task="Limits" Rho="1e7"/>
-      <Task Task="LookAt" Rho="0.5e2"/>
+      <Task Task="LookAt" Rho="1e2"/>
       <!-- <Task Task="Wrist" Rho="1e2"/> -->
 
     </Cost>
