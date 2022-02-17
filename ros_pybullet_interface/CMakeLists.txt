@@ -8,6 +8,10 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
+add_message_files(
+  ResetDebugVisualizerCamera.msg
+)
+
 # add_service_files(
 #   FILES
 #   Service1.srv
