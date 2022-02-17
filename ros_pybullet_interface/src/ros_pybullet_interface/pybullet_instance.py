@@ -23,6 +23,7 @@ class PybulletInstance:
         self.client_id = self.pb.connect(self.pb.GUI)
         if self.client_id == -1:
             raise RuntimeError('Unable to connect to Pybullet!')
+        self.node.logdebug('connected to Pybullet with client id %d', self.client_id)
 
         # Reset simulation
         self.pb.resetSimulation()
@@ -51,6 +52,7 @@ class PybulletInstance:
         status_hz = self.config.get('status_frequency', 50)
         status_dt = 1.0/float(status_hz)
         self.node.Timer(self.node.Duration(status_dt), self.publish_status)
+        self.node.logdebug('initialized Pybullet instance')
 
 
     def publish_status(self, event):
