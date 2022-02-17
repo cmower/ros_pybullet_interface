@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+
 <launch>
 
   <!-- Launch ROS-PyBullet interface node -->
@@ -42,8 +44,8 @@
         value="{ros_pybullet_interface}/configs/camera.yaml"
         type="str"/>
 
-    <!-- List collision objects (optional) -->
-    <rosparam param="collision_object_config_file_names">
+    <!-- List visual objects (optional) -->
+    <rosparam param="visual_object_config_file_names">
       [
       '{ros_pybullet_interface}/configs/sphere.yaml',
       '{ros_pybullet_interface}/configs/sphere2.yaml',

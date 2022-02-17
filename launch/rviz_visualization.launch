@@ -1,0 +1,8 @@
+<launch>
+    <arg name="model" />
+    <arg name="gui" default="false"/>
+    <param name="kuka_description" textfile="$(find ros_pybullet_interface)/robots/kuka_iiwa/iiwa14_rviz.urdf"/>
+    <param name="use_gui" value="$(arg gui)"/>
+    <node name="rviz_visualization" pkg="ros_pybullet_interface" type="rviz_visualization.py" output="screen"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ros_pybullet_interface)/rviz/catching_setup.rviz" required="true"/>
+</launch>

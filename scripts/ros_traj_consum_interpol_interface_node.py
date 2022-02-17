@@ -7,10 +7,12 @@ import os
 import tf2_ros
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
 
 # ROS message types
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float32
 
 
 import ros_pybullet_interface.utils as utils
@@ -22,7 +24,7 @@ import ros_pybullet_interface.interpolation as interpol
 # Constants
 # ------------------------------------------------------
 
-FREQ = 100 # Resolution of trajectory knots --- sampling frequency
+FREQ = 200 # Resolution of trajectory knots --- sampling frequency
 
 class TrajManager:
 
@@ -34,13 +36,14 @@ class TrajManager:
         self.use_interp = interpol['use_interpolation']
 
         # number of dimentions of the trajectory plan
-        trajPlanDim = mot_dim["number"]
+        # trajPlanDim = mot_dim["number"]
 
         # information about the fixed and planned dimensions of the motion
         self.mot_dim = mot_dim
 
         # init struct for interpolated motion plan
         self.motionInterpPlan = np.array([])
+        self.stiffnessInterpPlan = np.array([])
 
 
     def getNextWayPt(self):
@@ -50,6 +53,16 @@ class TrajManager:
 
         if traj_waypt is not None:
             return self.transTraj2Motion6D(traj_waypt)
+        else:
+            return None
+
+    def getNextStiffness(self):
+        """ Get function to access data from the trajectory class """
+
+        stiffness_waypt = self.popFirstStiffnessElem()
+
+        if stiffness_waypt is not None:
+            return stiffness_waypt
         else:
             return None
 
@@ -68,7 +81,6 @@ class TrajManager:
         else:
             y = way_pt[self.mot_dim['trans']['translationY_index']]
 
-
         if self.mot_dim['trans']['translationZ'] is not None:
             z = self.mot_dim['trans']['translationZ']
         else:
@@ -77,17 +89,20 @@ class TrajManager:
         pos = np.array([x, y, z])
 
         # rotation
+        # specify manually axis and angle --- used for fixed orientation
+        if self.mot_dim['rotation']['rotation_repr'] == 'None':
+            Ori_Rot = R.from_rotvec(np.deg2rad(self.mot_dim['rotation']['rotationangle'])*np.array(self.mot_dim['rotation']['rotationvec']))
         # specify manually axis and take angle from the planner  --- used for rotation around fixed axis
-        if self.mot_dim['rotation']['rotationTheta'] == True:
-            Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec'])*way_pt[self.mot_dim['rotation']['rotationTheta_index']])
-        else:
-            # specify manually axis and angle --- used for fixed orientation
-            if self.mot_dim['rotation']['rotationvec'] is not None:
-                Ori_Rot = R.from_rotvec(np.deg2rad(self.mot_dim['rotation']['rotationangle'])*np.array(self.mot_dim['rotation']['rotationvec']))
-            else:
-                # take quaternion directly from the planner
-                idx = self.mot_dim['rotation']['rotationvec_index']
-                Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
+        elif self.mot_dim['rotation']['rotation_repr'] == 'Theta':
+            Ori_Rot = R.from_rotvec(np.array(self.mot_dim['rotation']['rotationvec'])*way_pt[self.mot_dim['rotation']['rotationvec_index'][0]])
+        elif self.mot_dim['rotation']['rotation_repr'] == 'Euler':
+            # take euler angles directly from the planner
+            idx = self.mot_dim['rotation']['rotationvec_index']
+            Ori_Rot = R.from_euler('ZYX', np.array(way_pt[idx[0]:idx[1]]))
+        elif self.mot_dim['rotation']['rotation_repr'] == 'Quat':
+            # take quaternion directly from the planner
+            idx = self.mot_dim['rotation']['rotationvec_index']
+            Ori_Rot = R.from_quat(np.array(way_pt[idx[0]:idx[1]]))
 
         Ori = Ori_Rot.as_quat()
 
@@ -123,6 +138,23 @@ class TrajManager:
 
         return nextWaypt
 
+    def popFirstStiffnessElem(self):
+        """ Extract the 1st element of the motion struct to
+        send to the simulation"""
+
+
+        # if we use interpolation, we use the interpolated one
+        # if self.use_interp:
+
+        if self.stiffnessInterpPlan.shape[0] == 0:
+            rospy.logerr("All the trajectory data has been consumed")
+            return None
+
+        nextWaypt = self.stiffnessInterpPlan[0]
+        self.stiffnessInterpPlan = np.delete(self.stiffnessInterpPlan, 0)
+
+        return nextWaypt
+
 
     def updateTraj(self, new_traj):
         """ Implemented for receiding horizon and MPC loops
@@ -144,7 +176,8 @@ class TrajManager:
         timevector = timevector.reshape(1,timevector.shape[0])
 
         numRows, _ = new_traj.shape
-        midRow = int((numRows-1)/2)+1
+        midRow = self.mot_dim['number'] + 1
+
         # first half rows denote position
         trajPlan = np.hstack((self.motionInterpPlan[:,:insertIndex],  new_traj[1:midRow,index_of_1st_knot:]))
         # second half rows denote velocity
@@ -184,7 +217,8 @@ class TrajManager:
         timevector = timeVec.reshape(1,timeVec.shape[0])
 
         numRows, _ = new_traj.shape
-        midRow = int((numRows-1)/2)+1
+        midRow = self.mot_dim['number'] + 1
+
         # first half rows denote position
         trajPlan = new_traj[1:midRow,:]
 
@@ -193,10 +227,38 @@ class TrajManager:
 
         # interpolate
         if self.use_interp:
-            self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan )
+            self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan)
         else:
             self.timeInterpPlan = timevector
             self.motionInterpPlan = trajPlan
+
+
+    def setInitStiffness(self, new_traj):
+        """ More comments are needed """
+
+        # # time is always the first row
+        timePlan = new_traj[0,:]
+        # timePlan = timePlan.reshape(1,timePlan.shape[0])
+        # second row denote stiffness
+        trajPlan = new_traj[1,:]
+        # trajPlan = trajPlan.reshape(1,trajPlan.shape[0])
+
+        # interpolate
+        if self.use_interp:
+            # self.timeInterpPlan, self.motionInterpPlan = self.computeInterpTraj(timevector, trajPlan, dtrajPlan)
+            _, self.stiffnessInterpPlan = self.computeInterpStiffness(timePlan, trajPlan)
+        else:
+            self.stiffnessInterpPlan = trajPlan
+
+
+    def computeInterpStiffness(self, time_vector, traj_plan):
+        tempMotionInterpPlan = np.empty((0))
+        trajDim = traj_plan.shape[0]
+        row_len = 0
+        interSeqTime, interSeq_I = interpol.interpolateInterp1d(time_vector, traj_plan, kind='linear', sampleFreq = self.interFreq, plotFlag=False, plotTitle="None")
+
+        return interSeqTime, interSeq_I
+
 
     def computeInterpTraj(self, time_vector, traj_plan, dtraj_plan):
         """ Compute the interpolated trajectory from the planning traj
@@ -206,16 +268,62 @@ class TrajManager:
                                                                              """
         tempMotionInterpPlan = np.empty((0))
         trajDim = traj_plan.shape[0]
+        row_len = 0
 
-        # for each dimension of the motion compute the interpolated trajectory
-        for i in range(trajDim):
-            # interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSplineSourceCode(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
-            interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="PositionVsTime")
-            tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+        rot_repr = self.mot_dim['rotation']['rotation_repr']
+        if rot_repr == 'None' or rot_repr == 'Theta':
+            # for each dimension of the motion compute the interpolated trajectory
+            for i in range(trajDim):
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="DimVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+
+            row_len = trajDim
+        else:
+            # for each translational dimension of the motion compute the interpolated trajectory
+            # using position and derivatives
+            if self.mot_dim['trans']['translationX'] is None:
+                i = self.mot_dim['trans']['translationX_index']
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="XVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 1
+
+            if self.mot_dim['trans']['translationY'] is None:
+                i = self.mot_dim['trans']['translationY_index']
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="YVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 1
+
+            if self.mot_dim['trans']['translationZ'] is None:
+                i = self.mot_dim['trans']['translationZ_index']
+                interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(time_vector[0,:], traj_plan[i,:], dtraj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="ZVsTime")
+                tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 1
+
+            # for each rotational dimension of the motion compute the interpolated trajectory
+            # using only the value of the Euler angles and neglect angular velocity
+            if rot_repr == 'Euler':
+                rot_idx = self.mot_dim['rotation']['rotationvec_index']
+                for i in range(rot_idx[0],rot_idx[1]):
+                    # interSeqTime, interSeq_I = interpol.interpolatePolyfit(time_vector[0,:],  traj_plan[i,:], polyOrder = 3, sampleFreq=self.interFreq, plotFlag=True, plotTitle="EulerVsTime")
+                    interSeqTime, interSeq_I = interpol.interpolateCubicSpline(time_vector[0,:],  traj_plan[i,:], sampleFreq=self.interFreq, plotFlag=False, plotTitle="EulerVsTime")
+                    tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
+                row_len += 3
+
+            # for each rotational dimension of the motion compute the interpolated trajectory
+            # using slerp for quaternions
+            elif rot_repr == 'Quat':
+                # we need to do slerp
+                rot_idx = self.mot_dim['rotation']['rotationvec_index']
+                # interSeqTime, interSeq_I = interpol.interpolateLinearlyQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]:rot_idx[1],:], sampleFreq=self.interFreq)
+                interSeqTime, interSeq_I = interpol.interpolateCubiQuaternions(time_vector[0,:],  traj_plan[rot_idx[0]:rot_idx[1],:], sampleFreq=self.interFreq)
+                for i in range(interSeq_I.shape[1]):
+                    tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I[:,i], axis=0)
+                row_len += 4
+
 
         # reshape to have a dimension per row
         col_len = interSeq_I.shape[0]
-        tempMotionInterpPlan = tempMotionInterpPlan.reshape(trajDim, col_len)
+        tempMotionInterpPlan = tempMotionInterpPlan.reshape(row_len, col_len)
 
         return interSeqTime, tempMotionInterpPlan
 
@@ -225,25 +333,36 @@ class ROSTrajInterface(object):
 
     def __init__(self):
 
-        # Setup constants
-        self.dt = 1.0/float(FREQ)
-
         # Name of node
         self.name = rospy.get_name()
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
 
+        # safty check
+        if FREQ > 200:
+            rospy.loginfo("%s: Shutting down to high FREQUENCY of consuming in node ", self.name)
+            self.cleanShutdown()
+
+        # Setup constants
+        self.dt = 1.0/float(FREQ)
+
         # get the path to this catkin ws
         self.current_dir = utils.ROOT_DIR
 
         # Get ros parameters
-        traj_config_file_name = rospy.get_param('~traj_config')
+        self.traj_config_file_name = rospy.get_param('~traj_config')
 
         # if interpolation is for a robot
-        robot_name = rospy.get_param('~robot_name','')
+        self.robot_name = rospy.get_param('~robot_name','')
+
+        # flag for stiffness interpolation/publishing
+        self.variable_stiffness = rospy.get_param('~variable_stiffness', False)
+
+        # stream the interpolated data or not
+        rospy.set_param('/stream_interpolated_motion_flag', False)
 
         #  TrajManager
-        self.setupTrajManager(traj_config_file_name, robot_name)
+        self.setupTrajManager(self.traj_config_file_name, self.robot_name)
 
         # Establish connection with planning node
         rospy.loginfo(f"{self.name}: Waiting for self.current_traj_topic topic")
@@ -253,6 +372,11 @@ class ROSTrajInterface(object):
         # To be used for play-back motion plans
         self.readInitialTrajFromROS(msgTraj)
 
+        if self.variable_stiffness:
+            self.setupStiffnessManager(self.traj_config_file_name, self.robot_name)
+            msgStiffness = rospy.wait_for_message(self.current_stiffness_listener , Float64MultiArray)
+            self.readInitialStiffnessFromROS(msgStiffness)
+
         # Subscribe target trajectory callback
         # repetitive update of trajectory
         # To be used for receiding horizon and/or MPC motion plans
@@ -260,7 +384,7 @@ class ROSTrajInterface(object):
 
         self.tfBroadcaster = tf2_ros.TransformBroadcaster()
 
-        rospy.sleep(3.0)
+        # rospy.sleep(3.0)
 
 
     def setupTrajManager(self, config_file_name, robot):
@@ -285,6 +409,25 @@ class ROSTrajInterface(object):
         self.trajManag = TrajManager(mot_dim, interpol)
 
 
+    def setupStiffnessManager(self, config_file_name, robot):
+
+        # Load robot configuration
+        config = utils.loadYAMLConfig(config_file_name)
+
+        # Extract data from configuration
+        interpol = config['interpolation']
+
+        # set info for listener
+        self.current_stiffness_listener = f"{robot}/{config['stiffnessComm']['listener']['topic']}"
+        # set info for stiffness publisher
+        self.stiffness_publisher_name = f"{robot}/{config['stiffnessComm']['publisher']['topic']}"
+        self.current_stiffness_publisher = rospy.Publisher(self.stiffness_publisher_name, Float32, queue_size=1)
+
+        # Create trajectory manager instance
+        self.stiffnessManag = TrajManager(1, interpol)
+
+
+
     def readInitialTrajFromROS(self, msg):
         # listener, that receives the initial trajectory
         # decode msg
@@ -292,6 +435,14 @@ class ROSTrajInterface(object):
 
         #  call to initial setup of trajectory data
         self.trajManag.setInitTraj(msg_data)
+
+    def readInitialStiffnessFromROS(self, msg):
+        # listener, that receives the initial trajectory
+        # decode msg
+        msg_data = self.decodeROStrajmsg(msg)
+
+        #  call to initial setup of trajectory data
+        self.stiffnessManag.setInitStiffness(msg_data)
 
 
     def readCurrentTrajUpdateFromROS(self, msg):
@@ -318,6 +469,11 @@ class ROSTrajInterface(object):
     def publishdNextWayPtToROS(self, event):
         """ Publish 6D information for the respective rigid body """
 
+        # check if stream flag is active
+        if rospy.get_param('/stream_interpolated_motion_flag')!= True:
+            return
+
+
         motion = self.trajManag.getNextWayPt()
 
         # if the motion plan is not empty
@@ -336,10 +492,27 @@ class ROSTrajInterface(object):
             msg.transform.rotation.z = motion[5]
             msg.transform.rotation.w = motion[6] # NOTE: the ordering here may be wrong
 
-            # Publish msg
+            # Publish tf msg
             self.tfBroadcaster.sendTransform(msg)
+
+            if self.variable_stiffness:
+
+                # Publish stifness msg
+                stiffness = self.stiffnessManag.getNextStiffness()
+                msg = Float32()
+                msg.data = stiffness
+                self.current_stiffness_publisher.publish(msg)
+
         else:
             self.cleanShutdown()
+
+    def publishdNextStiffness(self, event):
+        stiffness = self.stiffnessManag.getNextStiffness()
+
+        msg = Float32()
+        msg.data = stiffness
+
+        self.current_stiffness_publisher.publish(msg)
 
     def cleanShutdown(self):
         print('')
@@ -352,6 +525,7 @@ class ROSTrajInterface(object):
 
 if __name__ == '__main__':
     try:
+        rospy.sleep(1.0)
         # Initialize node
         rospy.init_node("ros_Traj_interface", anonymous=True)
         # Initialize node class
@@ -361,6 +535,7 @@ if __name__ == '__main__':
 
         # Create timer for periodic publisher
         dur = rospy.Duration(ROSTrajInterface.dt)
+
         ROSTrajInterface.writeCallbackTimer = rospy.Timer(dur, ROSTrajInterface.publishdNextWayPtToROS)
 
         # Ctrl-C will stop the script

@@ -30,7 +30,11 @@
         value="0"
         type="int"/>
 
-    <!-- Robot config (required) -->
+    <param
+       name="Z_gravity"
+       value="-9.81"
+       type="double"/>
+
     <!-- Robot config (required) -->
     <rosparam param="robot_config_file_names">
       [
@@ -153,6 +157,7 @@
                 name="robot_name"
                 value="LWR"
                 type="str"/>
-      </node>
+
+        </node>
 
 </launch>

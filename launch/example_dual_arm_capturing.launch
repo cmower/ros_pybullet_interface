@@ -1,0 +1,224 @@
+<launch>
+  <!-- Launch ROS-PyBullet interface node -->
+  <node
+      name="ros_pybullet_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_pybullet_interface_node.py"
+      clear_params="true"
+      output="screen">
+
+      <!-- Pybullet simulation config (required) -->
+      <!-- Flag to indicate how bullet simulation step is
+           synced with ROS control loop.
+           Options:
+                0:  pybullet executes all simulation steps in a fixed frequency
+                       This can be used to simulate real world
+                       ( use simulation freqency > 250 Hz)
+                1: pybullet executes every simulation step when commanded by ROS node
+                       This can be used to execute one simulation step after one control/interface step
+                       Useful for debugging, but not realistic
+                       (specially, if control loop freqency is < 250 Hz)
+                2: pybullet executes a simulation step when ROS srv manualPybulletSteps is called
+                   This can be used to execute one simulation step after one control/interface step
+                   Useful for debugging MPC-like algorithms, but not realistic
+                  -->
+    <param
+        name="pybullet_sim_self_loop"
+        value="0"
+        type="int"/>
+
+    <param
+        name="Z_gravity"
+        value="-9.81"
+        type="double"/>
+
+    <!-- Robot config (required) -->
+    <rosparam param="robot_config_file_names">
+      [
+      "{ros_pybullet_interface}/configs/yin.yaml",
+      "{ros_pybullet_interface}/configs/yang.yaml",
+      ]
+    </rosparam>
+
+    <!-- Camera config (required) -->
+    <param
+        name="camera_config"
+        value="{ros_pybullet_interface}/configs/camera.yaml"
+        type="str"/>
+
+    <!-- List visual objects (optional) -->
+    <rosparam param="visual_object_config_file_names">
+      [
+     '{ros_pybullet_interface}/configs/sphere.yaml', 
+     '{ros_pybullet_interface}/configs/sphere2.yaml',
+      '{ros_pybullet_interface}/configs/target_obj_visual_demo.yaml',
+<!--       '{ros_pybullet_interface}/configs/yang_workspace_visual.yaml', -->
+<!--       '{ros_pybullet_interface}/configs/yin_workspace_visual.yaml', -->
+      ]
+    </rosparam>
+
+    <!-- List objects (optional) -->
+    <rosparam param="object_config_file_names">
+      [
+      '{ros_pybullet_interface}/configs/target_obj_demo.yaml',
+      ]
+    </rosparam>
+
+    <!-- List visual links (optional) -->
+    <rosparam param="visframes">
+      [
+<!--      'yang/ros_pybullet_interface/robot/end_effector_sponge',-->
+<!--      'yin/ros_pybullet_interface/robot/end_effector_sponge',-->
+      ]
+    </rosparam>
+
+
+  </node>
+
+  <node
+      name="read_publish_object_state"
+      pkg="ros_pybullet_interface"
+      type="read_publish_object_estimation.py"
+      clear_params="true"
+      output="screen">
+
+      <param
+          name="sim_or_real"
+          value="sim"
+          type="str"/>
+  </node>
+
+  <!-- PyRBDL4dIK Environmet node (receiver - publisher) -->
+  <node
+      name="ros_PyRBDL4dIK_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace_node.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="{ros_pybullet_interface}/configs/yin.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_PyRBDL4dIK_interface2"
+      pkg="ros_pybullet_interface"
+      type="ros_rbdl_IK_interace_node.py"
+      output="screen">
+
+    <param
+        name="robot_config"
+        value="{ros_pybullet_interface}/configs/yang.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_object3D_freemotion.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface_sphere1"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_sphere1.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface_sphere2"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_sphere2.yaml"
+        type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface_Yang"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_yang.yaml"
+        type="str"/>
+
+    <param
+      name="robot_name"
+      value="yang"
+      type="str"/>
+
+  </node>
+
+  <node
+      name="ros_traj_consum_interpol_interface_Yin"
+      pkg="ros_pybullet_interface"
+      type="ros_traj_consum_interpol_interface_node.py"
+      output="screen">
+
+    <!-- Traj config (required) -->
+    <param
+        name="traj_config"
+        value="{ros_pybullet_interface}/configs/traj_yin.yaml"
+        type="str"/>
+
+    <param
+      name="robot_name"
+      value="yin"
+      type="str"/>
+
+  </node>
+
+
+  <!-- Testing node trajectory publisher -->
+  <node name="test_dual_arm_capturing_obj3D"
+      pkg="ros_pybullet_interface"
+      type="test_dual_arm_catching_FlyingObject.py"
+      output="screen">
+
+<!-- type="test_dual_arm_capturing_prediction_v3.py" -->
+<!--      <param-->
+<!--          name="rotation_repr"-->
+<!--          value="Quat"-->
+<!--          type="str"/>-->
+
+     <param
+         name="robot1_name"
+         value="yang"
+         type="str"/>
+
+     <param
+        name="robot2_name"
+        value="yin"
+        type="str"/>
+
+  </node>
+
+
+</launch>

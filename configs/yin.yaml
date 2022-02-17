@@ -5,9 +5,12 @@ name: "yin"
 file_name: "{ros_pybullet_interface}/robots/kuka_iiwa/iiwa14.urdf"
 end_effector: "end_effector_sponge"
 use_fixed_base: True
-base_position: [1., 0.0, 0.0]
-base_orient_eulerXYZ: [0.0, 0.0, 180.0]
-init_position: [0., 28.64788976, 17.18873385, -28.64788976, 11.4591559, 45.83662361, 0.]
+base_position: [0.952, 2.046, 0.843]
+base_orient_eulerXYZ: [0.629, 0.349, -171.913]
+
+# used for all the experiments
+init_position: [-7., 90., -110., 75., -47., 50., -20.]
+
 
 sensors:
 
@@ -41,10 +44,14 @@ IK:
   # last index in IK
   l_indx : 6
 
+  # weights for orientation tracking - [x, y, z] of the target
+  # select: at least two of the axes have to be 1
+  ori_axis_weights: [1, 1, 1]
+
   # scaling parameter between orientation and position
-  scale_pos_orient : 0.1
+  scale_pos_orient : 1.0
 
   # parameters of the nullspace motion
-  alpha_null : [0., 0., -0., -0., 0., 0.01, 0.] # activation per joint
-  h_delta : [0., 0., -0., -0., 0., 90., 0.]     # nominal configuration, aimed via nullspace motion
+  alpha_null : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # activation per joint
+  h_delta : [0., 0., -0., -0., 0., 0., 0.]     # nominal configuration, aimed via nullspace motion
   h_norm : [340., 240., 340., 240., 340., 240., 350.]  # normalization of the error for each joint (IIWA specific)

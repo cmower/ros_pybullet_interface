@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import rospy
 import tf2_ros
+import tf_conversions
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped, WrenchStamped
 
@@ -18,7 +19,7 @@ from ros_pybullet_interface.srv import ManualPybulletSteps, ManualPybulletStepsR
 # Constants
 # ------------------------------------------------------
 
-ROS_FREQ = 100       # ROS loop sampling frequency
+ROS_FREQ = 200       # ROS loop sampling frequency
 ROS_DT = 1.0/float(ROS_FREQ)
 PYBULLET_FREQ = ROS_FREQ #256 # PyBullet simulation loop sampling frequency
 PYBULLET_DT = 1.0/float(PYBULLET_FREQ)
@@ -26,6 +27,15 @@ TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target'  # listen
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current'  # publishes joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
 
+
+
+# ------------------------------------------------------------
+#  REAL ROBOT
+# ------------------------------------------------------------
+# test on robot and compare with commit:
+# https://github.com/cmower/ros_pybullet_interface/commit/12d603ea46791a7db6a6ac0195dcef6cf7597cf1
+# REAL_ROBOT_TARGET_JOINT_STATE_TOPIC = 'joint_states'  # publishes joint states on this topic
+# TARGET_JOINT_STATE_TOPIC = REAL_ROBOT_TARGET_JOINT_STATE_TOPIC
 
 # ------------------------------------------------------
 #
@@ -91,11 +101,13 @@ class ROSPyBulletInterface:
 
         self.visframes = rospy.get_param("~visframes", [])
 
+        grav = [0.0, 0.0, rospy.get_param('~Z_gravity', 0.0)]
+
         # Setup PyBullet, note publishers/subscribers are also setup internally
         # to these setup functions
 
         # Initialise pybullet
-        pybullet_interface.initPyBullet(ROS_DT)
+        pybullet_interface.initPyBullet(ROS_DT, gravity = grav)
         self.setupPyBulletCamera(camera_config_file_name)
 
         for file_name in robot_file_names:
@@ -137,6 +149,9 @@ class ROSPyBulletInterface:
             self.shutdown()
             sys.exit(0)
 
+        # Setup ros timer to publish sensor readings
+        rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
+
         # Main pybullet update
         self.main_timer = rospy.Timer(self.dur, self.updatePyBullet)
 
@@ -172,12 +187,33 @@ class ROSPyBulletInterface:
         self.robots.append({"robot": robot,
                             "robot_name": robot_name}
                             )
+
         robot.setBasePositionAndOrientation(
             config['base_position'],
             np.deg2rad(config['base_orient_eulerXYZ'])
         )
         qinit = np.deg2rad(config['init_position'])
         robot.setJointPositions(qinit)
+
+        # Loop 2 times to get the position and orientation of the base the robots from the vicon
+        for _ in range(2):
+            try:
+                # Read the position and orientation of the robot from the topic
+                trans = rospy.wait_for_message(f"vicon_offset/{robot_name}_frame/{robot_name}_frame", TransformStamped, timeout=2)
+
+                # replaces base_position = config['base_position']
+                base_position = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+                # replaces: base_orient_eulerXYZ = config['base_orient_eulerXYZ']
+                base_orient_quat = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w]
+
+                robot.setBasePositionAndOrientation(
+                    base_position,
+                    tf_conversions.transformations.euler_from_quaternion(base_orient_quat)
+                )
+                break
+            except:
+                rospy.logwarn(f"{self.name}: /tf topic does NOT have vicon/<subject_name>/<segment_name>_{robot_name}")
+
 
         # Specify target joint position
         self.robots_target_joint_position.append(qinit)
@@ -228,10 +264,6 @@ class ROSPyBulletInterface:
                     self.robots_sensor_pubs.append(sensor_pubs)
                     self.robots[-1]['sensor_idx'] = len(self.robots_sensor_pubs) - 1
 
-            # Setup ros timer to publish sensor readings
-            rospy.Timer(self.dur, self.publishPyBulletSensorReadingsToROS)
-
-
     def setupPyBulletVisualLinks(self, linkid):
         self.tfs[linkid] = {
             'received': False, 'position': None, 'orientation': None
@@ -250,17 +282,18 @@ class ROSPyBulletInterface:
             config['base_mass'],
         )
 
-        obj.changeDynamics(
-            -1,
-            config['lateral_friction'],
-            config['spinning_friction'],
-            config['rolling_friction'],
-            config['restitution'],
-            config['linear_damping'],
-            config['angular_damping'],
-            config['contact_stiffness'],
-            config['contact_damping']
-        )
+        # obj.changeDynamics(
+        #     -1,
+        #     config['lateral_friction'],
+        #     config['spinning_friction'],
+        #     config['rolling_friction'],
+        #     config['restitution'],
+        #     config['linear_damping'],
+        #     config['angular_damping'],
+        #     config['contact_stiffness'],
+        #     config['contact_damping'],
+        #     config['localInertiaDiagonal']
+        # )
 
         if 'tf_frame_id' in config['link_state']:
             tf_frame_id = config['link_state']['tf_frame_id']
@@ -313,6 +346,7 @@ class ROSPyBulletInterface:
                 'position': config['link_state']['position'],
                 'orientation': config['link_state']['orientation_eulerXYZ'],
             })
+            static_col_obj = {}
             if 'pub_tf' in config['link_state']:
                 static_col_obj['pub_tf'] = config['link_state']['pub_tf']
             else:
@@ -330,13 +364,21 @@ class ROSPyBulletInterface:
             # Load config
             config = loadYAMLConfig(file_name)
 
-            # Setup visual object
-            obj = pybullet_interface.PyBulletObject(
-                config['file_name'],
-                config['mesh_scale'],
-                config['rgba_color'],
-                config['base_mass'],
-            )
+            if 'urdf' in config.keys():
+                obj= pybullet_interface.PyBulletObject(
+                    config['file_name'],
+                    config['mesh_scale'],
+                    config['rgba_color'],
+                    config['base_mass'],
+                    loadURDF=config['urdf'])
+            else:
+                # Setup visual object
+                obj = pybullet_interface.PyBulletObject(
+                    config['file_name'],
+                    config['mesh_scale'],
+                    config['rgba_color'],
+                    config['base_mass'],
+                )
 
             obj.changeDynamics(
                 -1, # which is the link index
@@ -348,6 +390,7 @@ class ROSPyBulletInterface:
                 config['angular_damping'],
                 config['contact_stiffness'],
                 config['contact_damping'],
+                config['localInertiaDiagonal']
             )
 
             obj.setBasePositionAndOrientation(
@@ -496,10 +539,11 @@ class ROSPyBulletInterface:
             rospy.logwarn(f"{obj_name} was not found... in setObjState()")
             return
 
-        pybullet_interface.setObjectPosOrient(obj['object_id'], req.pos, req.quat)
-        pybullet_interface.setObjectVelLinAng(obj['object_id'], req.lin_vel, req.ang_vel)
+        pybullet_interface.setObjectPosOrient(obj_id, req.pos, req.quat)
+        pybullet_interface.setObjectVelLinAng(obj_id, req.lin_vel, req.ang_vel)
         rospy.loginfo(f"Returning object position and orientation: {req.pos}, {req.quat}")
         rospy.loginfo(f"Returning object linear and angular velocity: {req.lin_vel}, {req.ang_vel}")
+        rospy.loginfo(f"Returning object dynamics info: {pybullet_interface.getObjectDynamicsInfo(obj_id)}")
 
         return setObjectStateResponse("True: Set the state of the object successfully")
 
@@ -553,6 +597,7 @@ class ROSPyBulletInterface:
         # (as bullet can run the simulation steps automatically from within)
         # or (as we might want to manually control the rate of steps)
         self.step()
+
 
     def spin(self):
         try:

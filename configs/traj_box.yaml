@@ -14,11 +14,10 @@ motion_dimensions:
     translationZ_index:
 
   rotation:
-    rotationTheta: True
-    rotationTheta_index: 2
+    rotation_repr: 'Theta'
     rotationvec: [0.0, 0.0, 1.0] # unit vector
-    rotationangle: 
-    rotationvec_index:
+    rotationangle:
+    rotationvec_index: [2]
 
 interpolation:
   nochange_window_length: 1

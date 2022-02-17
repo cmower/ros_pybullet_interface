@@ -19,6 +19,7 @@ VISUAL_FRAME_LINE_WIDTH = 2
 
 def initPyBullet(time_step, gravity=[0, 0, -9.81]):
     pybullet.connect(pybullet.GUI)
+    # pybullet.connect(pybullet.DIRECT) # --- this command will disable the visualization
     pybullet.resetSimulation()
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0) # this removes the side menus
     pybullet.setTimeStep(time_step)
@@ -51,6 +52,15 @@ def closePyBullet():
 def updateTimeStep(dt):
     pybullet.setTimeStep(dt)
 
+
+def getPybulletObject_hack():
+    """
+    This function should be used only for prototyping reasons
+    and just for temporary convenience.
+    It is called hack! to remember that cannot be used in release code!
+    """
+    return pybullet
+
 def setObjectPosOrient(obj_id, pos3D=None, quat=None):
 
     if pos3D!=None:
@@ -72,6 +82,11 @@ def setObjectVelLinAng(obj_id, lin_vel3D, ang_vel3D):
 def getObjectPosOrient(obj_id):
     return pybullet.getBasePositionAndOrientation(obj_id)
 
+def getObjectDynamicsInfo(obj_id):
+    return pybullet.getDynamicsInfo(obj_id, -1)
+
+def getObjectLinAngVel(obj_id):
+    return pybullet.getBaseVelocity(obj_id)
 
 def asQuaternion(orientation):
     """Ensure orientation is a quaternion."""
@@ -106,11 +121,17 @@ def visualizeFrameInWorld(position, orientation, scale=1.0):
 
 class PyBulletObject:
 
-    def __init__(self, file_name, mesh_scale, rgba_color, base_mass):
-        file_name = replacePackage(file_name)
-        self.loadMeshVisual(file_name, mesh_scale, rgba_color)
-        self.loadMeshCollision(file_name, mesh_scale)
-        self.createMultiBody(base_mass)
+    def __init__(self, file_name, mesh_scale, rgba_color, base_mass, loadURDF=None):
+
+        if loadURDF==None:
+            file_name = replacePackage(file_name)
+            self.loadMeshVisual(file_name, mesh_scale, rgba_color)
+            self.loadMeshCollision(file_name, mesh_scale)
+            self.createMultiBody(base_mass)
+        else:
+            file_name = replacePackage(loadURDF)
+            self.loadURDF(file_name, fixed_base=False)
+
 
     def setBasePositionAndOrientation(self, position, orientation):
         '''Note: if len(orientation) is 3 then it is treated as euler angles, otherwise
@@ -159,7 +180,8 @@ class PyBulletObject:
                        linear_damping,
                        angular_damping,
                        contact_stiffness,
-                       contact_damping):
+                       contact_damping,
+                       localInertiaDiagonal):
         pybullet.changeDynamics(
             bodyUniqueId=self.ID,
             linkIndex=link_index,
@@ -171,11 +193,12 @@ class PyBulletObject:
             angularDamping=angular_damping,
             contactStiffness=contact_stiffness,
             contactDamping=contact_damping,
+            localInertiaDiagonal=localInertiaDiagonal,
         )
 
-    def loadURDF(self, file_name):
+    def loadURDF(self, file_name, fixed_base=True):
         file_name = replacePackage(file_name)
-        self.ID = pybullet.loadURDF(file_name, useFixedBase=True) # only support fixed base robots
+        self.ID = pybullet.loadURDF(file_name, useFixedBase=fixed_base) # only support fixed base robots
 
     def loadMeshVisual(self, file_name, mesh_scale, rgba_color):
         file_name = replacePackage(file_name)
@@ -332,6 +355,8 @@ class PyBulletRobot(PyBulletObject):
             self.active_joint_ids,
             pybullet.POSITION_CONTROL,
             targetPositions=target_position,
+            positionGains = [0.8] * len(target_position),
+            velocityGains = [1.5] * len(target_position),
         )
 
     def setupJointForceTorqueSensor(self, label, joint_index):

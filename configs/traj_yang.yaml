@@ -1,0 +1,40 @@
+#
+# Trajectory manager for robot configuration file
+#
+
+motion_dimensions:
+  number: 7
+
+  trans:
+    translationX:
+    translationX_index: 0
+    translationY:
+    translationY_index: 1
+    translationZ:
+    translationZ_index: 2
+
+#  'Quat' and [3,7] for quaternion, 'Euler' and [3,6] for euler angles
+  rotation:
+    rotation_repr: 'Quat'
+    rotationvec:
+    rotationangle:
+    rotationvec_index: [3,7]
+
+
+interpolation:
+  nochange_window_length: 1
+  use_interpolation: True
+  interDt: 0.005
+
+communication:
+  publisher:
+    header_frame_id: 'ros_pybullet_interface/world'
+    msg_child_frame_id: 'ros_pybullet_interface/end_effector/target'
+  listener:
+    topic: 'ros_pybullet_interface/end_effector/traj'
+
+stiffnessComm:
+  publisher:
+    topic: 'ros_pybullet_interface/end_effector/stiffness/target'
+  listener:
+    topic: 'ros_pybullet_interface/end_effector/stiffness'
