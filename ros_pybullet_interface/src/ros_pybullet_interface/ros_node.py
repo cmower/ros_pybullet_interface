@@ -7,6 +7,9 @@ ROS API
 The reason for this class is to minimize effort when parsing the
 ros_pybullet_interface to ROS2.
 
+When porting, consider notes in:
+https://github.com/cmower/ros_pybullet_interface/issues/102
+
 """
 
 class RosNode:
