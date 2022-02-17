@@ -33,6 +33,7 @@ class PybulletVisualizer:
 
         # Setup subcscriber
         self.node.Subscriber('rpbi/reset_debug_visualizer_camera', ResetDebugVisualizerCamera, self.callback)
+        self.node.logdebug('initialized Pybullet visualizer')
 
     def callback(self, msg):
         self.camera_config = {
