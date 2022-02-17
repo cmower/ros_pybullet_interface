@@ -12,10 +12,10 @@ class TfInterface:
         self.tf_buffer = tf2_ros.Buffer()
         tf2_ros.TransformListener(self.tf_buffer)
 
-    def set_tf(self, base_frame_id, child_frame_id, position, orientation=[0, 0, 0, 1]):
+    def set_tf(self, parent_frame_id, child_frame_id, position, orientation=[0, 0, 0, 1]):
         msg = TransformStamped()
         msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = base_frame_id
+        msg.header.frame_id = parent_frame_id
         msg.child_frame_id = child_frame_id
         msg.transform.translation.x = position[0]
         msg.transform.translation.y = position[1]
@@ -26,13 +26,13 @@ class TfInterface:
         msg.transform.rotation.w = orientation[3]
         self.tf_broadcaster.sendTransform(msg)
 
-    def get_tf(self, base_frame_id, child_frame_id):
+    def get_tf(self, parent_frame_id, child_frame_id):
         try:
-            msg = self.tf_buffer.lookup_transform(base_frame_id, child_frame_id, rospy.Time())
+            msg = self.tf_buffer.lookup_transform(parent_frame_id, child_frame_id, rospy.Time())
             position = [getattr(msg.transform.translation, d) for d in 'xyz']
             orientation = [getattr(msg.transform.rotation, d) for d in 'xyzw']
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-            rospy.logdebug('Did not recieve frame %s in %s!', child_frame_id, base_frame_id)
+            rospy.logdebug('Did not recieve frame %s in %s!', child_frame_id, parent_frame_id)
             position = None
             orientation = None
         return position, orientation
