@@ -36,6 +36,10 @@ class Node(RosNode):
             obj = PybulletRobot(pybullet, self, load_config(config_filename))
             self.pybullet_objects[obj.name] = obj
 
+        # Start pybullet
+        if self.pybullet_instance.start_pybullet_after_initialization:
+            self.pybullet_instance.start()
+
     def add_pybullet_objects(self, parameter_name, object_type):
         for config_filename in self.get_param(parameter_name, []):
             obj = object_type(pybullet, self, load_config(config_filename))

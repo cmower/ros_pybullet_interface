@@ -42,6 +42,9 @@ class PybulletInstance:
         dt = 1.0/float(hz)
         self.pb.setTimeStep(dt)
 
+        # Get user option to start pybullet from initialization
+        self.start_pybullet_after_initialization = self.config.get('start_pybullet_after_initialization', True)
+
         # Setup services
         self.node.Service('rpbi/start', Trigger, self.service_start)
         self.node.Service('rpbi/step', Trigger, self.service_step)
