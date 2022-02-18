@@ -19,6 +19,9 @@ class RosNode:
     def __init__(self, *args, **kwargs):
         rospy.init_node(*args, **kwargs)
 
+    def time_now(self):
+        return rospy.Time.now()
+
     def set_param(self, *args, **kwargs):
         return rospy.set_param(*args, **kwargs)
 
