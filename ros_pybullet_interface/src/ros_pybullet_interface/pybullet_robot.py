@@ -28,6 +28,7 @@ class PybulletRobot(PybulletObject):
         # Setup input for loadURDF
         load_urdf_input = config.copy()
         load_urdf_input['fileName'] = urdf_filename
+        self.urdf_filename = urdf_filename
         if 'flags' in load_urdf_input.keys():
             load_urdf_input['flags'] = eval('|'.join(['self.pb.' + f for f in load_urdf_input['flags'].split('|')]))
 
@@ -41,6 +42,7 @@ class PybulletRobot(PybulletObject):
         ]
         self.joint_names = [j.jointName for j in self.joints]
         self.joint_indices = [j.jointIndex for j in self.joints]
+        self.link_names = [j.linkName for j in self.joints]
 
         # Set initial joint position
         initial_joint_state = self.config.get('initial_joint_position', {})
@@ -154,6 +156,24 @@ class PybulletRobot(PybulletObject):
             self.joint_state_pub = self.node.Publisher('rpbi/{self.name}/joint_states', JointState, queue_size=10)
             self.node.Timer(self.node.Duration(publish_joint_state_dt), self.joint_state_publisher)
 
+        # Start publishing link states
+        if self.config.get('publish_link_states', False):
+
+            # Get root link name
+            # Note, to the best of my knowledge Pybullet doesn't have a way to return the root link name
+            self.root_link_name = self.get_root_link_name()
+
+            # Setup publish link state timer
+            publish_link_states_frequency = self.config.get('publish_link_states_frequency', 50)
+            publish_link_states_dt = 1.0/float(publish_link_states_frequency)
+            self.node.Timer(self.node.Duration(publish_link_states_dt), self.publish_link_states)
+
+    def get_root_link_name(self):
+        # HACK: since I haven't been able to find how to retrieve the root link name, I had to use urdf_parser_py instead
+        from urdf_parser_py import urdf
+        with open(self.urdf_filename, 'r') as f:
+            robot = urdf.Robot.from_xml_string(f.read())
+        return robot.get_root()
 
     def reset_set_joint_motor_control_array_input_position(self, msg):
         self.set_joint_motor_control_array_input['jointIndices'] = [self.joint_names.index(joint_name) for joint_name in msg.name]
@@ -212,3 +232,14 @@ class PybulletRobot(PybulletObject):
         msg = JointState(name=self.joint_names, position=position, velocity=velocity, effort=effort)
         msg.header.stamp = self.node.time_now()
         self.joint_state_pub.publish(msg)
+
+
+    def publish_link_states(self, event):
+
+        # Get base position/orientation
+        pos, rot = self.pb.getBasePositionAndOrientation(self.body_unique_id)
+        self.node.tf.set_tf('rpbi/world', f'rpbi/{self.name}/{self.root_link_name}', pos, rot)
+
+        # Iterate over joints
+        for link_name, link_state in zip(self.link_names, self.pb.getLinkStates(self.body_unique_id, self.joint_indices, computeForwardKinematics=1)):
+            self.node.tf.set_tf('rpbi/world', f'rpbi/{self.name}/{link_name}', link_state[0], link_state[1])
