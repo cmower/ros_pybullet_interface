@@ -1,5 +1,7 @@
 import rospy
 import tf2_ros
+import tf_conversions
+import numpy as np
 from geometry_msgs.msg import TransformStamped
 
 
@@ -91,3 +93,9 @@ Returns
             position = None
             orientation = None
         return position, orientation
+
+    @staticmethod
+    def position_and_quaternion_to_matrix(pos, quat):
+        T = tf_conversions.transformations.quaternion_matrix(quat)
+        T[:3,-1] = pos
+        return T
