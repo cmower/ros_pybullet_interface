@@ -37,7 +37,7 @@ class PybulletInstance:
                 graZ=gravity[2],
             )
 
-        # Setup time
+        # Setup time step
         hz = self.config.get('time_step_frequency', 50)
         dt = 1.0/float(hz)
         self.pb.setTimeStep(dt)
