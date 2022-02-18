@@ -122,3 +122,7 @@ class PybulletInstance:
 
     def service_stop(self):
         return self._service(self.stop)
+
+
+    def close(self):
+        self.pb.disconnect()
