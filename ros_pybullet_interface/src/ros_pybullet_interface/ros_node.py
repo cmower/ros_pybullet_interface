@@ -14,7 +14,7 @@ https://github.com/cmower/ros_pybullet_interface/issues/102
 
 class RosNode:
 
-    def init_node(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         rospy.init_node(*args, **kwargs)
 
     def set_param(self, *args, **kwargs):
