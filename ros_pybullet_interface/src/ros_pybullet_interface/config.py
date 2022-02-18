@@ -6,6 +6,10 @@ import rospkg
 
 rp = rospkg.RosPack()
 
+def ros_package_path(package):
+    """Wrapper for rp.get_path - to ease effort when porting to ROS2."""
+    return rp.get_path(package)
+
 def replace_package(path):
     """Repalce package name in {} with path"""
     matches = re.findall(r'{.+?}', path)
