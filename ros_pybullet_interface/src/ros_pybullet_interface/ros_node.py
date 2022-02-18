@@ -40,6 +40,9 @@ class RosNode:
     def Timer(self, *args, **kwargs):
         return rospy.Timer(*args, **kwargs)
 
+    def Rate(self, *args, **kwargs):
+        return rospy.Rate(*args, **kwargs)
+
     def Duration(self, *args, **kwargs):
         return rospy.Duration(*args, **kwargs)
 
