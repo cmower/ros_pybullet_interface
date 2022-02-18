@@ -28,6 +28,8 @@ class PybulletObject:
         self.object_base_tf_frame_is_static = None
         self.object_base_tf_frame_listener_frequency = None
         self.object_base_tf_frame_listener_timer = None
+        self.object_base_tf_frame_listener_timer_start_time = None
+        self.object_base_tf_frame_listener_timeout = None
 
         # Initialize object
         self.init()
@@ -92,8 +94,13 @@ class PybulletObject:
             # Get listener frequency (optional, default to 50Hz)
             self.object_base_tf_frame_listener_frequency = self.config.get('object_base_tf_frame_listener_frequency', 50)
 
+            # Get timer timeout if static
+            if self.object_base_tf_frame_is_static:
+                self.object_base_tf_frame_listener_timeout = self.config.get('object_base_tf_frame_listener_timeout', 100)
+
             # Start looping: collect object tf
             object_base_tf_frame_listener_dt = 1.0/float(self.object_base_tf_frame_listener_frequency)
+            self.object_base_tf_frame_listener_timer_start_time = self.node.time_now()
             self.object_base_tf_frame_listener_timer = self.node.Timer(self.node.Duration(object_base_tf_frame_listener_dt), self.object_base_tf_frame_listener_callback)
 
         else:
@@ -113,7 +120,17 @@ class PybulletObject:
         pos, rot = self.node.tf.get_tf('rpbi/world', self.object_base_tf_frame_id)
 
         # Failed to retrieve tf, loop again
-        if pos is None: return
+        if pos is None:
+
+            # Compute time since the callback started
+            time_since_start = (self.node.time_now() - self.object_base_tf_frame_listener_timer_start_time).to_sec()
+
+            if (time_since_start > self.object_base_tf_frame_listener_timeout) and self.object_base_tf_frame_is_static:
+                # object should be static and timeout exceeded -> kill timer
+                self.object_base_tf_frame_listener_timer_start_time = None
+                self.node.logerr(f'reached timeout ({self.object_base_tf_frame_listener_timeout} secs) to retrieve static frame {self.object_base_tf_frame_id}, killing callback timer!')
+                self.object_base_tf_frame_listener_timer.shutdown()
+            return
 
         # Apply offset
         T0 = tf_conversions.quaternion_matrix(rot)
