@@ -19,6 +19,8 @@ class PybulletObject:
 
         # Setup variables
         self.body_unique_id = None
+        self.base_collision_shape_index = None
+        self.base_visual_shape_index = None
         self.linear_offset = None
         self.rotational_offset_R = None
         self.offset_T = None

@@ -1,4 +1,3 @@
-
 from .pybullet_object import PybulletObject
 
 class PybulletVisualObject(PybulletObject):
@@ -6,8 +5,8 @@ class PybulletVisualObject(PybulletObject):
     def init(self):
 
         # Initialize the visual object in Pybullet
-        self.visual_id = self.create_visual_shape(self.config['createVisualShape'])
-        self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.visual_id)
+        self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
+        self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.base_visual_shape_index)
 
         # Setup object
         self.get_frame_offset()
