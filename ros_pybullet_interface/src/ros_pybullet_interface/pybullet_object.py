@@ -4,14 +4,16 @@ from .config import load_config
 class PybulletObject:
 
 
-    def __init__(self, pb, node, config_filename):
+    def __init__(self, pb, node, config):
 
         # Set pybullet instance and ROS node
         self.pb = pb
         self.node = node
 
-        # Load config
-        self.config = load_config(config_filename)
+        # Init config
+        self.config = config
+        self.name = self.config['name']
+        del self.config['name']
 
         # Initialize object
         self.init()
