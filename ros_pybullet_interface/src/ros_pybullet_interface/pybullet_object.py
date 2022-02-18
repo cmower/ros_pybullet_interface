@@ -22,7 +22,8 @@ class PybulletObject:
         self.base_collision_shape_index = None
         self.base_visual_shape_index = None
         self.linear_offset = None
-        self.rotational_offset_R = None
+        self.rotational_offset_eul = None
+        self.rotational_offset_quat = None
         self.offset_T = None
         self.object_base_tf_frame_id = None
         self.object_base_tf_frame_is_static = None
@@ -66,18 +67,15 @@ class PybulletObject:
         # Get linear/rotational offset
         # Note: rotational offset in Euler angles [degrees]
         self.linear_offset = np.asarray(self.config.get('linear_offset', np.zeros(3)))
-        rotational_offset = np.deg2rad(self.config.get('rotational_offset', np.zeros(3)))
-        rotational_offset_quat = tf_conversions.transformations.quaternion_from_euler(
-            rotational_offset[0],
-            rotational_offset[1],
-            rotational_offset[2],
+        self.rotational_offset_eul = np.deg2rad(self.config.get('rotational_offset', np.zeros(3)))
+        self.rotational_offset_quat = tf_conversions.transformations.quaternion_from_euler(
+            self.rotational_offset_eul[0],
+            self.rotational_offset_eul[1],
+            self.rotational_offset_eul[2],
         )
-        self.rotational_offset_R = tf_conversions.transformations.quaternion_matrix(rotational_offset_quat)
 
         # Compute transform matrix for offset
-        self.offset_T = np.eye(4)
-        self.offset_T[:3,:3] = self.rotational_offset_R
-        self.offset_T[:3,-1] = self.linear_offset
+        self.offset_T = self.node.tf.position_and_quaternion_to_matrix(self.linear_offset, self.rotational_offset_quat)
 
 
     def setup_object_base_tf_frame(self):
@@ -96,7 +94,7 @@ class PybulletObject:
 
             # Get timer timeout if static
             if self.object_base_tf_frame_is_static:
-                self.object_base_tf_frame_listener_timeout = self.config.get('object_base_tf_frame_listener_timeout', 100)
+                self.object_base_tf_frame_listener_timeout = self.config.get('object_base_tf_frame_listener_timeout', 2)
 
             # Start looping: collect object tf
             object_base_tf_frame_listener_dt = 1.0/float(self.object_base_tf_frame_listener_frequency)
@@ -133,8 +131,7 @@ class PybulletObject:
             return
 
         # Apply offset
-        T0 = tf_conversions.quaternion_matrix(rot)
-        T0[:3,-1] = pos
+        T0 = self.node.tf.position_and_quaternion_to_matrix(pos, rot)
         T = self.offset_T @ T0
         pos_use = T[:3,-3].flatten()
         rot_use = tf_conversions.transformations.quaternion_from_matrix(T)
