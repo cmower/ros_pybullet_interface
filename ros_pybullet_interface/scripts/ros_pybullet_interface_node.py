@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import pybullet
 
-# Import required classes for pybullet interface
 from ros_pybullet_interface.ros_node import RosNode
 from ros_pybullet_interface.config import load_config
 from ros_pybullet_interface.utils import UniqueDict
