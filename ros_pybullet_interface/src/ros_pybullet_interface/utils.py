@@ -8,3 +8,6 @@ class UniqueDict(dict):
             dict.__setitem__(self, key, value)
         else:
             raise KeyError(f"Key '{key}' already exists!")
+
+class TimeoutExceeded(Exception):
+    pass
