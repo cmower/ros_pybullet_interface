@@ -4,7 +4,7 @@ import math
 import rospy
 from std_msgs.msg import Int64
 from sensor_msgs.msg import JointState
-from ros_pybullet_interface.srv import PybulletRobotJointInfo
+from ros_pybullet_interface.srv import RobotInfo
 
 
 class Node:
@@ -18,27 +18,32 @@ class Node:
         rospy.init_node('basic_robot_example_node')
 
         # Get robot name
-        robot_name = rospy.get_param('~robot_name')
-        target_joint_state_topic = f'rpbi/{robot_name}/joint_state/target'
+        if rospy.has_param('~robot_name'):
+            robot_name = rospy.get_param('~robot_name')
+        elif len(sys.argv) > 1:
+            robot_name = sys.argv[1]
+        else:
+            raise ValueError("robot name not specified, either set the '~robot_name' node parameter or via command line args")
+        target_joint_state_topic = f'rpbi/{robot_name}/joint_states/target'
 
         # Other setup
         dur = rospy.Duration(self.dt)
 
         # Subscribers
         self.active = False
-        rospy.Subscriber('rpbi/active', Int64, self.active_callback)
+        rospy.Subscriber('rpbi/status', Int64, self.active_callback)
 
         # Get ndof
-        service = 'pybullet_robot_joint_info'
+        service = f'rpbi/{robot_name}/robot_info'
         rospy.wait_for_service(service)
         try:
-            handle = rospy.ServiceProxy(service, PybulletRobotJointInfo)
-            res = handle(robot_name)
+            handle = rospy.ServiceProxy(service, RobotInfo)
+            res = handle()
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
             sys.exit(0)
-        self.ndof = res.ndof_active
-        self.name = res.active_joint_name
+        self.ndof = sum([j.jointTypeStr != 'JOINT_FIXED' for j in res.joint_info])
+        self.name = [j.jointName for j in res.joint_info if j.jointTypeStr != 'JOINT_FIXED']
 
         # Setup for joint updates
         self.joint_index = 0
