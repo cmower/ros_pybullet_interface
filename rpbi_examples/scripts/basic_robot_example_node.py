@@ -42,7 +42,7 @@ class Node:
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s", e)
             sys.exit(0)
-        self.ndof = sum([j.jointTypeStr != 'JOINT_FIXED' for j in res.joint_info])
+        self.ndof = res.numDof
         self.name = [j.jointName for j in res.joint_info if j.jointTypeStr != 'JOINT_FIXED']
 
         # Setup for joint updates
