@@ -7,77 +7,25 @@ class Joint:
     def __init__(self, info):
         self.info = info
 
-    @property
-    def jointIndex(self):
-        return self.info[0]
-
-    @property
-    def jointName(self):
-        return self.info[1].decode('utf-8')
-
-    @property
-    def jointType(self):
-        return self.info[2]
-
-    @property
-    def jointTypeStr(self):
-        return Joint.joint_types_str[self.jointType]
-
-    @property
-    def qIndex(self):
-        return self.info[3]
-
-    @property
-    def uIndex(self):
-        return self.info[4]
-
-    @property
-    def flags(self):
-        return self.info[5]
-
-    @property
-    def jointDamping(self):
-        return self.info[6]
-
-    @property
-    def jointFriction(self):
-        return self.info[7]
-
-    @property
-    def jointLowerLimit(self):
-        return self.info[8]
-
-    @property
-    def jointUpperLimit(self):
-        return self.info[9]
-
-    @property
-    def jointMaxForce(self):
-        return self.info[10]
-
-    @property
-    def jointMaxVelocity(self):
-        return self.info[11]
-
-    @property
-    def linkName(self):
-        return self.info[12].decode('utf-8')
-
-    @property
-    def jointAxis(self):
-        return self.info[13]
-
-    @property
-    def parentFramePos(self):
-        return self.info[14]
-
-    @property
-    def parentFrameOrn(self):
-        return self.info[15]
-
-    @property
-    def parentIndex(self):
-        return self.info[16]
+        # Extract data
+        self.jointIndex = info[0]
+        self.jointName = info[1].decode('utf-8')
+        self.jointType = info[2]
+        self.jointTypeStr = Joint.joint_types_str[info[2]]
+        self.qIndex = info[3]
+        self.uIndex = info[4]
+        self.flags = info[5]
+        self.jointDamping = info[6]
+        self.jointFriction = info[7]
+        self.jointLowerLimit = info[8]
+        self.jointUpperLimit = info[9]
+        self.jointMaxForce = info[10]
+        self.jointMaxVelocity = info[11]
+        self.linkName = info[12].decode('utf-8')
+        self.jointAxis = info[13]
+        self.parentFramePos = info[14]
+        self.parentFrameOrn = info[15]
+        self.parentIndex = info[16]
 
     def as_ros_msg(self):
         msg = JointInfo()
