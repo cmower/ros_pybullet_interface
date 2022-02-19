@@ -8,10 +8,12 @@ from .pybullet_object import PybulletObject
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
 from .utils import TimeoutExceeded
+from cob_srvs.srv import SetString, SetStringResponse
 from ros_pybullet_interface.srv import RobotInfo, RobotInfoResponse
 
 class PybulletRobot(PybulletObject):
 
+    snap_to_real_robot_timeout = 10.0  # secs
 
     def init(self):
 
@@ -42,6 +44,7 @@ class PybulletRobot(PybulletObject):
             Joint(self.pb.getJointInfo(self.body_unique_id, jointIndex))
             for jointIndex in range(self.num_joints)
         ]
+        self.ndof = sum([j.jointType != self.pb.JOINT_FIXED for j in self.joints])
         self.joint_names = [j.jointName for j in self.joints]
         self.joint_indices = [j.jointIndex for j in self.joints]
         self.link_names = [j.linkName for j in self.joints]
@@ -172,6 +175,7 @@ class PybulletRobot(PybulletObject):
 
         # Setup services
         self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
+        self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
 
     def get_root_link_name(self):
         # HACK: since I haven't been able to find how to retrieve the root link name, I had to use urdf_parser_py instead
@@ -256,5 +260,29 @@ class PybulletRobot(PybulletObject):
             root_link_name=self.root_link_name,
             bodyUniqueId=self.body_unique_id,
             numJoints=self.num_joints,
+            numDof=self.ndof,
             joint_info=[j.as_ros_msg() for j in self.joints],
         )
+
+    def service_snap_to_real_robot(self, req):
+
+        # Setup
+        success = True
+        message = 'matched Pybullet robot to real robot'
+
+        # Snap robot
+        try:
+            joint_state_topic = req.data
+            msg = self.node.wait_for_message(joint_state_topic, JointState, timeout=self.snap_to_real_robot_timeout)
+            self.target_joint_state_callback_reset_joint_state(msg)
+        except Exception as e:
+            success = False
+            message = 'failed to match Pybullet robot to real robot, exception: %s' % str(e)
+
+        # Log result
+        if success:
+            self.node.loginfo(message)
+        else:
+            self.node.logerr(message)
+
+        return SetStringResponse(success=success, message=message)

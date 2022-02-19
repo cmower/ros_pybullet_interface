@@ -22,6 +22,12 @@ class RosNode:
     def time_now(self):
         return rospy.Time.now()
 
+    def wait_for_service(self, *args, **kwargs):
+        rospy.wait_for_service(*args, **kwarg)
+
+    def wait_for_message(self, *args, **kwargs):
+        return rospy.wait_for_message(*args, **kwarg)
+
     def set_param(self, *args, **kwargs):
         return rospy.set_param(*args, **kwargs)
 
