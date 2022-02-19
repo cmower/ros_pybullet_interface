@@ -12,6 +12,9 @@ from ros_pybullet_interface.pybullet_visual_object import PybulletVisualObject
 from ros_pybullet_interface.pybullet_dynamic_object import PybulletDynamicObject
 from ros_pybullet_interface.pybullet_collision_object import PybulletCollisionObject
 
+from cob_srvs.srv import SetString, SetStringResponse
+
+
 class Node(RosNode):
 
     def __init__(self):
@@ -40,6 +43,9 @@ class Node(RosNode):
             obj = PybulletRobot(pybullet, self, load_config(config_filename))
             self.pybullet_objects[obj.name] = obj
 
+        # Start services
+        self.Service('rpbi/add_pybullet_visual_object', SetString, self.service_add_pybullet_visual_object)
+
         # Start pybullet
         if self.pybullet_instance.start_pybullet_after_initialization:
             self.pybullet_instance.start()
@@ -49,6 +55,32 @@ class Node(RosNode):
             obj = object_type(pybullet, self, load_config(config_filename))
             self.pybullet_objects[obj.name] = obj
 
+    def service_add_pybullet_visual_object(self, req):
+
+        success = True
+
+        try:
+
+            # Load config
+            config_filename = req.data
+            config = load_config(config_filename)
+
+            # Create visual object
+            obj = PybulletVisualObject(pybullet, self, config)
+            self.pybullet_objects[obj.name] = obj
+            message = f'created Pybullet visual object "{obj.name}"'
+
+        except Exception as e:
+            success = False
+            message = f'failed to create Pybullet visual object, exception: ' + str(e)
+
+        # Log message
+        if success:
+            self.loginfo(message)
+        else:
+            self.logerr(message)
+
+        return SetStringResponse(success=success, message=message)
 
 def main():
     Node().spin()
