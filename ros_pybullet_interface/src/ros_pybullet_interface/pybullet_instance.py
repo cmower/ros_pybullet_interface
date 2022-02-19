@@ -32,9 +32,9 @@ class PybulletInstance:
         if 'gravity' in self.config.keys():
             gravity = self.config['gravity']
             self.pb.setGravity(
-                graX=gravity[0],
-                graY=gravity[1],
-                graZ=gravity[2],
+                gravX=gravity[0],
+                gravY=gravity[1],
+                gravZ=gravity[2],
             )
 
         # Setup time step
