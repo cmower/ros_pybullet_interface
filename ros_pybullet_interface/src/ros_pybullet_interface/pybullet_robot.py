@@ -51,7 +51,7 @@ class PybulletRobot(PybulletObject):
         joint_state = JointState()
         for joint_name, position in initial_joint_state.items():
             joint_state.name.append(joint_name)
-            joint_type = self.joints[self.joint_name.index(joint_name)].jointType
+            joint_type = self.joints[self.joint_names.index(joint_name)].jointType
             if joint_type == self.pb.JOINT_REVOLUTE:
                 joint_state.position.append(radians(position))
             else:
@@ -111,7 +111,7 @@ class PybulletRobot(PybulletObject):
 
             # Get control mode
             control_mode_str = self.config.get('controlMode', 'POSITION_CONTROL')
-            self.control_mode = getattr(self.pd, control_mode_str)
+            self.control_mode = getattr(self.pb, control_mode_str)
 
             # Setup setJointMotorControlArray input
             self.set_joint_motor_control_array_input = {'bodyIndex': self.body_unique_id, 'controlMode': self.control_mode}
@@ -148,14 +148,14 @@ class PybulletRobot(PybulletObject):
         self.enabled_joint_force_torque_sensors = self.config.get('enabled_joint_force_torque_sensors', []) # list of joint names
         self.ft_publishers = {}
         for joint_name in self.enabled_joint_force_torque_sensors:
-            self.pb.enableJointForceTorqueSensor(self.body_unique_id, self.joint_names.index(name), enableSensor=1)
-            self.ft_publishers[name] = self.node.Publisher(f'rpbi/{self.name}/{joint_name}/ft_sensor', WrenchStamped, queue_size=10)
+            self.pb.enableJointForceTorqueSensor(self.body_unique_id, self.joint_names.index(joint_name), enableSensor=1)
+            self.ft_publishers[joint_name] = self.node.Publisher(f'rpbi/{self.name}/{joint_name}/ft_sensor', WrenchStamped, queue_size=10)
 
         # Start current joint state publisher
         if not self.is_visual_robot:
             publish_joint_state_frequency = self.config.get('publish_joint_state_frequency', 50)
             publish_joint_state_dt = 1.0/float(publish_joint_state_frequency)
-            self.joint_state_pub = self.node.Publisher('rpbi/{self.name}/joint_states', JointState, queue_size=10)
+            self.joint_state_pub = self.node.Publisher(f'rpbi/{self.name}/joint_states', JointState, queue_size=10)
             self.node.Timer(self.node.Duration(publish_joint_state_dt), self.joint_state_publisher)
 
         # Start publishing link states

@@ -4,8 +4,10 @@ import pybullet
 from ros_pybullet_interface.ros_node import RosNode
 from ros_pybullet_interface.config import load_config
 from ros_pybullet_interface.utils import UniqueDict
+from ros_pybullet_interface.tf_interface import TfInterface
 from ros_pybullet_interface.pybullet_instance import PybulletInstance
 from ros_pybullet_interface.pybullet_visualizer import PybulletVisualizer
+from ros_pybullet_interface.pybullet_robot import PybulletRobot
 from ros_pybullet_interface.pybullet_visual_object import PybulletVisualObject
 from ros_pybullet_interface.pybullet_dynamic_object import PybulletDynamicObject
 from ros_pybullet_interface.pybullet_collision_object import PybulletCollisionObject
@@ -16,6 +18,9 @@ class Node(RosNode):
 
         # Initialize node
         RosNode.__init__(self, 'ros_pybullet_interface')
+
+        # Setup tf interface
+        self.tf = TfInterface()
 
         # Connect to pybullet
         self.pybullet_instance = PybulletInstance(pybullet, self)

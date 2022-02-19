@@ -1,3 +1,5 @@
+name: "kuka_lwr"
+
 loadURDF:
   fileName: "{rpbi_examples}/robots/kuka_lwr.urdf"
   useFixedBase: 1
@@ -13,6 +15,8 @@ initial_joint_position:
 
 linear_offset: [0.5, 0.0, 0.0]
 rotational_offset: [0.0, 0.0, 0.0]
+
+object_base_tf_frame_is_static: true
 
 is_visual_robot: false
 

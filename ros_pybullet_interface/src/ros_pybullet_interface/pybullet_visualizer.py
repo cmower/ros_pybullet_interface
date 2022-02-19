@@ -27,7 +27,7 @@ class PybulletVisualizer:
         )
         self.camera_config = {
             key: self.config.get(key, self.reset_debug_visualizer_camera_default[key])
-            for key in self.reset_debug_visualizer_camera.keys()
+            for key in self.reset_debug_visualizer_camera_default.keys()
         }
         self.pb.resetDebugVisualizerCamera(**self.camera_config)
 

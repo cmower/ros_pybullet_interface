@@ -1,6 +1,6 @@
 from .config import load_config
 from std_msgs.msg import Int64
-from std_srvs.msg import Trigger, TriggerResponse
+from std_srvs.srv import Trigger, TriggerResponse
 
 
 class PybulletInstance:
@@ -109,18 +109,20 @@ class PybulletInstance:
             success = False
             message = 'failed to %s Pybullet, exception: %s' % (handle.__name__, str(e))
             self.node.logerr(message)
+        if success:
+            self.node.loginfo('%s Pybullet was successful', handle.__name__)
         return TriggerResponse(success=success, message=message)
 
 
-    def service_start(self):
+    def service_start(self, req):
         return self._service(self.start)
 
 
-    def service_step(self):
+    def service_step(self, req):
         return self._service(self.step)
 
 
-    def service_stop(self):
+    def service_stop(self, req):
         return self._service(self.stop)
 
 
