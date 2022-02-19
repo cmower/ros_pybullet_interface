@@ -1,0 +1,12 @@
+<launch>
+
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface" type="ros_pybullet_interface_node.py" output="screen">
+
+    <rosparam param="pybullet_robot_config_filenames">
+      [
+      "{rpbi_examples}/configs/basic_example_kuka_lwr/kuka_lwr.yaml"
+      ]
+    </rosparam>
+  </node>
+
+</launch>
