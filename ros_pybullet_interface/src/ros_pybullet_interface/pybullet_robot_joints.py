@@ -1,5 +1,8 @@
+from ros_pybullet_interface.msg import JointInfo
 
 class Joint:
+
+    joint_types_str = ["JOINT_REVOLUTE", "JOINT_PRISMATIC", "JOINT_SPHERICAL", "JOINT_PLANAR", "JOINT_FIXED"]
 
     def __init__(self, info):
         self.info = info
@@ -15,6 +18,10 @@ class Joint:
     @property
     def jointType(self):
         return self.info[2]
+
+    @property
+    def jointTypeStr(self):
+        return Joint.joint_types_str[self.jointType]
 
     @property
     def qIndex(self):
@@ -71,3 +78,32 @@ class Joint:
     @property
     def parentIndex(self):
         return self.info[16]
+
+    def as_ros_msg(self):
+        msg = JointInfo()
+        msg.jointIndex = self.jointIndex
+        msg.jointName = self.jointName
+        msg.jointType = self.jointType
+        msg.jointTypeStr = self.jointTypeStr
+        msg.qIndex = self.qIndex
+        msg.uIndex = self.uIndex
+        msg.flags = self.flags
+        msg.jointDamping = self.jointDamping
+        msg.jointFriction = self.jointFriction
+        msg.jointLowerLimit = self.jointLowerLimit
+        msg.jointUpperLimit = self.jointUpperLimit
+        msg.jointMaxForce = self.jointMaxForce
+        msg.jointMaxVelocity = self.jointMaxVelocity
+        msg.linkName = self.linkName
+        msg.jointAxis.x = self.jointAxis[0]
+        msg.jointAxis.y = self.jointAxis[1]
+        msg.jointAxis.z = self.jointAxis[2]
+        msg.parentFramePos.x = self.parentFramePos[0]
+        msg.parentFramePos.y = self.parentFramePos[1]
+        msg.parentFramePos.z = self.parentFramePos[2]
+        msg.parentFrameOrn.x = self.parentFrameOrn[0]
+        msg.parentFrameOrn.y = self.parentFrameOrn[1]
+        msg.parentFrameOrn.z = self.parentFrameOrn[2]
+        msg.parentFrameOrn.w = self.parentFrameOrn[3]
+        msg.parentIndex = self.parentIndex
+        return msg

@@ -1,0 +1,6 @@
+---
+string robot_name
+string root_link_name
+int64 bodyUniqueId
+int64 numJoints
+ros_pybullet_interface/JointInfo[] joint_info

@@ -8,6 +8,7 @@ from .pybullet_object import PybulletObject
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
 from .utils import TimeoutExceeded
+from ros_pybullet_interface.srv import RobotInfo, RobotInfoResponse
 
 class PybulletRobot(PybulletObject):
 
@@ -36,9 +37,10 @@ class PybulletRobot(PybulletObject):
         self.body_unique_id = self.pb.loadURDF(**load_urdf_input)
 
         # Get joint information
+        self.num_joints = self.pb.getNumJoints(self.body_unique_id)
         self.joints = [
             Joint(self.pb.getJointInfo(self.body_unique_id, jointIndex))
-            for jointIndex in range(self.pb.getNumJoints(self.body_unique_id))
+            for jointIndex in range(self.num_joints)
         ]
         self.joint_names = [j.jointName for j in self.joints]
         self.joint_indices = [j.jointIndex for j in self.joints]
@@ -168,6 +170,9 @@ class PybulletRobot(PybulletObject):
             publish_link_states_dt = 1.0/float(publish_link_states_frequency)
             self.node.Timer(self.node.Duration(publish_link_states_dt), self.publish_link_states)
 
+        # Setup services
+        self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
+
     def get_root_link_name(self):
         # HACK: since I haven't been able to find how to retrieve the root link name, I had to use urdf_parser_py instead
         from urdf_parser_py import urdf
@@ -243,3 +248,13 @@ class PybulletRobot(PybulletObject):
         # Iterate over joints
         for link_name, link_state in zip(self.link_names, self.pb.getLinkStates(self.body_unique_id, self.joint_indices, computeForwardKinematics=1)):
             self.node.tf.set_tf('rpbi/world', f'rpbi/{self.name}/{link_name}', link_state[0], link_state[1])
+
+
+    def service_robot_info(self):
+        return RobotInfoResponse(
+            robot_name=self.name,
+            root_link_name=self.root_link_name,
+            bodyUniqueId=self.body_unique_id,
+            numJoints=self.num_joints,
+            joint_info=[j.as_ros_msg() for j in self.joints],
+        )

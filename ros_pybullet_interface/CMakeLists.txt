@@ -16,10 +16,10 @@ add_message_files(
   JointInfo.msg
 )
 
-# add_service_files(
-#   FILES
-#   Service1.srv
-# )
+add_service_files(
+  FILES
+  RobotInfo.srv
+)
 
 generate_messages(
   DEPENDENCIES
