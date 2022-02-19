@@ -38,7 +38,6 @@ class Node(RosNode):
         self.add_pybullet_objects('~pybullet_collision_object_config_filenames', PybulletCollisionObject)
 
         # Collect robots
-        self.pybullet_robots = UniqueDict()
         for config_filename in self.get_param('~pybullet_robot_config_filenames', []):
             obj = PybulletRobot(pybullet, self, load_config(config_filename))
             self.pybullet_objects[obj.name] = obj
