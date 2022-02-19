@@ -84,7 +84,7 @@ class PybulletObject:
         self.object_base_tf_frame_id = self.config.get('object_base_tf_frame_id', 'rpbi/world')
 
         # Check if the object base frame is static or not
-        self.object_base_tf_frame_is_static = self.config['object_base_tf_frame_is_static']
+        self.object_base_tf_frame_is_static = self.config.get('object_base_tf_frame_is_static', True)
 
         if self.object_base_tf_frame_id != 'rpbi/world':
             # base frame is not world frame -> listen to tf frames and reset object base position/orientation
