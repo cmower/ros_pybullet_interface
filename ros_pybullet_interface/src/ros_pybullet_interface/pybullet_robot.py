@@ -250,7 +250,7 @@ class PybulletRobot(PybulletObject):
             self.node.tf.set_tf('rpbi/world', f'rpbi/{self.name}/{link_name}', link_state[0], link_state[1])
 
 
-    def service_robot_info(self):
+    def service_robot_info(self, req):
         return RobotInfoResponse(
             robot_name=self.name,
             root_link_name=self.root_link_name,
