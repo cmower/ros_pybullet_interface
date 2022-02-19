@@ -44,6 +44,7 @@ class Node(RosNode):
         self.Service('rpbi/add_pybullet_collision_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletCollisionObject))
         self.Service('rpbi/add_pybullet_dynamic_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletDynamicObject))
         self.Service('rpbi/add_pybullet_robot', SetString, partial(self.service_add_pybullet_object, object_type=PybulletRobot))
+        self.Service('rpbi/remove_pybullet_object', SetString, self.service_remove_pybullet_object)
 
         # Start pybullet
         if self.pybullet_instance.start_pybullet_after_initialization:
@@ -80,6 +81,28 @@ class Node(RosNode):
             self.logerr(message)
 
         return SetStringResponse(success=success, message=message)
+
+    def service_remove_pybullet_object(self, req):
+
+        success = True
+
+        try:
+            object_name = req.data
+            self.pybullet_objects[object_name].destroy()
+            del self.pybullet_objects[object_name]
+            message = 'removed Pybullet object'
+        except Exception as e:
+            success = False
+            message = 'failed to remove Pybullet object, exception: ' + str(e)
+
+        # Log message
+        if success:
+            self.loginfo(message)
+        else:
+            self.logerr(message)
+
+        return SetStringResponse(message=message, success=success)
+
 
 def main():
     Node().spin()

@@ -142,3 +142,7 @@ class PybulletObject:
         # Shutdown if tf frame is static
         if self.object_base_tf_frame_is_static:
             self.object_base_tf_frame_listener_timer.shutdown()
+
+
+    def destroy(self):
+        self.pb.removeBody(self.body_unique_id)
