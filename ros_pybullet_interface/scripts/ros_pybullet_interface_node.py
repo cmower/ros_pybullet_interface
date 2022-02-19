@@ -41,6 +41,9 @@ class Node(RosNode):
 
         # Start services
         self.Service('rpbi/add_pybullet_visual_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletVisualObject))
+        self.Service('rpbi/add_pybullet_collision_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletCollisionObject))
+        self.Service('rpbi/add_pybullet_dynamic_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletDynamicObject))
+        self.Service('rpbi/add_pybullet_robot', SetString, partial(self.service_add_pybullet_object, object_type=PybulletRobot))
 
         # Start pybullet
         if self.pybullet_instance.start_pybullet_after_initialization:
