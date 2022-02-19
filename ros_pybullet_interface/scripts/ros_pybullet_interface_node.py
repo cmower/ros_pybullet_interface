@@ -37,11 +37,7 @@ class Node(RosNode):
         self.add_pybullet_objects('~pybullet_visual_object_config_filenames', PybulletVisualObject)
         self.add_pybullet_objects('~pybullet_dynamic_object_config_filenames', PybulletDynamicObject)
         self.add_pybullet_objects('~pybullet_collision_object_config_filenames', PybulletCollisionObject)
-
-        # Collect robots
-        for config_filename in self.get_param('~pybullet_robot_config_filenames', []):
-            obj = PybulletRobot(pybullet, self, load_config(config_filename))
-            self.pybullet_objects[obj.name] = obj
+        self.add_pybullet_objects('~pybullet_robot_config_filenames', PybulletRobot)
 
         # Start services
         self.Service('rpbi/add_pybullet_visual_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletVisualObject))
