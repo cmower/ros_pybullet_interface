@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pybullet
+from functools import partial
 
 from ros_pybullet_interface.ros_node import RosNode
 from ros_pybullet_interface.config import load_config
@@ -43,7 +44,7 @@ class Node(RosNode):
             self.pybullet_objects[obj.name] = obj
 
         # Start services
-        self.Service('rpbi/add_pybullet_visual_object', SetString, self.service_add_pybullet_visual_object)
+        self.Service('rpbi/add_pybullet_visual_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletVisualObject))
 
         # Start pybullet
         if self.pybullet_instance.start_pybullet_after_initialization:
@@ -54,7 +55,7 @@ class Node(RosNode):
             obj = object_type(pybullet, self, load_config(config_filename))
             self.pybullet_objects[obj.name] = obj
 
-    def service_add_pybullet_visual_object(self, req):
+    def service_add_pybullet_object(self, req, object_type):
 
         success = True
 
@@ -65,13 +66,13 @@ class Node(RosNode):
             config = load_config(config_filename)
 
             # Create visual object
-            obj = PybulletVisualObject(pybullet, self, config)
+            obj = object_type(pybullet, self, config)
             self.pybullet_objects[obj.name] = obj
-            message = f'created Pybullet visual object "{obj.name}"'
+            message = f'created {object_type.__name__} named "{obj.name}"'
 
         except Exception as e:
             success = False
-            message = f'failed to create Pybullet visual object, exception: ' + str(e)
+            message = f'failed to create {object_type.__name__}, exception: ' + str(e)
 
         # Log message
         if success:
