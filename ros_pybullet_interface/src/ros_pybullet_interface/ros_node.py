@@ -1,3 +1,4 @@
+import time
 import rospy
 from .tf_interface import TfInterface
 
@@ -23,6 +24,28 @@ class RosNode:
 
     def time_now(self):
         return rospy.Time.now()
+
+    def ROSException(self, msg=''):
+        rospy.exceptions.ROSException(msg)
+
+    def wait_for_tf(self, parent_frame_id, child_frame_id, timeout=None):
+        r = self.Rate(100)
+        if timeout is not None:
+            timeout_t = time.time() + timeout
+            while True:
+                pos, rot = self.tf.get_tf(parent_frame_id, child_frame_id)
+                if pos is not None:
+                    break
+                if time.time() >= timeout_t:
+                    raise self.ROSException("timeout exceeded while waiting for tf %s in %s" % (child_frame_id, parent_frame_id))
+                r.sleep()
+        else:
+            while True:
+                pos, rot = self.tf.get_tf(parent_frame_id, child_frame_id)
+                if pos is not None:
+                    break
+                r.sleep()
+        return pos, rot
 
     def wait_for_service(self, *args, **kwargs):
         rospy.wait_for_service(*args, **kwarg)
