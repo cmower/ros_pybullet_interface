@@ -23,18 +23,8 @@ class PybulletObject:
 
         # Setup variables
         self.body_unique_id = None
-        self.base_collision_shape_index = None
-        self.base_visual_shape_index = None
-        self.linear_offset = None
-        self.rotational_offset_eul = None
-        self.rotational_offset_quat = None
-        self.offset_T = None
-        self.object_base_tf_frame_id = None
-        self.object_base_tf_frame_is_static = None
-        self.object_base_tf_frame_listener_frequency = None
-        self.object_base_tf_frame_listener_timer = None
-        self.object_base_tf_frame_listener_timer_start_time = None
-        self.object_base_tf_frame_listener_timeout = None
+        self.offset = None  # object offset in object base frame
+        self.base = None  # object base frame defined in rpbi/world
 
         # Initialize object
         self.init()
@@ -68,86 +58,69 @@ class PybulletObject:
         self.pb.changeDynamics(**config)
 
 
-    def get_frame_offset(self):
+    def get_object_offset_in_base_tf(self, object_tf_config):
 
-        # Get linear/rotational offset
-        # Note: rotational offset in Euler angles [degrees]
-        self.linear_offset = np.asarray(self.config.get('linear_offset', np.zeros(3)))
-        self.rotational_offset_eul = np.deg2rad(self.config.get('rotational_offset', np.zeros(3)))
-        self.rotational_offset_quat = tf_conversions.transformations.quaternion_from_euler(
-            self.rotational_offset_eul[0],
-            self.rotational_offset_eul[1],
-            self.rotational_offset_eul[2],
-        )
-
-        # Compute transform matrix for offset
-        self.offset_T = self.node.tf.position_and_quaternion_to_matrix(self.linear_offset, self.rotational_offset_quat)
-
-
-    def setup_object_base_tf_frame(self):
-
-        # Get object base tf frame (optional, default to world frame)
-        self.object_base_tf_frame_id = self.config.get('object_base_tf_frame_id', 'rpbi/world')
-
-        # Check if the object base frame is static or not
-        self.object_base_tf_frame_is_static = self.config.get('object_base_tf_frame_is_static', True)
-
-        if self.object_base_tf_frame_id != 'rpbi/world':
-            # base frame is not world frame -> listen to tf frames and reset object base position/orientation
-
-            # Get listener frequency (optional, default to 50Hz)
-            self.object_base_tf_frame_listener_frequency = self.config.get('object_base_tf_frame_listener_frequency', 50)
-
-            # Get timer timeout if static
-            if self.object_base_tf_frame_is_static:
-                self.object_base_tf_frame_listener_timeout = self.config.get('object_base_tf_frame_listener_timeout', 2)
-
-            # Start looping: collect object tf
-            object_base_tf_frame_listener_dt = 1.0/float(self.object_base_tf_frame_listener_frequency)
-            self.object_base_tf_frame_listener_timer_start_time = self.node.time_now()
-            self.object_base_tf_frame_listener_timer = self.node.Timer(self.node.Duration(object_base_tf_frame_listener_dt), self.object_base_tf_frame_listener_callback)
-
+        offset = object_tf_config.get('offset', [0.0]*6)
+        if len(offset) == 3:
+            # pos
+            offset_lin = np.array(offset)
+            offset_rot = np.array([0., 0., 0., 1.])
+        elif len(offset) == 6:
+            # pos, eul
+            offset_lin = np.array(offset[:3])
+            offset_eul = np.deg2rad(offset[3:])
+            offset_rot = tf_conversions.transformations.quaternion_from_euler(offset_eul[0], offset_eul[1], offset_eul[2])
+        elif len(offset) == 7:
+            # pos, quat
+            offset_lin = np.array(offset[:3])
+            offset_rot = np.array(offset[3:])
         else:
-            # base frame is world frame -> reset base position/orientation using offset
+            raise ValueError("offset is incorrect length, got %d, expected either 3, 6, or 7" % len(offset))
 
-            # Get pos/rot for offset in world frame
-            pos_use = self.offset_T[:3,-1].flatten()
-            rot_use = tf_conversions.transformations.quaternion_from_matrix(self.offset_T)
-
-            # Set base position/orientation
-            self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos_use, rot_use)
+        return self.node.tf.position_and_quaternion_to_matrix(offset_lin, offset_rot)
 
 
-    def object_base_tf_frame_listener_callback(self, event):
+    def get_static_object_base_tf_in_world(self, object_tf_config):
+        base_tf_id = object_tf_config.get('base_tf_id', 'rpbi/world')
+        if base_tf_id != 'rpbi/world':
+            pos, rot = self.node.wait_for_tf('rpbi/world', base_tf_id, timeout=object_tf_config.get('timeout'))
+        else:
+            # base frame is world -> return identity transformation
+            pos = np.zeros(3)
+            rot = np.array([0., 0., 0., 1.])
+        return self.node.tf.position_and_quaternion_to_matrix(pos, rot)
 
-        # Get object base tf frame in world
+
+    def start_object_base_tf_listener(self, object_tf_config):
+        self.base_tf_id = object_tf_config.get('base_tf_id', 'rpbi/world')
+        freq = object_tf_config.get('listener_frequency', 50)
+        self.timers['object_base_tf_listener'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self._update_object_base_tf)
+
+
+    def _update_object_base_tf(self, event):
         pos, rot = self.node.tf.get_tf('rpbi/world', self.object_base_tf_frame_id)
+        if pos is None: return
+        self.base = self.node.tf.position_and_quaternion_to_matrix(pos, rot)
 
-        # Failed to retrieve tf, loop again
-        if pos is None:
 
-            # Compute time since the callback started
-            time_since_start = (self.node.time_now() - self.object_base_tf_frame_listener_timer_start_time).to_sec()
+    def start_applying_non_static_object_tf(self, object_tf_config):
+        freq = object_tf_config.get('listener_frequency', 50)
+        self.timers['applying_non_static_object_tf'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self._update_non_static_object_tf)
 
-            if (time_since_start > self.object_base_tf_frame_listener_timeout) and self.object_base_tf_frame_is_static:
-                # object should be static and timeout exceeded -> kill timer
-                self.object_base_tf_frame_listener_timer_start_time = None
-                self.node.logerr(f'reached timeout ({self.object_base_tf_frame_listener_timeout} secs) to retrieve static frame {self.object_base_tf_frame_id}, killing callback timer!')
-                self.object_base_tf_frame_listener_timer.shutdown()
-            return
 
-        # Apply offset
-        T0 = self.node.tf.position_and_quaternion_to_matrix(pos, rot)
-        T = self.offset_T @ T0
-        pos_use = T[:3,-1].flatten()
-        rot_use = tf_conversions.transformations.quaternion_from_matrix(T)
+    def _update_non_static_object_tf(self, event):
+        if self.base is None: return
+        self.reset_base_position_and_orientation()
 
-        # Set object position/orientation in Pybullet
-        self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos_use, rot_use)
+    def get_base_position_and_orientation(self, offset, base):
+        T = offset @ base
+        pos = T[:3,-1].flatten()
+        rot = tf_conversions.transformations.quaternion_from_matrix(T)
+        return pos, rot
 
-        # Shutdown if tf frame is static
-        if self.object_base_tf_frame_is_static:
-            self.object_base_tf_frame_listener_timer.shutdown()
+    def reset_base_position_and_orientation(self):
+        pos, rot = self.get_base_position_and_orientation(self.offset, self.base)
+        self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)
 
 
     def destroy(self):
