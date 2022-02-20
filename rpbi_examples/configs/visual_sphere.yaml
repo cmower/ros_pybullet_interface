@@ -2,6 +2,7 @@ name: 'visual_sphere'
 
 createVisualShape:
   shapeType: "GEOM_SPHERE"
-  rgbaColor: [0.3, 0.4, 0.1, 1.0]
+  radius: 0.3
+  rgbaColor: [0, 0, 1, 1.0]
 
 linear_offset: [0.0, 0.0, 1.0]
