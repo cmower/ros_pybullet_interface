@@ -1,4 +1,5 @@
 import numpy as np
+import tf_conversions
 from .pybullet_object import PybulletObject
 from .utils import TimeoutExceeded
 
@@ -48,7 +49,7 @@ class PybulletDynamicObject(PybulletObject):
         # Get base position/orientation
         T = self.offset_T @ self.node.tf.position_and_quaternion_to_matrix(pos_base, rot_base)
         self.base_position = T[:3,-1].flatten()
-        self.base_orientation = tf_conversions.quaternion_from_matrix(T)
+        self.base_orientation = tf_conversions.transformations.quaternion_from_matrix(T)
 
         # Initialize the dynamic object in Pybullet
         self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
