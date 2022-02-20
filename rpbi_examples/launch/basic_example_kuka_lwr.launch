@@ -10,6 +10,12 @@
       "{rpbi_examples}/configs/basic_example_kuka_lwr/kuka_lwr.yaml"
       ]
     </rosparam>
+
+    <rosparam param="pybullet_collision_object_config_filenames">
+      [
+      "{rpbi_examples}/configs/floor.yaml"
+      ]
+    </rosparam>
   </node>
 
   <node pkg="rpbi_examples" name="example" type="basic_robot_example_node.py" args="kuka_lwr"/>
