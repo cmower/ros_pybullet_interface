@@ -3,6 +3,7 @@
   <node pkg="ros_pybullet_interface" name="ros_pybullet_interface" type="ros_pybullet_interface_node.py" output="screen">
 
     <param name="pybullet_config_filename" type="string" value="{rpbi_examples}/configs/basic_example_kuka_lwr/pybullet.yaml"/>
+    <param name="visualizer_config_filename" type="string" value="{rpbi_examples}/configs/basic_example_kuka_lwr/visualizer.yaml"/>
 
     <rosparam param="pybullet_robot_config_filenames">
       [
