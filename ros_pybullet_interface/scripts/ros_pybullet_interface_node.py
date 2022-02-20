@@ -51,8 +51,21 @@ class Node(RosNode):
 
     def add_pybullet_objects(self, parameter_name, object_type):
         for config_filename in self.get_param(parameter_name, []):
-            obj = object_type(pybullet, self, load_config(config_filename))
-            self.pybullet_objects[obj.name] = obj
+            self.add_pybullet_object(config_filename, object_type)
+
+
+    def add_pybullet_object(self, config_filename, object_type):
+        added_object = True
+        config = load_config(config_filename)
+        name = config['name']
+        if name not in self.pybullet_objects.keys():
+            self.pybullet_objects[name] = object_type(pybullet, self, load_config(config_filename))
+            self.loginfo(f'added object "{name}"')
+        else:
+            added_object = False
+            self.logerr(f'unable to add object "{name}"')
+        return added_object
+
 
     def service_add_pybullet_object(self, req, object_type):
 
@@ -62,12 +75,12 @@ class Node(RosNode):
 
             # Load config
             config_filename = req.data
-            config = load_config(config_filename)
 
             # Create visual object
-            obj = object_type(pybullet, self, config)
-            self.pybullet_objects[obj.name] = obj
-            message = f'created {object_type.__name__} named "{obj.name}"'
+            if not self.add_pybullet_object(config_filename, object_type):
+                raise KeyError("object already exists")
+
+            message = f'created {object_type.__name__}'
 
         except Exception as e:
             success = False
@@ -87,9 +100,13 @@ class Node(RosNode):
 
         try:
             object_name = req.data
-            self.pybullet_objects[object_name].destroy()
-            del self.pybullet_objects[object_name]
-            message = 'removed Pybullet object'
+            if object_name in self.pybullet_objects.keys():
+                self.pybullet_objects[object_name].destroy()
+                del self.pybullet_objects[object_name]
+                message = 'removed Pybullet object'
+            else:
+                success = False
+                message = f'given object "{object_name}" does not exist!'
         except Exception as e:
             success = False
             message = 'failed to remove Pybullet object, exception: ' + str(e)
