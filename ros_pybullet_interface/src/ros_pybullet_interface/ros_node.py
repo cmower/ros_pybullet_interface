@@ -1,4 +1,5 @@
 import rospy
+from .tf_interface import TfInterface
 
 """
 
@@ -18,6 +19,7 @@ class RosNode:
 
     def __init__(self, *args, **kwargs):
         rospy.init_node(*args, **kwargs)
+        self.tf = TfInterface()
 
     def time_now(self):
         return rospy.Time.now()

@@ -4,7 +4,6 @@ from functools import partial
 
 from ros_pybullet_interface.ros_node import RosNode
 from ros_pybullet_interface.config import load_config
-from ros_pybullet_interface.tf_interface import TfInterface
 from ros_pybullet_interface.pybullet_instance import PybulletInstance
 from ros_pybullet_interface.pybullet_visualizer import PybulletVisualizer
 from ros_pybullet_interface.pybullet_robot import PybulletRobot
@@ -21,9 +20,6 @@ class Node(RosNode):
 
         # Initialize node
         RosNode.__init__(self, 'ros_pybullet_interface')
-
-        # Setup tf interface
-        self.tf = TfInterface()
 
         # Connect to pybullet
         self.pybullet_instance = PybulletInstance(pybullet, self)
