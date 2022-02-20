@@ -11,6 +11,10 @@ class PybulletObject:
         # Set pybullet instance and ROS node
         self.pb = pb
         self.node = node
+        self.pubs = {}
+        self.srvs = {}
+        self.subs = {}
+        self.timers = {}
 
         # Init config
         self.config = config
@@ -147,7 +151,19 @@ class PybulletObject:
 
 
     def destroy(self):
+
+        # Remove object from pybullet
         self.pb.removeBody(self.body_unique_id)
+
+        # Close all ROS communication
+        for t in self.timers.values():
+            t.shutdown()
+        for s in self.subs.values():
+            s.unregister()
+        for p in self.pubs.values():
+            p.unregister()
+        for s in self.srvs.values():
+            s.shutdown()
 
 
 class PybulletObjectArray:
