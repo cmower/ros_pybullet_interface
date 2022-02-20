@@ -4,7 +4,6 @@ from functools import partial
 
 from ros_pybullet_interface.ros_node import RosNode
 from ros_pybullet_interface.config import load_config
-from ros_pybullet_interface.utils import UniqueDict
 from ros_pybullet_interface.tf_interface import TfInterface
 from ros_pybullet_interface.pybullet_instance import PybulletInstance
 from ros_pybullet_interface.pybullet_visualizer import PybulletVisualizer
@@ -33,7 +32,7 @@ class Node(RosNode):
         self.pybullet_visualizer = PybulletVisualizer(pybullet, self)
 
         # Collect pybullet objects
-        self.pybullet_objects = UniqueDict()
+        self.pybullet_objects = {}
         self.add_pybullet_objects('~pybullet_visual_object_config_filenames', PybulletVisualObject)
         self.add_pybullet_objects('~pybullet_dynamic_object_config_filenames', PybulletDynamicObject)
         self.add_pybullet_objects('~pybullet_collision_object_config_filenames', PybulletCollisionObject)
