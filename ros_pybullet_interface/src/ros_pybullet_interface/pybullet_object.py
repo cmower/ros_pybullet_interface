@@ -148,3 +148,33 @@ class PybulletObject:
 
     def destroy(self):
         self.pb.removeBody(self.body_unique_id)
+
+
+class PybulletObjectArray:
+
+
+    def __init__(self, pb, node, config, object_type, num_objects):
+
+        # Set pybullet instance and ROS node
+        self.pb = pb
+        self.node = node
+
+        # Create object array
+        self.objects = []
+        for i in range(num_objects):
+
+            # Update config
+            config_i = config.copy()
+            config_i['name'] = config['name'] + str(i)
+            if 'object_base_tf_frame_id' in config.keys():
+                if config['object_base_tf_frame_id'] != 'rpbi/world':
+                    config_i['object_base_tf_frame_id'] = config['object_base_tf_frame_id'] + str(i)
+            if 'tf_frame_id' in config.keys():
+                config_i['tf_frame_id'] = config['tf_frame_id'] + str(i)
+
+            # Append object
+            self.objects.append(object_type(pb, node, config_i))
+
+    def destroy(self):
+        for obj in self.objects:
+            obj.destroy()
