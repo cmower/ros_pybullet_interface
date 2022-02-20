@@ -105,7 +105,7 @@ class PybulletObject:
             # base frame is world frame -> reset base position/orientation using offset
 
             # Get pos/rot for offset in world frame
-            pos_use = self.offset_T[:3,-3].flatten()
+            pos_use = self.offset_T[:3,-1].flatten()
             rot_use = tf_conversions.transformations.quaternion_from_matrix(self.offset_T)
 
             # Set base position/orientation
@@ -133,7 +133,7 @@ class PybulletObject:
         # Apply offset
         T0 = self.node.tf.position_and_quaternion_to_matrix(pos, rot)
         T = self.offset_T @ T0
-        pos_use = T[:3,-3].flatten()
+        pos_use = T[:3,-1].flatten()
         rot_use = tf_conversions.transformations.quaternion_from_matrix(T)
 
         # Set object position/orientation in Pybullet
