@@ -39,7 +39,7 @@ class PybulletRobot(PybulletObject):
         ## Load URDF
 
         # Get urdf filename and create new temp filename
-        urdf_filename = replace_package(config['fileName'])
+        urdf_filename = replace_package(urdf_config['fileName'])
 
         # Check if urdf contains ros package:// statements
         if urdf_contains_ros_package_statements(urdf_filename):
