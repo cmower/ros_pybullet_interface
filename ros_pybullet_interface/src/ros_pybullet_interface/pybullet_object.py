@@ -35,14 +35,16 @@ class PybulletObject:
 
 
     def create_visual_shape(self, config):
-        config['shapeType'] = getattr(self.pb, config['shapeType'])  # expect string
+        if isinstance(config['shapeType'], str):
+            config['shapeType'] = getattr(self.pb, config['shapeType'])
         if 'fileName' in config.keys():
             config['fileName'] = replace_package(config['fileName'])
         return self.pb.createVisualShape(**config)
 
 
     def create_collision_shape(self, config):
-        config['shapeType'] = getattr(self.pb, config['shapeType'])  # expect string
+        if isinstance(config['shapeType'], str):
+            config['shapeType'] = getattr(self.pb, config['shapeType'])
         if 'fileName' in config.keys():
             config['fileName'] = replace_package(config['fileName'])
         return self.pb.createCollisionShape(**config)
