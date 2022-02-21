@@ -1,1 +1,18 @@
 name: "dynamic_box"
+
+createVisualShape:
+  shapeType: "GEOM_BOX"
+  halfExtents: [0.3, 0.15, 0.1]
+  rgbaColor: [0.9, 1.0, 0.3, 1.0]
+
+createCollisionShape:
+  shapeType: "GEOM_BOX"
+  halfExtents: [0.3, 0.15, 0.1]
+
+baseMass: 0.5
+
+resetBaseVelocity:
+  linearVelocity: [0.0, 0, 1.5]
+
+object_tf:
+  offset: [0.0, 0.0, 1.0]
