@@ -1,0 +1,11 @@
+name: 'visual_sphere'
+
+createVisualShape:
+  shapeType: "GEOM_SPHERE"
+  radius: 0.2
+  rgbaColor: [0.0, 1.0, 1, 0.6]
+
+object_tf:
+  is_static: false
+  base_tf_id: "visual_sphere"
+  listener_frequency: 30
