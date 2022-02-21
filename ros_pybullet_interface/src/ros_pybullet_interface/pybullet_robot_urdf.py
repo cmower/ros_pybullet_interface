@@ -1,4 +1,5 @@
 import time
+from .config import ros_package_path
 
 def urdf_contains_ros_package_statements(filename):
     ret = False
@@ -28,7 +29,7 @@ def replace_ros_package_statements(filename):
                 # True -> replace package with absolute path
                 idx = line.find("package://")
                 package_name = line[idx:].split('/')[2]
-                abs_path = rp.get_path(package_name)
+                abs_path = ros_package_path(package_name)
                 old = "package://" + package_name
                 new = abs_path
                 line_out = line.replace(old, new)
