@@ -27,6 +27,6 @@
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="figure_eight_base_in_rpbi_world" args="0.5 0 0.65 0 1.57 0 rpbi/world figure_eight_base"/>
 
-  <!-- <node pkg="rpbi_examples" name="example" type="pybullet_objects_example_node.py" args="kuka_lwr"/> -->
+  <node pkg="rpbi_examples" name="example" type="pybullet_objects_example_node.py" output="screen"/>
 
 </launch>
