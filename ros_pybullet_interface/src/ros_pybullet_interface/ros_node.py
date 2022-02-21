@@ -51,7 +51,7 @@ class RosNode:
         return pos, rot
 
     def wait_for_service(self, *args, **kwargs):
-        rospy.wait_for_service(*args, **kwarg)
+        rospy.wait_for_service(*args, **kwargs)
 
     def wait_for_message(self, *args, **kwargs):
         return rospy.wait_for_message(*args, **kwarg)
