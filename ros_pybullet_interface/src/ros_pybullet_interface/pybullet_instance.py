@@ -5,6 +5,7 @@ from std_srvs.srv import Trigger, TriggerResponse
 
 class PybulletInstance:
 
+    """Interface to the main Pybullet instance."""
 
     def __init__(self, pb, node):
 
@@ -60,10 +61,12 @@ class PybulletInstance:
 
 
     def publish_status(self, event):
+        """Timer callback for publishing the status of Pybullet interface."""
         self.status_pub.publish(Int64(data=int(self.is_active)))
 
 
     def start(self):
+        """Start Pybullet"""
         if not self.is_active:
             self.pb.setRealTimeSimulation(1)
             self.is_active = True
@@ -77,6 +80,7 @@ class PybulletInstance:
 
 
     def stop(self):
+        """Stop Pybullet"""
         if self.is_active:
             self.pb.setRealTimeSimulation(0)
             self.is_active = False
@@ -90,6 +94,7 @@ class PybulletInstance:
 
 
     def step(self):
+        """Step Pybullet by one time step."""
         if not self.is_active:
             self.is_active = True
             self.pb.stepSimulation()
@@ -105,6 +110,7 @@ class PybulletInstance:
 
 
     def _service(self, handle):
+        """Abstract method for start/stop/step services."""
         try:
             success, message = handle()
         except Exception as e:
@@ -117,16 +123,20 @@ class PybulletInstance:
 
 
     def service_start(self, req):
+        """Service callback for starting Pybullet."""
         return self._service(self.start)
 
 
     def service_step(self, req):
+        """Service callback for stepping Pybullet."""
         return self._service(self.step)
 
 
     def service_stop(self, req):
+        """Service callback for stopping Pybullet."""
         return self._service(self.stop)
 
 
     def close(self):
+        """Close connection to Pybullet."""
         self.pb.disconnect()
