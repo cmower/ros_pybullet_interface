@@ -9,6 +9,7 @@ project(rpbi_examples)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  ik_ros_examples
 )
 
 ## System dependencies are found with CMake's conventions
