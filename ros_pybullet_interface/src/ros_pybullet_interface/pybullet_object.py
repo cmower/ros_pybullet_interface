@@ -100,7 +100,7 @@ class PybulletObject:
 
 
     def _update_object_base_tf(self, event):
-        pos, rot = self.node.tf.get_tf('rpbi/world', self.object_base_tf_frame_id)
+        pos, rot = self.node.tf.get_tf('rpbi/world', self.base_tf_id)
         if pos is None: return
         self.base = self.node.tf.position_and_quaternion_to_matrix(pos, rot)
 
