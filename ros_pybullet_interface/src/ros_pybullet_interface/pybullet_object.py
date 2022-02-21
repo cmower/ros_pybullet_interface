@@ -114,7 +114,8 @@ class PybulletObject:
         if self.base is None: return
         self.reset_base_position_and_orientation()
 
-    def get_base_position_and_orientation(self, offset, base):
+    @staticmethod
+    def get_base_position_and_orientation(offset, base):
         T = offset @ base
         pos = T[:3,-1].flatten()
         rot = tf_conversions.transformations.quaternion_from_matrix(T)
