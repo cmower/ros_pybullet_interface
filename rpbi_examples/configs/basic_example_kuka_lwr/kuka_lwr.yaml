@@ -3,6 +3,7 @@ name: "kuka_lwr"
 loadURDF:
   fileName: "{rpbi_examples}/robots/kuka_lwr.urdf"
   useFixedBase: 1
+  basePosition: [0.5, 0., 0.]  # can also specify offset in object_tf
 
 initial_joint_position:
   lwr_arm_0_joint: 0.0
@@ -13,14 +14,10 @@ initial_joint_position:
   lwr_arm_5_joint: 60.0
   lwr_arm_6_joint: 0.0
 
-linear_offset: [0.5, 0.0, 0.0]
-rotational_offset: [0.0, 0.0, 0.0]
-
-object_base_tf_frame_is_static: true
-
 is_visual_robot: false
 
-controlMode: "POSITION_CONTROL"
+setJointMotorControlArray:
+  controlMode: "POSITION_CONTROL"
 
 enabled_joint_force_torque_sensors: ["lwr_arm_6_joint"]
 
