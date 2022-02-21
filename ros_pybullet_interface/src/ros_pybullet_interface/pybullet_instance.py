@@ -40,6 +40,7 @@ class PybulletInstance:
         # Setup time step
         hz = self.config.get('time_step_frequency', 50)
         dt = 1.0/float(hz)
+        self.dt = dt
         self.pb.setTimeStep(dt)
 
         # Get user option to start pybullet from initialization
@@ -92,6 +93,7 @@ class PybulletInstance:
         if not self.is_active:
             self.is_active = True
             self.pb.stepSimulation()
+            self.node.sleep(self.dt)
             self.is_active = False
             success = True
             message = 'stepped Pybullet'

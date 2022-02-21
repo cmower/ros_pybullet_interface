@@ -25,6 +25,9 @@ class RosNode:
     def time_now(self):
         return rospy.Time.now()
 
+    def sleep(self, duration):
+        rospy.sleep(duration)
+
     def ROSException(self, msg=''):
         rospy.exceptions.ROSException(msg)
 
