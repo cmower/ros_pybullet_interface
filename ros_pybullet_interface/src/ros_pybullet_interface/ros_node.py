@@ -71,6 +71,9 @@ class RosNode:
     def Service(self, *args, **kwargs):
         return rospy.Service(*args, **kwargs)
 
+    def ServiceProxy(self, *args, **kwargs):
+        return rospy.ServiceProxy(*args, **kwargs)
+
     def Timer(self, *args, **kwargs):
         return rospy.Timer(*args, **kwargs)
 
