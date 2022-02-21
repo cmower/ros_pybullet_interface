@@ -6,6 +6,9 @@ from .config import replace_package
 class PybulletObject:
 
 
+    """Base class for objects in Pybullet."""
+
+
     def __init__(self, pb, node, config):
 
         # Set pybullet instance and ROS node
@@ -31,10 +34,12 @@ class PybulletObject:
 
 
     def init(self):
+        """Initialize child class."""
         raise NotImplementedError('a child class of PybulletObject needs to implement an init method')
 
 
     def create_visual_shape(self, config):
+        """Exposes createVisualShape."""
         if isinstance(config['shapeType'], str):
             config['shapeType'] = getattr(self.pb, config['shapeType'])
         if 'fileName' in config.keys():
@@ -43,6 +48,7 @@ class PybulletObject:
 
 
     def create_collision_shape(self, config):
+        """Exposes createCollisionShape."""
         if isinstance(config['shapeType'], str):
             config['shapeType'] = getattr(self.pb, config['shapeType'])
         if 'fileName' in config.keys():
@@ -51,6 +57,7 @@ class PybulletObject:
 
 
     def change_dynamics(self, config, link_index=-1):
+        """Exposes changeDynamics."""
         config['bodyUniqueId'] = self.body_unique_id
         config['linkIndex'] = link_index
         if 'mass' in config.keys():
@@ -61,6 +68,30 @@ class PybulletObject:
 
 
     def get_object_offset_in_base_tf(self, object_tf_config):
+        """Retrieves the offset in the object base frame.
+
+Syntax
+------
+
+    tf = PybulletObject.get_object_offset_in_base_tf(object_tf_config)
+
+Parameters
+----------
+
+    object_tf_config (dict)
+        Configuration for object tf. Tags:
+          - "offset" (list of floats) frame offset, if
+             - length 3: position
+             - length 6: position + Euler angles (degrees)
+             - length 7: position + Quaternion
+
+Returns
+-------
+
+    tf (numpy.ndarray, shape=(4,4))
+        Offset transform.
+
+"""
 
         offset = object_tf_config.get('offset', [0.0]*6)
         if len(offset) == 3:
@@ -83,6 +114,30 @@ class PybulletObject:
 
 
     def get_static_object_base_tf_in_world(self, object_tf_config):
+        """Returns the static object base frame with respect to the world frame.
+
+Syntax
+------
+
+    tf = PybulletObject.get_static_object_base_tf_in_world(object_tf_config)
+
+Parameters
+----------
+
+    object_tf_config (dict)
+        Configuration for object tf. Tags:
+          - "base_tf_id" (string, default "rpbi/world") if specified
+            as the world frame then the identity transform is
+            returned, otherwise the tf is collected from the tf2
+            library.
+
+Returns
+-------
+
+    tf (numpy.ndarray, shape=(4,4))
+        Base transform.
+
+"""
         base_tf_id = object_tf_config.get('base_tf_id', 'rpbi/world')
         if base_tf_id != 'rpbi/world':
             pos, rot = self.node.wait_for_tf('rpbi/world', base_tf_id, timeout=object_tf_config.get('timeout'))
@@ -94,39 +149,73 @@ class PybulletObject:
 
 
     def start_object_base_tf_listener(self, object_tf_config):
+        """Starts a timer that updates the object base tf."""
         self.base_tf_id = object_tf_config.get('base_tf_id', 'rpbi/world')
         freq = object_tf_config.get('listener_frequency', 50)
         self.timers['object_base_tf_listener'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self._update_object_base_tf)
 
 
     def _update_object_base_tf(self, event):
+        """Timer callback that updates the object base tf."""
         pos, rot = self.node.tf.get_tf('rpbi/world', self.base_tf_id)
         if pos is None: return
         self.base = self.node.tf.position_and_quaternion_to_matrix(pos, rot)
 
 
     def start_applying_non_static_object_tf(self, object_tf_config):
+        """Starts a timer for applying the non static object tf."""
         freq = object_tf_config.get('listener_frequency', 50)
         self.timers['applying_non_static_object_tf'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self._update_non_static_object_tf)
 
 
     def _update_non_static_object_tf(self, event):
+        """Timer callback that updates the non static object tf."""
         if self.base is None: return
         self.reset_base_position_and_orientation()
 
+
     @staticmethod
     def get_base_position_and_orientation(offset, base):
+        """Computes the base position and orientation given the base and offset tf.
+
+Syntax
+------
+
+    pos, rot = Pybullet.get_base_position_and_orientation(offset, base)
+
+Parameters
+----------
+
+    offset (numpy.ndarray, shape=(4,4))
+        Offset transform.
+
+    base (numpy.ndarray, shape=(4,4))
+        Base transform.
+
+Returns
+-------
+
+    pos (numpy.ndarray, shape=(3,))
+        Transform position.
+
+    rot (numpy.ndarray, shape=(4,))
+        Transform quaternion (xyzw).
+
+"""
         T = offset @ base
         pos = T[:3,-1].flatten()
         rot = tf_conversions.transformations.quaternion_from_matrix(T)
         return pos, rot
 
+
     def reset_base_position_and_orientation(self):
+        """Retrieves the current pose of the object and resets the position/orientation in Pybullet."""
         pos, rot = self.get_base_position_and_orientation(self.offset, self.base)
         self.pb.resetBasePositionAndOrientation(self.body_unique_id, pos, rot)
 
 
     def destroy(self):
+        """Removes the object from Pybullet and closes any communication with ROS."""
 
         # Remove object from pybullet
         self.pb.removeBody(self.body_unique_id)

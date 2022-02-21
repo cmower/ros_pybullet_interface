@@ -6,6 +6,8 @@ from .utils import TimeoutExceeded
 
 class PybulletDynamicObject(PybulletObject):
 
+    """Objects motion defined by Pybullet."""
+
     def init(self):
 
         self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
@@ -36,5 +38,6 @@ class PybulletDynamicObject(PybulletObject):
 
 
     def broadcast_dynamic_object_tf(self, event):
+        """Grabs the current position and orientation of the dynamic object and broadcasts as a ROS tf using tf2 library."""
         pos, ori = self.pb.getBasePositionAndOrientation(self.body_unique_id)
         self.node.tf.set_tf('rpbi/world', self.tf_frame_id, pos, ori)

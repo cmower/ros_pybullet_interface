@@ -3,6 +3,8 @@ from .pybullet_object import PybulletObject
 
 class PybulletCollisionObject(PybulletObject):
 
+    """Visualizes an object. Other objects will react to this, but it will remain unaffected."""
+
     def init(self):
 
         self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])

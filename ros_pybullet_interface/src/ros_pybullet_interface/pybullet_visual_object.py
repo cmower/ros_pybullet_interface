@@ -2,6 +2,8 @@ from .pybullet_object import PybulletObject
 
 class PybulletVisualObject(PybulletObject):
 
+    """Simply visualizes an object in Pybullet."""
+
     def init(self):
 
         self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
