@@ -17,9 +17,35 @@ class PybulletRobot(PybulletObject):
 
     def init(self):
 
+        ##################################
+        ## Extract configurations
+
+        urdf_config = self.config['loadURDF']
+        self.use_fixed_base = urdf_config.get('useFixedBase', 0)  # pybullet defaults to 0
+
+        object_tf_config = self.config.get('object_tf', {})
+
+        ##################################
+        ## Setup object tf
+
+        # Get offset in base frame
+        self.offset = self.get_object_offset_in_base_tf(object_tf_config)
+
+        if self.use_fixed_base:
+            self.base = get_static_object_base_tf_in_world(object_tf_config)
+            pos, rot = self.get_base_position_and_orientation(self.offset, self.base)
+            self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.base_visual_shape_index, basePosition=pos, baseOrientation=rot)
+        else:
+            pass
+
+
+
+        ##################################
+        ## Load URDF
+
         # Get urdf config
-        config = self.config['loadURDF']
-        self.use_fixed_base = config.get('useFixedBase', 0)  # pybullet defaults to 0
+
+
 
         # Get urdf filename and create new temp filename
         urdf_filename = replace_package(config['fileName'])
@@ -37,6 +63,9 @@ class PybulletRobot(PybulletObject):
 
         # Load URDF
         self.body_unique_id = self.pb.loadURDF(**load_urdf_input)
+
+        ##################################
+        ## Setup joints interface
 
         # Get joint information
         self.num_joints = self.pb.getNumJoints(self.body_unique_id)
