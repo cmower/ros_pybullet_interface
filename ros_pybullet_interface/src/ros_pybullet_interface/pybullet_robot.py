@@ -23,29 +23,20 @@ class PybulletRobot(PybulletObject):
         urdf_config = self.config['loadURDF']
         self.use_fixed_base = urdf_config.get('useFixedBase', 0)  # pybullet defaults to 0
 
-        object_tf_config = self.config.get('object_tf', {})
+        object_tf_config = self.config.get('object_tf', {})  # optional, can be given via basePosition/baseOrientation in loadURDF config
+
+        self.is_visual_robot = self.config.get('is_visual_robot', False)
+        set_joint_motor_control_array_config = self.config.get('setJointMotorControlArray', {})
 
         ##################################
         ## Setup object tf
 
-        # Get offset in base frame
         self.offset = self.get_object_offset_in_base_tf(object_tf_config)
-
-        if self.use_fixed_base:
-            self.base = get_static_object_base_tf_in_world(object_tf_config)
-            pos, rot = self.get_base_position_and_orientation(self.offset, self.base)
-            self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.base_visual_shape_index, basePosition=pos, baseOrientation=rot)
-        else:
-            pass
-
-
+        self.base = self.get_static_object_base_tf_in_world(object_tf_config)
+        base_position, base_orientation = self.get_base_position_and_orientation(self.offset, self.base)
 
         ##################################
         ## Load URDF
-
-        # Get urdf config
-
-
 
         # Get urdf filename and create new temp filename
         urdf_filename = replace_package(config['fileName'])
@@ -55,11 +46,16 @@ class PybulletRobot(PybulletObject):
             urdf_filename = replace_ros_package_statements(urdf_filename)
 
         # Setup input for loadURDF
-        load_urdf_input = config.copy()
+        load_urdf_input = urdf_config.copy()
         load_urdf_input['fileName'] = urdf_filename
+        if 'basePosition' not in load_urdf_input:
+            load_urdf_input['basePosition'] = base_position
+        if 'baseOrientation' not in load_urdf_input:
+            load_urdf_input['baseOrientation'] = base_orientation
         self.urdf_filename = urdf_filename
-        if 'flags' in load_urdf_input.keys():
-            load_urdf_input['flags'] = eval('|'.join(['self.pb.' + f for f in load_urdf_input['flags'].split('|')]))
+        if 'flags' in load_urdf_input:
+            if isinstance(load_urdf_input['flags'], str):
+                load_urdf_input['flags'] = eval('|'.join(['self.pb.' + f for f in load_urdf_input['flags'].split('|')]))
 
         # Load URDF
         self.body_unique_id = self.pb.loadURDF(**load_urdf_input)
@@ -90,63 +86,29 @@ class PybulletRobot(PybulletObject):
                 joint_state.position.append(position)
         self.target_joint_state_callback_reset_joint_state(joint_state)
 
-        # Get frame offset
-        self.get_frame_offset()
-
-        # Set object base tf frame
-        if self.use_fixed_base:
-            self.setup_object_base_tf_frame()
-        else:
-            # Robot is not fixed base -> set initial base position/orientation
-
-            # Get object base tf frame (optional, default to world frame)
-            self.object_base_tf_frame_id = self.config.get('object_base_tf_frame_id', 'rpbi/world')
-
-            if self.object_base_tf_frame_id != 'rpbi/world':
-                # base frame is not world frame -> listen to tf frames
-
-                # Get timer timeout if static
-                if self.object_base_tf_frame_is_static:
-                    self.object_base_tf_frame_listener_timeout = self.config.get('object_base_tf_frame_listener_timeout', 2)
-
-                # Start looping: collect object tf
-                got_tf = False
-                self.object_base_tf_frame_listener_timer_start_time = self.node.time_now()
-                while not got_tf:
-                    pos_base, rot_base = self.node.tf.get_tf('rpbi/world', self.object_base_tf_frame_id)
-                    if pos_base is not None:
-                        got_tf = True
-                    else:
-                        # Compute time since the callback started
-                        time_since_start = (self.node.time_now() - self.object_base_tf_frame_listener_timer_start_time).to_sec()
-
-                        # Check if timeout exceeded
-                        if (time_since_start > self.object_base_tf_frame_listener_timeout):
-                            raise TimeoutExceeded(f'reached timeout ({self.object_base_tf_frame_listener_timeout} secs) to retrieve frame {self.object_base_tf_frame_id}!')
-
-            else:
-
-                # Base is world, so use zero transform
-                pos_base = np.zeros(3)
-                rot_base = np.array([0, 0, 0, 1])
-
-            # Get base position/orientation
-            T = self.offset_T @ self.node.tf.position_and_quaternion_to_matrix(pos_base, rot_base)
-            base_position = T[:3,-1].flatten()
-            base_orientation = tf_conversions.quaternion_from_matrix(T)
-
-            self.pb.resetBasePositionAndOrientation(self.body_unique_id, base_position, base_orientation)
+        ##################################
+        ## Setup target joint states
 
         # Check if robot is visual or not
-        self.is_visual_robot = self.config.get('is_visual_robot', False)
         if not self.is_visual_robot:
+            # not visual robot (use motor control commands)
 
             # Get control mode
-            control_mode_str = self.config.get('controlMode', 'POSITION_CONTROL')
-            self.control_mode = getattr(self.pb, control_mode_str)
+            cm = set_joint_motor_control_array_config.get('controlMode', 'POSITION_CONTROL')
+            if isinstance(cm, str):
+                self.control_mode = getattr(self.pb, cm)
+            elif isinstance(cm, int):
+                self.control_mode = cm
+            else:
+                raise ValueError(f'did not reconize type of control mode, given "{type(cm)}", expected either a "str" or "int".')
 
             # Setup setJointMotorControlArray input
             self.set_joint_motor_control_array_input = {'bodyIndex': self.body_unique_id, 'controlMode': self.control_mode}
+
+            # Set gains (optional)
+            for name in ('positionGains', 'velocityGains'):
+                if name in set_joint_motor_control_array_config:
+                    self.set_joint_motor_control_array_input[name] = set_joint_motor_control_array_config[name]
 
             # Set reset method
             if self.control_mode == self.pb.POSITION_CONTROL:
@@ -156,7 +118,7 @@ class PybulletRobot(PybulletObject):
             elif self.control_mode == self.pb.TORQUE_CONTROL:
                 self.reset_set_joint_motor_control_array_input = self.reset_set_joint_motor_control_array_input_force
             else:
-                raise NotImplementedError(f'control mode {control_mode_str} is not supported!')
+                raise NotImplementedError(f'control mode with id "{self.control_mode}" is not supported!')
 
             # Set callback method
             target_joint_state_callback = self.target_joint_state_callback_motor_control
@@ -173,22 +135,28 @@ class PybulletRobot(PybulletObject):
 
         # Start target joint state subscriber
         topic_name = f'rpbi/{self.name}/joint_states/target'
-        self.node.Subscriber(topic_name, JointState, target_joint_state_callback)
+        self.subs['target_joint_state'] = self.node.Subscriber(topic_name, JointState, target_joint_state_callback)
 
-        # Retrieve list of joint names and enable those as f/t sensors (optional)
-        # Note: if robot is visual then this data will not be published, even if this is set in config file
-        self.enabled_joint_force_torque_sensors = self.config.get('enabled_joint_force_torque_sensors', []) # list of joint names
-        self.ft_publishers = {}
-        for joint_name in self.enabled_joint_force_torque_sensors:
-            self.pb.enableJointForceTorqueSensor(self.body_unique_id, self.joint_names.index(joint_name), enableSensor=1)
-            self.ft_publishers[joint_name] = self.node.Publisher(f'rpbi/{self.name}/{joint_name}/ft_sensor', WrenchStamped, queue_size=10)
+        ##################################
+        ## Setup FT sensors
 
-        # Start current joint state publisher
         if not self.is_visual_robot:
-            publish_joint_state_frequency = self.config.get('publish_joint_state_frequency', 50)
-            publish_joint_state_dt = 1.0/float(publish_joint_state_frequency)
-            self.joint_state_pub = self.node.Publisher(f'rpbi/{self.name}/joint_states', JointState, queue_size=10)
-            self.node.Timer(self.node.Duration(publish_joint_state_dt), self.joint_state_publisher)
+
+            # Retrieve list of joint names and enable those as f/t sensors (optional)
+            # Note: if robot is visual then this data will not be published, even if this is set in config file
+            self.enabled_joint_force_torque_sensors = self.config.get('enabled_joint_force_torque_sensors', []) # list of joint names
+            for joint_name in self.enabled_joint_force_torque_sensors:
+                self.pb.enableJointForceTorqueSensor(self.body_unique_id, self.joint_names.index(joint_name), enableSensor=1)
+                self.pubs[f'{self.name}_{joint_name}_ft_sensor'] = self.node.Publisher(f'rpbi/{self.name}/{joint_name}/ft_sensor', WrenchStamped, queue_size=10)
+
+        ##################################
+        ## Setup current state publishers
+
+        if not self.is_visual_robot:
+            # Start current joint state publisher
+            freq = self.config.get('publish_joint_state_frequency', 50)
+            self.pubs['current_joint_states'] = self.node.Publisher(f'rpbi/{self.name}/joint_states', JointState, queue_size=10)
+            self.node.Timer(self.node.Duration(1.0/float(freq)), self.joint_state_publisher)
 
         # Start publishing link states
         if self.config.get('publish_link_states', False):
@@ -198,13 +166,13 @@ class PybulletRobot(PybulletObject):
             self.root_link_name = self.get_root_link_name()
 
             # Setup publish link state timer
-            publish_link_states_frequency = self.config.get('publish_link_states_frequency', 50)
-            publish_link_states_dt = 1.0/float(publish_link_states_frequency)
-            self.node.Timer(self.node.Duration(publish_link_states_dt), self.publish_link_states)
+            freq = self.config.get('publish_link_states_frequency', 50)
+            self.timers['publish_link_states'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self.publish_link_states)
 
-        # Setup services
-        self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
-        self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
+        ##################################
+        ## Setup services
+        self.srvs['robot_info'] = self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
+        self.srvs['snap_to_real_robot'] = self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
 
     def get_root_link_name(self):
         # HACK: since I haven't been able to find how to retrieve the root link name, I had to use urdf_parser_py instead
@@ -247,7 +215,7 @@ class PybulletRobot(PybulletObject):
         msg.wrench.torque.x = joint_reaction_forces[3]
         msg.wrench.torque.y = joint_reaction_forces[4]
         msg.wrench.torque.z = joint_reaction_forces[5]
-        self.ft_publishers[name].publish(msg)
+        self.pubs[f'{self.name}_{name}_ft_sensor'].publish(msg)
 
 
     def joint_state_publisher(self, event):
@@ -269,7 +237,7 @@ class PybulletRobot(PybulletObject):
         # Create joint state message
         msg = JointState(name=self.joint_names, position=position, velocity=velocity, effort=effort)
         msg.header.stamp = self.node.time_now()
-        self.joint_state_pub.publish(msg)
+        self.pubs['current_joint_states'].publish(msg)
 
 
     def publish_link_states(self, event):
