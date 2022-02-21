@@ -2,6 +2,8 @@ from ros_pybullet_interface.msg import JointInfo
 
 class Joint:
 
+    """Joint class that hold joint information returned by pybullet.getJointInfo."""
+
     joint_types_str = ["JOINT_REVOLUTE", "JOINT_PRISMATIC", "JOINT_SPHERICAL", "JOINT_PLANAR", "JOINT_FIXED"]
 
     def __init__(self, info):
@@ -28,6 +30,7 @@ class Joint:
         self.parentIndex = info[16]
 
     def as_ros_msg(self):
+        """Parse the joint information as a ros_pybullet_interface/JointInfo ROS message."""
         msg = JointInfo()
         msg.jointIndex = self.jointIndex
         msg.jointName = self.jointName

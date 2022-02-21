@@ -3,6 +3,8 @@ from ros_pybullet_interface.msg import ResetDebugVisualizerCamera
 
 class PybulletVisualizer:
 
+    """Interface for the Pybullet visualizer."""
+
     reset_debug_visualizer_camera_default = {
         'cameraDistance': 1.0,
         'cameraYaw': 0.0,
@@ -42,6 +44,7 @@ class PybulletVisualizer:
         self.node.logdebug('initialized Pybullet visualizer')
 
     def callback(self, msg):
+        """Callback for subscriber listening for visualizer pose updates."""
         self.camera_config = {
             key: getattr(msg, key, self.reset_debug_visualizer_camera_default[key])
             for key in self.reset_debug_visualizer_camera.keys()

@@ -2,6 +2,26 @@ import time
 from .config import ros_package_path
 
 def urdf_contains_ros_package_statements(filename):
+    """Returns true when the URDF contains "package://" statements, false otherwise.
+
+Syntax
+------
+
+    r = urdf_contains_ros_package_statements(filename)
+
+Parameters
+----------
+
+    filename (string)
+        Path to URDF.
+
+Returns
+-------
+
+    r (bool)
+        True when URDF contains "package://" statements, False otherwise.
+
+"""
     ret = False
     with open(filename, 'r') as f:
         for line in f.readlines():
@@ -11,6 +31,26 @@ def urdf_contains_ros_package_statements(filename):
     return ret
 
 def replace_ros_package_statements(filename):
+    """Replace "package://" statements with absolute paths in a new file.
+
+Syntax
+------
+
+    filename_out = replace_ros_package_statements(filename_in)
+
+Parameters
+----------
+
+    filename_in (string)
+        Path to URDF containing "package://" statements.
+
+Returns
+-------
+
+    filename_out (string)
+        Path to file in /tmp containing matching URDF with "package://" statements replaced by absolute paths.
+
+"""
 
     # Load urdf
     with open(filename, 'r') as fin:

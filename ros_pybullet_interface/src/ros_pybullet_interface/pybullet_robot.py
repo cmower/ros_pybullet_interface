@@ -13,6 +13,8 @@ from ros_pybullet_interface.srv import RobotInfo, RobotInfoResponse
 
 class PybulletRobot(PybulletObject):
 
+    """Interface for robots in Pybullet (simulated and visualizations). Note, visualized robots do not interact with objects in Pybullet."""
+
     snap_to_real_robot_timeout = 10.0  # secs
 
     def init(self):
@@ -175,6 +177,7 @@ class PybulletRobot(PybulletObject):
         self.srvs['snap_to_real_robot'] = self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
 
     def get_root_link_name(self):
+        """Return the root link name."""
         # HACK: since I haven't been able to find how to retrieve the root link name, I had to use urdf_parser_py instead
         from urdf_parser_py import urdf
         with open(self.urdf_filename, 'r') as f:
@@ -182,31 +185,37 @@ class PybulletRobot(PybulletObject):
         return robot.get_root()
 
     def reset_set_joint_motor_control_array_input_position(self, msg):
+        """Update the input parameters for setJointMotorControlArray using position control mode."""
         self.set_joint_motor_control_array_input['jointIndices'] = [self.joint_names.index(joint_name) for joint_name in msg.name]
         self.set_joint_motor_control_array_input['targetPositions'] = msg.position
 
 
     def reset_set_joint_motor_control_array_input_velocity(self, msg):
+        """Update the input parameters for setJointMotorControlArray using velocity control mode."""
         self.set_joint_motor_control_array_input['jointIndices'] = [self.joint_names.index(joint_name) for joint_name in msg.name]
         self.set_joint_motor_control_array_input['targetVelocities'] = msg.velocity
 
 
     def reset_set_joint_motor_control_array_input_force(self, msg):
+        """Update the input parameters for setJointMotorControlArray using torque control mode."""
         self.set_joint_motor_control_array_input['jointIndices'] = [self.joint_names.index(joint_name) for joint_name in msg.name]
         self.set_joint_motor_control_array_input['force'] = msg.effort
 
 
     def target_joint_state_callback_motor_control(self, msg):
+        """Target joint state callback for simulated robots."""
         self.reset_set_joint_motor_control_array_input(msg)
         self.pb.setJointMotorControlArray(**self.set_joint_motor_control_array_input)
 
 
     def target_joint_state_callback_reset_joint_state(self, msg):
+        """Target joint state callback for visualized robots."""
         for name, position in zip(msg.name, msg.position):
             self.pb.resetJointState(self.body_unique_id, self.joint_names.index(name), position)
 
 
     def publish_wrench(self, name, joint_reaction_forces):
+        """Publish wrench forces."""
         msg = WrenchStamped()
         msg.header.stamp = self.node.time_now()
         msg.wrench.force.x = joint_reaction_forces[0]
