@@ -28,6 +28,7 @@ class PybulletObject:
         self.body_unique_id = None
         self.offset = None  # object offset in object base frame
         self.base = None  # object base frame defined in rpbi/world
+        self.visual_shape_type = None # set when create_visual_shape is called
 
         # Initialize object
         self.init()
@@ -42,6 +43,7 @@ class PybulletObject:
         """Exposes createVisualShape."""
         if isinstance(config['shapeType'], str):
             config['shapeType'] = getattr(self.pb, config['shapeType'])
+        self.visual_shape_type = config['shapeType']
         if 'fileName' in config.keys():
             config['fileName'] = replace_package(config['fileName'])
         return self.pb.createVisualShape(**config)
