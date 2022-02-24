@@ -3,6 +3,10 @@ project(rpbi_utils)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  tf2
+  tf2_ros
+  geometry_msgs
+  std_msgs
   )
 
 catkin_python_setup()
