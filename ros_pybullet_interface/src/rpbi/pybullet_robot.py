@@ -171,6 +171,11 @@ class PybulletRobot(PybulletObject):
             freq = self.config.get('publish_link_states_frequency', 50)
             self.timers['publish_link_states'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self.publish_link_states)
 
+        # Show joint limits
+        if self.is_visual_robot:
+            if self.config.get('show_joint_limits', True):
+                self.timers['show_joint_limits'] = self.node.Timer(self.node.Duration(1.0/50.0), self.show_joint_limits)
+
         ##################################
         ## Setup services
         self.srvs['robot_info'] = self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
@@ -212,7 +217,6 @@ class PybulletRobot(PybulletObject):
         """Target joint state callback for visualized robots."""
         for name, position in zip(msg.name, msg.position):
             self.pb.resetJointState(self.body_unique_id, self.joint_names.index(name), position)
-
 
     def publish_wrench(self, name, joint_reaction_forces):
         """Publish wrench forces."""
@@ -292,3 +296,14 @@ class PybulletRobot(PybulletObject):
             self.node.logerr(message)
 
         return SetStringResponse(success=success, message=message)
+
+    def show_joint_limits(self, event):
+
+        in_limit = [
+            joint.in_limit(joint_states[0])
+            for joint, joint_states in zip(self.joints, self.pb.getJointStates(self.body_unique_id, self.joint_indices))
+            if joint.jointTypeStr != 'JOINT_FIXED'
+        ]
+
+        if not all(in_limit):
+            print(self.node.time_now().to_sec(), "-------------%s joint states outside limit------------" % self.name)

@@ -29,6 +29,9 @@ class Joint:
         self.parentFrameOrn = info[15]
         self.parentIndex = info[16]
 
+    def in_limit(self, q):
+        return self.jointLowerLimit <= q <= self.jointUpperLimit
+
     def as_ros_msg(self):
         """Parse the joint information as a ros_pybullet_interface/JointInfo ROS message."""
         msg = JointInfo()
