@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from ros_pybullet_interface.ros_node import RosNode
+from rpbi.ros_node import RosNode
 from cob_srvs.srv import SetString, SetStringRequest
 
 

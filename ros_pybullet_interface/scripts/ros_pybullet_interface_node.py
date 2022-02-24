@@ -2,14 +2,14 @@
 import pybullet
 from functools import partial
 
-from ros_pybullet_interface.ros_node import RosNode
-from ros_pybullet_interface.config import load_config
-from ros_pybullet_interface.pybullet_instance import PybulletInstance
-from ros_pybullet_interface.pybullet_visualizer import PybulletVisualizer
-from ros_pybullet_interface.pybullet_robot import PybulletRobot
-from ros_pybullet_interface.pybullet_visual_object import PybulletVisualObject
-from ros_pybullet_interface.pybullet_dynamic_object import PybulletDynamicObject
-from ros_pybullet_interface.pybullet_collision_object import PybulletCollisionObject
+from rpbi.ros_node import RosNode
+from rpbi.config import load_config
+from rpbi.pybullet_instance import PybulletInstance
+from rpbi.pybullet_visualizer import PybulletVisualizer
+from rpbi.pybullet_robot import PybulletRobot
+from rpbi.pybullet_visual_object import PybulletVisualObject
+from rpbi.pybullet_dynamic_object import PybulletDynamicObject
+from rpbi.pybullet_collision_object import PybulletCollisionObject
 
 from cob_srvs.srv import SetString, SetStringResponse
 
