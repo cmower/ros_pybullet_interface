@@ -1,6 +1,7 @@
 import tf_conversions
 import numpy as np
 from math import radians
+from collections import OrderedDict
 from .pybullet_robot_joints import Joint
 from .config import replace_package, ros_package_path
 from .pybullet_robot_urdf import urdf_contains_ros_package_statements, replace_ros_package_statements
@@ -171,10 +172,49 @@ class PybulletRobot(PybulletObject):
             freq = self.config.get('publish_link_states_frequency', 50)
             self.timers['publish_link_states'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self.publish_link_states)
 
+        # Setup link visualizers
+        self.links_to_visualize = OrderedDict()
+        for link_name, visual_link_config in self.config.get('links_to_visualize', {}).items():
+            if link_name == self.root_link_name:
+                self.links_to_visualize[-1] = visual_link_config
+            elif link_name in self.link_names:
+                self.links_to_visualize[self.link_names.index(link_name)] = visual_link_config
+            else:
+                raise ValueError(f"did not recognize link namg '{link_name}'")
+
+        self.links_to_visualize_ids = []
+        if self.links_to_visualize:
+            self.timers['links_to_visualize'] = self.node.Timer(self.node.Duration(1.0/100.), self.visualize_links)
+
         ##################################
         ## Setup services
         self.srvs['robot_info'] = self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
         self.srvs['snap_to_real_robot'] = self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
+
+    def visualize_links(self, event):
+
+        for i in self.links_to_visualize_ids:
+            self.pb.removeUserDebugItem(i)
+
+        for link_state, config in zip(self.pb.getLinkStates(self.body_unique_id, list(self.links_to_visualize.keys()), computeForwardKinematics=1), self.links_to_visualize.values()):
+
+            # Get position and orientation
+            pos = np.array(link_state[0])
+            ori = np.array(link_state[1])
+
+            # Quaternion to rotation matrix
+            R = tf_conversions.transformations.quaternion_matrix(ori)
+
+            # Visualize
+            s = config.get('scale', 1.0)
+            lw = config.get('line_width', 2)
+
+            id0 = self.pb.addUserDebugLine(pos, pos+s*R[:3,0], [1, 0, 0], lineWidth=lw)
+            id1 = self.pb.addUserDebugLine(pos, pos+s*R[:3,1], [0, 1, 0], lineWidth=lw)
+            id2 = self.pb.addUserDebugLine(pos, pos+s*R[:3,2], [0, 0, 1], lineWidth=lw)
+            self.links_to_visualize_ids += [id0, id1, id2]
+
+
 
     def get_root_link_name(self):
         """Return the root link name."""

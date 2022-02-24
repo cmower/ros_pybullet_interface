@@ -25,3 +25,8 @@ publish_joint_state_frequency: 30
 
 publish_link_states: true
 publish_link_states_frequency: 30
+
+links_to_visualize:
+  lwr_arm_7_link:
+    scale: 1.0
+    line_width: 2
