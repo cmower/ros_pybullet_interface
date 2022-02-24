@@ -1,3 +1,4 @@
+import os
 import re
 import yaml
 import rospkg
@@ -86,6 +87,15 @@ Returns
         Configuration.
 
 """
-    with open(replace_package(path), 'r') as configfile:
-         config = yaml.load(configfile, Loader=yaml.FullLoader)
+    path_ = replace_package(path)
+    if os.path.exists(path_):
+        with open(path_, 'r') as configfile:
+            config = yaml.load(configfile, Loader=yaml.FullLoader)
+    else:
+        # assume path is a string containing configuration (potentially used in add_pybullet_object services)
+        config = yaml.load(path)  # use path, not path_ since that may have been modified by replace_package
     return config
+
+
+def config_to_str(config):
+    return yaml.dump(config)

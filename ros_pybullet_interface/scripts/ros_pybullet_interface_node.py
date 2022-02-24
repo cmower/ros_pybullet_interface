@@ -70,7 +70,7 @@ class Node(RosNode):
         try:
 
             # Load config
-            config_filename = req.data
+            config_filename = req.data  # note, this may also be a string containing the configuration
 
             # Create visual object
             if not self.add_pybullet_object(config_filename, object_type):
