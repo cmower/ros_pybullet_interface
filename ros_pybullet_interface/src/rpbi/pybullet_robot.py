@@ -10,6 +10,7 @@ from geometry_msgs.msg import WrenchStamped
 from .utils import TimeoutExceeded
 from cob_srvs.srv import SetString, SetStringResponse
 from ros_pybullet_interface.srv import RobotInfo, RobotInfoResponse
+from ros_pybullet_interface.srv import ResetJointState, ResetJointStateResponse
 
 class PybulletRobot(PybulletObject):
 
@@ -180,6 +181,8 @@ class PybulletRobot(PybulletObject):
         ## Setup services
         self.srvs['robot_info'] = self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
         self.srvs['snap_to_real_robot'] = self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
+        self.srvs['reset_joint_state'] = self.node.Service(f'rpbi/{self.name}/reset_joint_state', ResetJointState, self.service_reset_joint_state)
+        self.srvs['move_to_joint_state'] = self.node.Service(f'rpbi/{self.name}/move_to_joint_state', ResetJointState, self.service_move_to_joint_state)
 
     def get_root_link_name(self):
         """Return the root link name."""
@@ -229,7 +232,6 @@ class PybulletRobot(PybulletObject):
         msg.wrench.torque.y = joint_reaction_forces[4]
         msg.wrench.torque.z = joint_reaction_forces[5]
         self.pubs[f'{self.name}_{name}_ft_sensor'].publish(msg)
-
 
     def joint_state_publisher(self, event):
 
@@ -296,6 +298,69 @@ class PybulletRobot(PybulletObject):
             self.node.logerr(message)
 
         return SetStringResponse(success=success, message=message)
+
+
+    def service_reset_joint_state(self, req):
+
+        success = True
+        message = 'reset joint state'
+        try:
+            if self.is_visual_robot:
+                self.target_joint_state_callback_reset_joint_state(req.joint_state)
+            else:
+                self.target_joint_state_callback_motor_control(req.joint_state)
+
+        except Exception as e:
+            success = False
+            message = 'failed to reset joint state, exception: %s' % str(e)
+
+        if success:
+            self.node.loginfo(message)
+        else:
+            self.node.logerr(message)
+
+        return ResetJointStateResponse(message=message, success=success)
+
+
+    def service_move_to_joint_state(self, req):
+
+        if self.control_mode not in {self.pb.POSITION_CONTROL, self.pb.VELOCITY_CONTROL}:
+            success = False
+            message = f'robot in  {self.control_mode}, currently this service only supports POSITION_CONTROL/VELOCITY_CONTROL modes!'
+            self.node.logerr(message)
+            return ResetJointStateResponse(message=message, success=success)
+
+        # Setup
+        success = True
+        message = 'successfully moved robot to joint state'
+
+        # Get joint states from pybullet
+        joint_states = self.pb.getJointStates(self.body_unique_id, self.joint_indices)
+
+        # Vectorize current and goal joint state
+        qcurr = np.array([joint_states[self.joint_names.index(name)][0] for name in req.joint_state.name])
+        qgoal = np.array(req.joint_state.position)
+
+        # Move robot
+        qprev = qcurr.copy()
+        alpha = 0.0
+        hz = 100
+        dt = 1.0/float(hz)
+        t0 = self.node.time_now().to_sec()
+        rate = self.node.Rate(hz)
+        while alpha < 1.0:
+            alpha = (self.node.time_now().to_sec() - t0)/req.duration
+            q = alpha*qgoal + (1.0-alpha)*qcurr
+            dq = q - qprev
+            joint_state = JointState(name=req.joint_state.name, position=q, velocity=dq/dt)
+            if self.is_visual_robot:
+                self.target_joint_state_callback_reset_joint_state(joint_state)
+            else:
+                self.target_joint_state_callback_motor_control(joint_state)
+            qprev = q.copy()
+            rate.sleep()
+
+        return ResetJointStateResponse(message=message, success=success)
 
     def show_joint_limits(self, event):
 
