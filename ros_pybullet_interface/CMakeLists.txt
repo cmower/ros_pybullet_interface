@@ -20,6 +20,7 @@ add_message_files(
 add_service_files(
   FILES
   RobotInfo.srv
+  ResetJointState.srv
 )
 
 generate_messages(
