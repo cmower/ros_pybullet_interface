@@ -12,6 +12,10 @@ from dmp.msg import DMPTraj, DMPPoint
 from dmp.srv import LearnDMPFromDemo, SetActiveDMP, GetDMPPlan
 from rpbi.tf_interface import TfInterface
 from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
+import matplotlib
+matplotlib.use('GTK3Agg')
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def get_srv_handle(srv_name, srv_type):
     rospy.wait_for_service(srv_name)
@@ -202,6 +206,26 @@ class Node:
         dt = 0.01
         integrate_iter = 500
         plan = self.get_dmp_plan(x0, xdot0, t0, goal, goal_thresh, seg_length, tau, dt, integrate_iter)
+
+        # Plot plan
+        plot_plan = rospy.get_param('~plot_param', True)
+        if plot_plan:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+
+            def plot_line(ax, points, fmt, **kwargs):
+                x = [pt.positions[0] for pt in points]
+                y = [pt.positions[1] for pt in points]
+                z = [pt.positions[2] for pt in points]
+                ax.plot(x, y, z, fmt, **kwargs)
+
+            demo = self.data_collector.get()
+            plot_line(ax, demo.points, '-k', label='demo')
+            plot_line(ax, plan.plan.points, '-b', label='plan')
+            ax.plot([demo.points[0].positions[0]], [demo.points[0].positions[1]], [demo.points[0].positions[2]], 'ok')
+            ax.plot([plan.plan.points[0].positions[0]], [plan.plan.points[0].positions[1]], [plan.plan.points[0].positions[2]], 'ob')
+            ax.legend()
+            plt.show()
 
         # Execute plan
         self.data_collector.tf.set_tf('kuka_start', 'kuka_target', x0)
