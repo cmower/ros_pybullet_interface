@@ -1,5 +1,9 @@
 <launch>
 
+  <!-- Arguments -->
+  <arg name="interface" default="keyboard"/>
+  <param name="human_interface" type="string" value="$(arg interface)"/>
+
   <!-- Simulation -->
   <!-- ========== -->
 
@@ -28,21 +32,41 @@
   <!-- Human interface -->
   <!-- =============== -->
 
-  <!-- Keyboard -->
+  <!-- Keyboard driver, note this is used in both cases where interface is 'spacenav' and 'keyboard' -->
   <node pkg="keyboard" name="keyboard" type="keyboard"/>
 
-  <!-- Spacenav -->
-  <node pkg="spacenav_node" type="spacenav_node" name="$(anon spacenav_node)" output="screen">
-    <param name="zero_when_static" value="true"/>
-    <param name="static_count_threshold" value="30"/>
-  </node>
+  <!-- Spacenav as interface -->
+  <group if="$(eval interface == 'spacenav')">
 
-  <!-- Map spacenav to operator signal -->
-  <node pkg="operator_node" name="joy2osig" type="scale_node.py">
-    <remap from="joy" to="spacenav/joy"/>
-    <param name="axes" type="str" value="2 1 0 5 4 3"/>
-    <param name="scale" type="str" value="-1 1 1 0 0 0"/>
-  </node>
+    <!-- Spacenav driver -->
+    <node pkg="spacenav_node" type="spacenav_node" name="$(anon spacenav_node)" output="screen">
+      <remap from="spacenav/joy" to="joy"/>
+      <param name="zero_when_static" value="true"/>
+      <param name="static_count_threshold" value="30"/>
+    </node>
+
+    <!-- Map spacenav to operator signal -->
+    <node pkg="operator_node" name="joy2osig" type="scale_node.py">
+      <param name="axes" type="str" value="2 1 0 5 4 3"/>
+      <param name="scale" type="str" value="-1 1 1 0 0 0"/>
+    </node>
+
+  </group>
+
+  <!-- Keyboard as interface -->
+  <group if="$(eval interface == 'keyboard')">
+
+    <node pkg="operator_node" name="key2joy" type="keyboard_to_joy.py">
+      <rosparam param="axes">["DOWN UP", "RIGHT LEFT", "s w"]</rosparam>
+    </node>
+
+    <!-- Map keyboard to operator signal -->
+    <node pkg="operator_node" name="joy2osig" type="scale_node.py">
+      <param name="axes" type="str" value="2 1 0"/>
+      <param name="scale" type="str" value="-1 1 1"/>
+    </node>
+
+  </group>
 
   <!-- Inverse Kinematics -->
   <!-- ================== -->

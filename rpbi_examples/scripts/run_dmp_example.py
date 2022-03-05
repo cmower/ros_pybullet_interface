@@ -96,6 +96,17 @@ class Node:
 
         rospy.loginfo('start dmp example demo')
 
+        print("\ncontrols:")
+        human_interface = rospy.get_param('human_interface')
+        if human_interface=='keyboard':
+            print("  press 1 to start teleoperation, and recording")
+            print("    control 3D position of end-effector using keys: LEFT, RIGHT, UP, DOWN, W, S")
+            print("  press 1 again to stop teleoperation, and recording")
+            print("  press 2 to learn the dmp")
+            print("  press 3 to execute the dmp")
+        elif human_interface=='spacenav':
+            pass
+
     def keyboard_callback(self, msg):
 
         if msg.code == Key.KEY_1:
