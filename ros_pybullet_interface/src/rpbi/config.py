@@ -93,7 +93,10 @@ Returns
             config = yaml.load(configfile, Loader=yaml.FullLoader)
     else:
         # assume path is a string containing configuration (potentially used in add_pybullet_object services)
-        config = yaml.load(path)  # use path, not path_ since that may have been modified by replace_package
+        try:
+            config = yaml.load(path, Loader=yaml.FullLoader)  # use path, not path_ since that may have been modified by replace_package
+        except yaml.parser.ParserError:
+            raise ValueError("failed to parse config")
     return config
 
 
