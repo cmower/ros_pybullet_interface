@@ -53,6 +53,14 @@ Parameters
         msg.transform.rotation.w = orientation[3]
         self.tf_broadcaster.sendTransform(msg)
 
+    def get_tf_msg(self, parent_frame_id, child_frame_id):
+        try:
+            msg = self.tf_buffer.lookup_transform(parent_frame_id, child_frame_id, rospy.Time())
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            rospy.logdebug('Did not recieve frame %s in %s!', child_frame_id, parent_frame_id)
+            msg = None
+        return msg
+
     def get_tf(self, parent_frame_id, child_frame_id):
         """Return position and orientation of child frame with respect to a parent frame.
 
@@ -84,12 +92,11 @@ Returns
         retrieval (e.g. frame doesn't exist) then None is returned in
         its place.
 """
-        try:
-            msg = self.tf_buffer.lookup_transform(parent_frame_id, child_frame_id, rospy.Time())
+        msg = self.get_tf_msg(parent_frame_id, child_frame_id)
+        if msg is not None:
             position = [getattr(msg.transform.translation, d) for d in 'xyz']
             orientation = [getattr(msg.transform.rotation, d) for d in 'xyzw']
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-            rospy.logdebug('Did not recieve frame %s in %s!', child_frame_id, parent_frame_id)
+        else:
             position = None
             orientation = None
         return position, orientation
