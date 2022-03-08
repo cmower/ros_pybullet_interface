@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # license removed for brevity
-import rospkg
 import rospy
-import os
 
 import tf2_ros
 import numpy as np
@@ -14,10 +12,8 @@ from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import Float32
 
-
-import ros_pybullet_interface.utils as utils
-
-import ros_pybullet_interface.interpolation as interpol
+import rpbi_utils.interpolation as interpol
+from rpbi.config import load_config
 
 # ------------------------------------------------------
 #
@@ -346,9 +342,6 @@ class ROSTrajInterface(object):
         # Setup constants
         self.dt = 1.0/float(FREQ)
 
-        # get the path to this catkin ws
-        self.current_dir = utils.ROOT_DIR
-
         # Get ros parameters
         self.traj_config_file_name = rospy.get_param('~traj_config')
 
@@ -390,7 +383,7 @@ class ROSTrajInterface(object):
     def setupTrajManager(self, config_file_name, robot):
 
         # Load robot configuration
-        config = utils.loadYAMLConfig(config_file_name)
+        config = load_config(config_file_name)
 
         # Extract data from configuration
         mot_dim = config['motion_dimensions']
@@ -412,7 +405,7 @@ class ROSTrajInterface(object):
     def setupStiffnessManager(self, config_file_name, robot):
 
         # Load robot configuration
-        config = utils.loadYAMLConfig(config_file_name)
+        config = load_config(config_file_name)
 
         # Extract data from configuration
         interpol = config['interpolation']
