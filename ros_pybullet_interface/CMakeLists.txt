@@ -22,6 +22,7 @@ add_service_files(
   FILES
   RobotInfo.srv
   ResetJointState.srv
+  ResetEffState.srv
   CalculateInverseKinematics.srv
 )
 
