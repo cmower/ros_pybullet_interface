@@ -10,7 +10,9 @@ from geometry_msgs.msg import WrenchStamped
 from .utils import TimeoutExceeded
 from cob_srvs.srv import SetString, SetStringResponse
 from ros_pybullet_interface.srv import RobotInfo, RobotInfoResponse
-from ros_pybullet_interface.srv import ResetJointState, ResetJointStateResponse
+from ros_pybullet_interface.srv import ResetJointState, ResetJointStateResponse, ResetJointStateRequest
+from ros_pybullet_interface.srv import CalculateInverseKinematics, CalculateInverseKinematicsResponse
+from ros_pybullet_interface.srv import ResetEffState, ResetEffStateResponse
 
 class PybulletRobot(PybulletObject):
 
@@ -183,6 +185,8 @@ class PybulletRobot(PybulletObject):
         self.srvs['snap_to_real_robot'] = self.node.Service(f'rpbi/{self.name}/snap_to_real_robot', SetString, self.service_snap_to_real_robot)
         self.srvs['reset_joint_state'] = self.node.Service(f'rpbi/{self.name}/reset_joint_state', ResetJointState, self.service_reset_joint_state)
         self.srvs['move_to_joint_state'] = self.node.Service(f'rpbi/{self.name}/move_to_joint_state', ResetJointState, self.service_move_to_joint_state)
+        self.srvs['move_to_eff_state'] = self.node.Service(f'rpbi/{self.name}/move_to_eff_state', ResetEffState, self.service_move_eff_to_state)
+        self.srvs['ik'] = self.node.Service(f'rpbi/{self.name}/ik', CalculateInverseKinematics, self.service_ik)
 
     def get_root_link_name(self):
         """Return the root link name."""
@@ -372,3 +376,65 @@ class PybulletRobot(PybulletObject):
 
         if not all(in_limit):
             print(self.node.time_now().to_sec(), "-------------%s joint states outside limit------------" % self.name)
+
+    def solve_ik(self, problem):
+
+        # Setup ik
+        calc_ik_args = [
+            self.body_unique_id,
+            self.link_names.index(problem.link_name),
+            problem.targetPosition[:3]
+        ]
+        calc_ik_kwargs = {}
+        if problem.targetOrientation:
+            calc_ik_kwargs['targetOrientation'] = problem.targetOrientation
+        if problem.lowerLimits:
+            calc_ik_kwargs['lowerLimits'] = problem.lowerLimits
+        if problem.upperLimits:
+            calc_ik_kwargs['upperLimits'] = problem.upperLimits
+        if problem.jointRanges:
+            calc_ik_kwargs['jointRanges'] = problem.jointRanges
+        if problem.restPoses:
+            calc_ik_kwargs['restPoses'] = problem.restPoses
+        if problem.jointDamping:
+            calc_ik_kwargs['jointDamping'] = problem.jointDamping
+        if problem.solver:
+            calc_ik_kwargs['solver'] = problem.solver
+        if problem.currentPosition:
+            calc_ik_kwargs['currentPosition'] = problem.currentPosition
+        if problem.maxNumIterations > 0:
+            calc_ik_kwargs['maxNumIterations'] = problem.maxNumIterations
+        if problem.residualThreshold:
+            calc_ik_kwargs['residualThreshold'] = problem.residualThreshold
+
+        # Solve IK
+        try:
+            positions = self.pb.calculateInverseKinematics(*calc_ik_args, **calc_ik_kwargs)
+            success = True
+            message = 'Pybullet solved IK'
+        except Exception as e:
+            success = False
+            message = 'Pybullet failed to solve IK, error: %s' % str(e)
+            self.node.logerr(message)
+
+        # Package message
+        solution = JointState(name=self.joint_names, position=positions)
+        solution.header.stamp = self.node.time_now()
+
+        return success, message, solution
+
+    def service_ik(self, req):
+        success, message, solution = self.solve_ik(req.problem)
+        return CalculateInverseKinematicsRespons(success=success, message=message, solution=solution)
+
+    def service_move_eff_to_state(self, req):
+
+        # Solve IK
+        success, message, solution = self.solve_ik(req.problem)
+        if not success:
+            return ResetEffStateResponse(success=success, message=message)
+
+        # Move robot
+        req = ResetJointStateRequest(joint_state=solution, duration=req.duration)
+        resp = self.service_move_to_joint_state(req)
+        return ResetEffStateResponse(success=req.success, message=resp.message)

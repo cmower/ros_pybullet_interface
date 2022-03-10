@@ -15,12 +15,14 @@ add_message_files(
   FILES
   ResetDebugVisualizerCamera.msg
   JointInfo.msg
+  CalculateInverseKinematicsProblem.msg
 )
 
 add_service_files(
   FILES
   RobotInfo.srv
   ResetJointState.srv
+  CalculateInverseKinematics.srv
 )
 
 generate_messages(
