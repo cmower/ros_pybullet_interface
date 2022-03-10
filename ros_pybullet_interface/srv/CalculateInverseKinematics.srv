@@ -2,4 +2,4 @@ ros_pybullet_interface/CalculateInverseKinematicsProblem problem
 ---
 bool success
 string message
-sensor_msgs/msg solution
+sensor_msgs/JointState solution
