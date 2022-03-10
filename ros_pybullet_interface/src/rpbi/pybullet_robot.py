@@ -342,8 +342,15 @@ class PybulletRobot(PybulletObject):
         joint_states = self.pb.getJointStates(self.body_unique_id, self.joint_indices)
 
         # Vectorize current and goal joint state
-        qcurr = np.array([joint_states[self.joint_names.index(name)][0] for name in req.joint_state.name])
-        qgoal = np.array(req.joint_state.position)
+        qcurr = np.zeros(len(self.joints))
+        qgoal = np.zeros(len(self.joints))
+        for idx, (name, state, joint) in enumerate(zip(self.joint_names, joint_states, self.joints)):
+            qcurr[idx] = state[0]
+            if name in req.joint_state.name:
+                qgoal[idx] = req.joint_state.position[req.joint_state.name.index(name)]
+            elif joint.jointType != self.pb.JOINT_FIXED:
+                joint_name = joint.jointName
+                self.node.logwarn(f'no goal position given for joint "{joint_name}", setting goal to zero')
 
         # Move robot
         qprev = qcurr.copy()
@@ -356,7 +363,7 @@ class PybulletRobot(PybulletObject):
             alpha = (self.node.time_now().to_sec() - t0)/req.duration
             q = alpha*qgoal + (1.0-alpha)*qcurr
             dq = q - qprev
-            joint_state = JointState(name=req.joint_state.name, position=q, velocity=dq/dt)
+            joint_state = JointState(name=self.joint_names, position=q, velocity=dq/dt)
             if self.is_visual_robot:
                 self.target_joint_state_callback_reset_joint_state(joint_state)
             else:
@@ -418,7 +425,7 @@ class PybulletRobot(PybulletObject):
             self.node.logerr(message)
 
         # Package message
-        solution = JointState(name=self.joint_names, position=positions)
+        solution = JointState(name=[name for name, joint in zip(self.joint_names, self.joints) if joint.jointType != self.pb.JOINT_FIXED], position=positions)
         solution.header.stamp = self.node.time_now()
 
         return success, message, solution
@@ -437,4 +444,4 @@ class PybulletRobot(PybulletObject):
         # Move robot
         req = ResetJointStateRequest(joint_state=solution, duration=req.duration)
         resp = self.service_move_to_joint_state(req)
-        return ResetEffStateResponse(success=req.success, message=resp.message)
+        return ResetEffStateResponse(success=resp.success, message=resp.message)
