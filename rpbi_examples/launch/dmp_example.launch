@@ -86,10 +86,10 @@
   </node>
 
   <!-- IK Node -->
-  <node pkg="ik_ros" name="ik_node" type="ik_node.py" args="SingleArmExoticaEffFrame" output="screen">
-    <param name="exotica_xml_filename" type="string" value="{ik_ros_examples}/configs/lwr.xml"/>
-    <param name="target_frame_id" type="string" value="Target"/>
-    <param name="base_frame_id" type="string" value="base"/>
+  <node pkg="ik_ros" name="ik_node" type="ik_node.py" args="TracIKInterface" output="screen">
+    <param name="urdf_filename" type="string" value="{ik_ros_examples}/robots/lwr.urdf"/>
+    <param name="tip_link" type="string" value="lwr_arm_7_link"/>
+    <param name="base_link" type="string" value="base"/>
     <remap from="joint_states/target" to="rpbi/kuka_lwr/joint_states/target"/>
   </node>
 

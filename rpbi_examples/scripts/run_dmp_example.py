@@ -89,7 +89,7 @@ class Node:
         self.toggle_operator_signal = get_srv_handle('operator_node/scalenode/toggle_callback', SetBool)
         self.toggle_teleop_tf = get_srv_handle('toggle_teleop_tf', SetBool)
         self.toggle_tf_to_floatarray = get_srv_handle('toggle_tf_to_floatarray', SetBool)
-        self.toggle_ik = get_srv_handle('toggle_ik_callback', SetBool)
+        self.toggle_ik = get_srv_handle('toggle_ik', SetBool)
         self.learn_dmp_from_demo = get_srv_handle('learn_dmp_from_demo', LearnDMPFromDemo)
         self.set_active_dmp = get_srv_handle('set_active_dmp', SetActiveDMP)
         self.get_dmp_plan = get_srv_handle('get_dmp_plan', GetDMPPlan)
