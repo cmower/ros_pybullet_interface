@@ -62,44 +62,29 @@ Parameters
         return msg
 
     def get_tf(self, parent_frame_id, child_frame_id):
-        """Return position and orientation of child frame with respect to a parent frame.
-
-Syntax
-------
-
-    position, orientation = tf_interface.get_tf(parent_frame_id, child_frame_id)
-
-Parameters
-----------
-
-    parent_frame_id (string)
-        The parent frame ID, must exist in the tf buffer.
-
-    child_frame_id (string)
-        The child frame ID, must exist in the tf buffer.
-
-Returns
--------
-
-    position (list[float] or None)
-        The 3D position of the child frame with respect to the parent
-        frame. If an error occured in the retrieval (e.g. frame
-        doesn't exist) then None is returned in its place.
-
-    orientation (list[float] or None)
-        The orientation, as a quaternion (xyzw), of the child frame
-        with respect to the parent frame. If an error occured in the
-        retrieval (e.g. frame doesn't exist) then None is returned in
-        its place.
-"""
+        """Return position and orientation of child frame with respect to a parent frame."""
         msg = self.get_tf_msg(parent_frame_id, child_frame_id)
         if msg is not None:
-            position = [getattr(msg.transform.translation, d) for d in 'xyz']
-            orientation = [getattr(msg.transform.rotation, d) for d in 'xyzw']
+            position = self.msg_to_position(msg)
+            orientation = self.msg_to_quaternion(msg)
         else:
             position = None
             orientation = None
         return position, orientation
+
+    @staticmethod
+    def msg_to_position(msg):
+        return [getattr(msg.transform.translation, d) for d in 'xyz']
+
+    @staticmethod
+    def msg_to_quaternion(msg):
+        return [getattr(msg.transform.rotation, d) for d in 'xyzw']
+
+    @staticmethod
+    def msg_to_matrix(msg):
+        p = self.msg_to_position(msg)
+        q = self.msg_to_quternion(msg)
+        return self.position_and_quaternion_to_matrix(p, q)
 
     @staticmethod
     def position_and_quaternion_to_matrix(pos, quat):
