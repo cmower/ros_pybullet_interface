@@ -6,15 +6,11 @@ class PybulletObjectPose:
     def __init__(self, pb_obj):
         self.pb_obj = pb_obj
         self.config = pb_obj.config.get('object_tf', {})
-        if self.is_static:
-            pos, rot = self.pb_obj.node.tf.wait_for_tf('rpbi/world', self.base_tf_id, timeout=self.timeout)
-            self.base = self.pb_obj.node.tf.position_and_quaternion_to_matrix(pos, rot)
-        else:
-            self.base = None
+        self.base = None
 
     @property
     def is_static(self):
-        return self.config.get('is_static', True) or (self.base_tf_id == 'rpbi/world')
+        return self.config.get('is_static', True)
 
     @property
     def base_tf_id(self):
