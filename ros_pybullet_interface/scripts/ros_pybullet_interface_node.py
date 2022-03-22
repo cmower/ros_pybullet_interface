@@ -3,7 +3,7 @@ import pybullet
 from functools import partial
 
 from rpbi.ros_node import RosNode
-from rpbi.config import load_config
+from rpbi.config import load_config, load_configs
 from rpbi.pybullet_instance import PybulletInstance
 from rpbi.pybullet_visualizer import PybulletVisualizer
 from rpbi.pybullet_robot import PybulletRobot
@@ -11,7 +11,29 @@ from rpbi.pybullet_visual_object import PybulletVisualObject
 from rpbi.pybullet_dynamic_object import PybulletDynamicObject
 from rpbi.pybullet_collision_object import PybulletCollisionObject
 
+from ros_pybullet_interface.msg import PybulletObject
+from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectResponse
 from cob_srvs.srv import SetString, SetStringResponse
+
+class PybulletObjects(dict):
+
+    def __init__(self, node):
+        super().__init__()
+        self.node = node
+
+    def add(self, config, object_type):
+        name = config['name']
+        self[name] = object_type(pybullet, self.node, config)
+
+    def __setitem__(self, name, obj):
+        if name in self:
+            raise KeyError(f'{name} already exists, pybullet objects must be given unique names!')
+        super().__setitem__(name, obj)
+        self.loginfo(f'added pybullet object "{name}"')
+
+    def __delitem__(self, name):
+        self[name].destroy()
+        super().__delitem__(name)
 
 
 class Node(RosNode):
@@ -31,81 +53,85 @@ class Node(RosNode):
         self.pybullet_visualizer = PybulletVisualizer(pybullet, self)
 
         # Collect pybullet objects
-        self.pybullet_objects = {}
-        self.add_pybullet_objects('~pybullet_visual_object_config_filenames', PybulletVisualObject)
-        self.add_pybullet_objects('~pybullet_dynamic_object_config_filenames', PybulletDynamicObject)
-        self.add_pybullet_objects('~pybullet_collision_object_config_filenames', PybulletCollisionObject)
-        self.add_pybullet_objects('~pybullet_robot_config_filenames', PybulletRobot)
+        self.pybullet_objects = PybulletObjects(self)
+
+        def add_list(filenames, object_type):
+            for filename in filenames:
+                self.pybullet_objects.add(load_config(filename), object_type)
+
+        add_list(self.config.get('visual_objects', []), PybulletVisualObject)
+        add_list(self.config.get('collision_objects', []), PybulletCollisionObject)
+        add_list(self.config.get('dynamic_objects', []), PybulletDynamicObject)
+        add_list(self.config.get('robots', []), PybulletRobot)
 
         # Start services
-        self.Service('rpbi/add_pybullet_visual_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletVisualObject))
-        self.Service('rpbi/add_pybullet_collision_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletCollisionObject))
-        self.Service('rpbi/add_pybullet_dynamic_object', SetString, partial(self.service_add_pybullet_object, object_type=PybulletDynamicObject))
-        self.Service('rpbi/add_pybullet_robot', SetString, partial(self.service_add_pybullet_object, object_type=PybulletRobot))
+        self.Service('rpbi/add_pybullet_object', AddPybulletObject, service_add_pybullet_object)
         self.Service('rpbi/remove_pybullet_object', SetString, self.service_remove_pybullet_object)
 
         # Start pybullet
         if self.pybullet_instance.start_pybullet_after_initialization:
             self.pybullet_instance.start()
 
-    def add_pybullet_objects(self, parameter_name, object_type):
-        for config_filename in self.get_param(parameter_name, []):
-            self.add_pybullet_object(config_filename, object_type)
 
-
-    def add_pybullet_object(self, config_filename, object_type):
-        added_object = True
-        config = load_config(config_filename)
-        name = config['name']
-        if name not in self.pybullet_objects.keys():
-            self.pybullet_objects[name] = object_type(pybullet, self, load_config(config_filename))
-            self.loginfo(f'added object "{name}"')
-        else:
-            added_object = False
-            self.logerr(f'unable to add object "{name}"')
-        return added_object
-
-
-    def service_add_pybullet_object(self, req, object_type):
+    def service_add_pybullet_object(self, req):
 
         success = True
+        message = 'added pybullet object'
 
-        try:
-
-            # Load config
-            config_filename = req.data  # note, this may also be a string containing the configuration
-
-            # Create visual object
-            if not self.add_pybullet_object(config_filename, object_type):
-                raise KeyError("object already exists")
-
-            message = f'created {object_type.__name__}'
-
-        except Exception as e:
-            success = False
-            message = f'failed to create {object_type.__name__}, exception: ' + str(e)
-
-        # Log message
-        if success:
-            self.loginfo(message)
+        # Get object type
+        if req.pybullet_object.object_type == PybulletObject.VISUAL:
+            object_type = PybulletVisualObject
+        elif req.pybullet_object.object_type == PybulletObject.COLLISION:
+            object_type = PybulletCollisionObject
+        elif req.pybullet_object.object_type == PybulletObject.DYNAMIC:
+            object_type = PybulletDynamicObject
+        elif req.pybullet_object.object_type == PybulletObject.ROBOT:
+            object_type = PybulletRobot
         else:
+            success = False
+            message = f"did not recognize object type, given '{req.pybullet_object.object_type}', expected either 0, 1, 2, 3. See PybulletObject.msg"
             self.logerr(message)
+            return AddPybulletObjectResponse(success=success, message)
 
-        return SetStringResponse(success=success, message=message)
+        # Add using filename (if given)
+        if req.pybullet_object.filename:
+            try:
+                self.pybullet_objects.add(load_config(req.pybullet_object.filename), object_type)
+            except Exception as err:
+                success = False
+                message = str(err)
+                self.logerr(message)
+            return AddPybulletObjectResponse(success=success, message=message)
+
+        # Add using config string
+        if req.pybullet_object.config:
+            try:
+                self.pybullet_objects.add(load_configs(req.pybullet_object.config), object_type)
+            except Exception as err:
+                success = False
+                message = str(err)
+                self.logerr(message)
+            return AddPybulletObjectResponse(success=success, message=message)
+
+
+        success = False
+        message = 'failed to add pybullet object, neither filename of config was given in request!'
+        return AddPybulletObjectResponse(success=success, message=message)
+
 
     def service_remove_pybullet_object(self, req):
 
         success = True
+        message = 'removed pybullet object'
+        name = req.data
 
         try:
-            object_name = req.data
-            if object_name in self.pybullet_objects.keys():
-                self.pybullet_objects[object_name].destroy()
-                del self.pybullet_objects[object_name]
-                message = 'removed Pybullet object'
-            else:
-                success = False
-                message = f'given object "{object_name}" does not exist!'
+            del self.pybullet_objects[name]
+
+        except KeyError:
+            success = False
+            message = f'given object "{name}" does not exist!'
+
         except Exception as e:
             success = False
             message = 'failed to remove Pybullet object, exception: ' + str(e)
