@@ -41,7 +41,7 @@ class Node(RosNode):
     def __init__(self):
 
         # Initialize node
-        RosNode.__init__(self, 'ros_pybullet_interface')
+        super().__init__('ros_pybullet_interface')
 
         # Get configuration
         self.config = self.get_param('~config')
