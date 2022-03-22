@@ -34,6 +34,8 @@ class PybulletObject(ABC):
         # Initialize object
         self.init()
 
+        self.node.loginfo(f'added pybullet object {self.name}')
+
 
     @abstractmethod
     def init(self):
