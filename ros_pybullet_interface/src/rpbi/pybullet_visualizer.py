@@ -23,10 +23,6 @@ class PybulletVisualizer:
         self.pb = pb
         self.node = node
 
-        # Load config
-        config_filename = self.node.get_param('~visualizer_config_filename', '')
-        self.config = load_config(config_filename) if config_filename else {}
-
         # Initialize visualizer
         configure_debug_visualizer_input = self.config.get('configureDebugVisualizer', self.configure_debug_visualizer_default)
         if 'flag' in configure_debug_visualizer_input.keys():
