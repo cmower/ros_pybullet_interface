@@ -1,21 +1,7 @@
 <launch>
 
   <node pkg="ros_pybullet_interface" name="ros_pybullet_interface" type="ros_pybullet_interface_node.py" output="screen">
-
-    <param name="pybullet_config_filename" type="string" value="{rpbi_examples}/configs/basic_example_kuka_lwr/pybullet.yaml"/>
-    <param name="visualizer_config_filename" type="string" value="{rpbi_examples}/configs/basic_example_kuka_lwr/visualizer.yaml"/>
-
-    <rosparam param="pybullet_robot_config_filenames">
-      [
-      "{rpbi_examples}/configs/basic_example_kuka_lwr/kuka_lwr.yaml"
-      ]
-    </rosparam>
-
-    <rosparam param="pybullet_collision_object_config_filenames">
-      [
-      "{rpbi_examples}/configs/floor.yaml"
-      ]
-    </rosparam>
+    <rosparam param="config" file="$(find rpbi_examples)/configs/basic_example_kuka_lwr/config.yaml"/>
   </node>
 
   <node pkg="rpbi_examples" name="example" type="basic_robot_example_node.py" args="kuka_lwr"/>
