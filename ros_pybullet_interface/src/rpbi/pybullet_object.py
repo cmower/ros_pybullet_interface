@@ -62,8 +62,6 @@ class PybulletObject:
         """Exposes changeDynamics."""
         config['bodyUniqueId'] = self.body_unique_id
         config['linkIndex'] = link_index
-        if 'mass' in config.keys():
-            del config['mass']  # use baseMass in config
         if 'activationState' in config.keys():
             config['activationState'] = getattr(self.pb, config['activationState'])
         self.pb.changeDynamics(**config)
