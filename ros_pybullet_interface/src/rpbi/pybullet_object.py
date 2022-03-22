@@ -1,9 +1,10 @@
 import tf_conversions
 import numpy as np
 from .config import replace_package
+from abc import ABC, abstractmethod
 
 
-class PybulletObject:
+class PybulletObject(ABC):
 
 
     """Base class for objects in Pybullet."""
@@ -34,9 +35,9 @@ class PybulletObject:
         self.init()
 
 
+    @abstractmethod
     def init(self):
-        """Initialize child class."""
-        raise NotImplementedError('a child class of PybulletObject needs to implement an init method')
+        pass
 
 
     def create_visual_shape(self, config):
