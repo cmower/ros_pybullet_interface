@@ -16,6 +16,7 @@ add_message_files(
   ResetDebugVisualizerCamera.msg
   JointInfo.msg
   CalculateInverseKinematicsProblem.msg
+  PybulletObject.msg
 )
 
 add_service_files(
@@ -25,6 +26,7 @@ add_service_files(
   ResetEffState.srv
   CalculateInverseKinematics.srv
   GetDebugVisualizerCamera.srv
+  AddPybulletObject.srv
 )
 
 generate_messages(
