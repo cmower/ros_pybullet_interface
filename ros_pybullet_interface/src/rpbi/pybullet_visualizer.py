@@ -24,7 +24,7 @@ class PybulletVisualizer:
         self.node = node
 
         # Initialize visualizer
-        configure_debug_visualizer_input = self.config.get('configureDebugVisualizer', self.configure_debug_visualizer_default)
+        configure_debug_visualizer_input = self.node.config.get('configureDebugVisualizer', self.configure_debug_visualizer_default)
         if 'flag' in configure_debug_visualizer_input.keys():
             flag = ['self.pb.' + f for f in configure_debug_visualizer_input['flag'].split('|')]
             configure_debug_visualizer_input['flag'] = eval('|'.join(flag))
