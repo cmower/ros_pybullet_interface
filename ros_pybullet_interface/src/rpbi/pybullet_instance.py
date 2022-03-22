@@ -1,5 +1,4 @@
 from functools import partial
-from .config import load_config
 from std_msgs.msg import Int64
 from std_srvs.srv import Trigger, TriggerResponse
 
