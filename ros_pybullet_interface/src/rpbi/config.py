@@ -8,54 +8,11 @@ import rospkg
 rp = rospkg.RosPack()
 
 def ros_package_path(package):
-    """Wrapper for rp.get_path - to ease effort when porting to ROS2.
-
-Syntax
-------
-
-    path = config.ros_package_path(package)
-
-Parameters
-----------
-
-    package (string)
-        Name of ROS package.
-
-Returns
--------
-
-    path (string)
-        Absolute path to ROS package.
-
-"""
+    """Wrapper for rp.get_path - to ease effort when porting to ROS2."""
     return rp.get_path(package)
 
 def replace_package(path):
-    """Replace package in path to file with absolute path to file.
-
-E.g. when path = "{ros_package}/path/to/file.txt" then
-replace_package(path) will return the absolute path to file.txt. When
-ROS package not specified between "{" and "}" then the path is
-returned.
-
-Syntax
-------
-
-    abs_path = config.replace_package(path)
-
-Parameters
-----------
-
-    path (string)
-        Relative path to file. Note, ROS package must be specified within "{" and "}".
-
-Returns
--------
-
-    abs_path (string)
-        Absolute path to file.
-
-"""
+    """Replace package in path to file with absolute path to file."""
     matches = re.findall(r'{.+?}', path)
     if len(matches) > 0:
         match = matches[0]
@@ -65,40 +22,16 @@ Returns
     return path
 
 def load_config(path):
-    """Load config file.
-
-Syntax
-------
-
-    config = config.load_config(path)
-
-Parameters
-----------
-
-    path (string)
-        Path to config YAML file. Note, you can use reletive paths to
-        ROS packages by specifying the ROS package name between "{"
-        and "}" and the beginning of path.
-
-Returns
--------
-
-    config (dict)
-        Configuration.
-
-"""
+    """Load config from file."""
     path_ = replace_package(path)
-    if os.path.exists(path_):
-        with open(path_, 'r') as configfile:
-            config = yaml.load(configfile, Loader=yaml.FullLoader)
-    else:
-        # assume path is a string containing configuration (potentially used in add_pybullet_object services)
-        try:
-            config = yaml.load(path, Loader=yaml.FullLoader)  # use path, not path_ since that may have been modified by replace_package
-        except yaml.parser.ParserError:
-            raise ValueError("failed to parse config")
+    with open(path_, 'r') as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
     return config
 
+def load_configs(s):
+    """Load config from string."""
+    return yaml.load(f, Loader=yaml.FullLoader)
 
 def config_to_str(config):
+    """Convert a configuration to string."""
     return yaml.dump(config)
