@@ -26,12 +26,12 @@ class PybulletInstance:
         self.pb.resetSimulation()
 
         # Set gravity
-        if 'gravity' in self.node.config:
-            g = self.node.config['gravity']
+        g = self.gravity
+        if g is not None:
             self.pb.setGravity(gravX=g[0], gravY=g[1], gravZ=g[2])
 
         # Setup time step
-        self.dt = self.node.config.get('timeStep', 0.02)
+        self.dt = self.timeStep
         self.pb.setTimeStep(self.dt)
 
         # Setup services
@@ -44,11 +44,17 @@ class PybulletInstance:
 
         self.node.loginfo('initialized Pybullet instance')
 
-
     @property
     def start_pybullet_after_initialization(self):
         return self.node.config.get('start_pybullet_after_initialization', True)
 
+    @property
+    def gravity(self):
+        return self.node.config.get('gravity')
+
+    @property
+    def timeStep(self):
+        return self.node.config.get('timeStep', 0.02)
 
     def start(self):
         """Start Pybullet"""
@@ -118,9 +124,12 @@ class StatusPublisher:
     def __init__(self, instance):
         self.instance = instance
         self.pub = self.instance.node.Publisher('rpbi/status', Int64, queue_size=10)
-        hz = self.instance.node.config.get('status_frequency', 50)
-        dt = self.node.Duration(1.0/float(hz))
+        dt = self.node.Duration(1.0/float(self.status_hz))
         self.timer = self.instance.node.Timer(dt, self.publish_status)
+
+    @property
+    def status_hz(self):
+        return self.instance.node.config.get('status_hz', 50)
 
     def publish_status(self, event):
         """Timer callback for publishing the status of Pybullet interface."""
