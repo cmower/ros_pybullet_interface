@@ -1,4 +1,5 @@
 from .pybullet_object import PybulletObject
+from .pybullet_object_pose import PybulletObjectPose
 
 
 class PybulletCollisionObject(PybulletObject):
@@ -7,15 +8,16 @@ class PybulletCollisionObject(PybulletObject):
 
     def init(self):
 
+        # Get visual and collision shape indices
         self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
         self.base_collision_shape_index = self.create_collision_shape(self.config['createCollisionShape'])
 
-        object_tf_config = self.config.get('object_tf', {})
-        self.offset = self.get_object_offset_in_base_tf(object_tf_config)
+        # Setup object pose handler
+        self.pose = PybulletObjectPose(self)
 
-        if object_tf_config.get('is_static', True):
-            self.base = self.get_static_object_base_tf_in_world(object_tf_config)
-            pos, rot = self.get_base_position_and_orientation(self.offset, self.base)
+        if self.pose.is_static:
+            self.pose.get_base_from_tf()
+            pos, rot = self.pose.get()
             self.body_unique_id = self.pb.createMultiBody(
                 baseMass=0.0,
                 baseVisualShapeIndex=self.base_visual_shape_index,
@@ -29,8 +31,7 @@ class PybulletCollisionObject(PybulletObject):
                 baseVisualShapeIndex=self.base_visual_shape_index,
                 baseCollisionShapeIndex=self.base_collision_shape_index
             )
-            self.start_object_base_tf_listener(object_tf_config)
-            self.start_applying_non_static_object_tf(object_tf_config)
+            self.pose.start_resetter()
 
         # Set dynamics
         self.change_dynamics(self.config['changeDynamics'])
