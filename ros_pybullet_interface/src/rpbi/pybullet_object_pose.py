@@ -59,6 +59,7 @@ class PybulletObjectPose:
         self.pb_obj.timers['pose_resetter'] = self.pb_obj.node.Timer(self.dt, self._update_pose)
 
     def _update_pose(self, event):
+        if self.pb_obj.body_unique_id is None: return
 
         # Update base
         msg = self.pb_obj.node.tf.get_tf_msg('rpbi/world', self.base_tf_id)
@@ -73,5 +74,6 @@ class PybulletObjectPose:
         self.pb_obj.timers['broadcast_pose'] = self.pb_obj.node.Timer(self.dt, self._broadcast_pose)
 
     def _broadcast_pose(self, event):
+        if not isinstance(self.pb_obj.body_unique_id, int): return
         pos, ori = self.pb_obj.pb.getBasePositionAndOrientation(self.pb_obj.body_unique_id)
         self.pb_obj.node.tf.set_tf('rpbi/world', self.tf_frame_id, pos, ori)
