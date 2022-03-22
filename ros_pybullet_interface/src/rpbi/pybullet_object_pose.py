@@ -56,3 +56,10 @@ class PybulletObjectPose:
         if self.base is None: return
         pos, ori = self.get()
         self.pb_obj.pb.resetBasePositionAndOrientation(self.pb_obj.body_unique_id, pos, ori)
+
+    def start_pose_broadcaster(self):
+        self.pb_obj.timers['broadcast_pose'] = self.pb_obj.node.Timer(self.dt, self._broadcast_pose)
+
+    def _broadcast_pose(self, event):
+        pos, ori = self.pb_obj.pb.getBasePositionAndOrientation(self.pb_obj.body_unique_id)
+        self.pb_obj.node.tf.set_tf('rpbi/world', self.tf_frame_id, pos, ori)
