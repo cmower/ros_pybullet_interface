@@ -113,7 +113,6 @@ class Node(RosNode):
                 self.logerr(message)
             return AddPybulletObjectResponse(success=success, message=message)
 
-
         success = False
         message = 'failed to add pybullet object, neither filename of config was given in request!'
         return AddPybulletObjectResponse(success=success, message=message)
