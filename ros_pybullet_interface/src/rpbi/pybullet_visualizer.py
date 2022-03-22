@@ -1,5 +1,6 @@
 from .config import load_config
 from ros_pybullet_interface.msg import ResetDebugVisualizerCamera
+from ros_pybullet_interface.srv import GetDebugVisualizerCamera, GetDebugVisualizerCameraResponse
 
 class PybulletVisualizer:
 
@@ -37,8 +38,16 @@ class PybulletVisualizer:
 
         # Setup subcscriber
         self.node.Subscriber('rpbi/reset_debug_visualizer_camera', ResetDebugVisualizerCamera, self.callback)
+
+        # Setup service
+        self.node.Service('rpbi/get_debug_visualizer_camera', GetDebugVisualizerCamera, self.service_get_debug_visualizer_camera)
+
         self.node.loginfo('initialized Pybullet visualizer')
 
+    def service_get_debug_visualizer_camera(self, req):
+        resp = GetDebugVisualizerCameraResponse()
+        for key, value in self.camera_config.items(): setattr(resp, key, value)
+        return resp
 
     def callback(self, msg):
         """Callback for subscriber listening for visualizer pose updates."""

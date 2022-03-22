@@ -24,6 +24,7 @@ add_service_files(
   ResetJointState.srv
   ResetEffState.srv
   CalculateInverseKinematics.srv
+  GetDebugVisualizerCamera.srv
 )
 
 generate_messages(
