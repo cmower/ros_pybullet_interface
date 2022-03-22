@@ -41,7 +41,8 @@ class PybulletVisualizer:
 
         # Setup subcscriber
         self.node.Subscriber('rpbi/reset_debug_visualizer_camera', ResetDebugVisualizerCamera, self.callback)
-        self.node.logdebug('initialized Pybullet visualizer')
+        self.node.loginfo('initialized Pybullet visualizer')
+
 
     def callback(self, msg):
         """Callback for subscriber listening for visualizer pose updates."""
