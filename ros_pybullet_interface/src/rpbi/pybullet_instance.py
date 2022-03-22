@@ -24,7 +24,7 @@ class PybulletInstance:
         self.client_id = self.pb.connect(self.pb.GUI)
         if self.client_id == -1:
             raise RuntimeError('Unable to connect to Pybullet!')
-        self.node.logdebug('connected to Pybullet with client id %d', self.client_id)
+        self.node.loginfo(f'connected to Pybullet with client id {self.client_id}')
 
         # Reset simulation
         self.pb.resetSimulation()
