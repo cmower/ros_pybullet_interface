@@ -26,8 +26,8 @@ class PybulletObjectPose:
 
     @property
     def dt(self):
-        freq = self.config.get('listener_frequency', 50)
-        return self.pb_obj.node.Duration(1.0/float(freq))
+        hz = self.config.get('hz', 50)
+        return self.pb_obj.node.Duration(1.0/float(hz))
 
     @property
     def offset(self):
