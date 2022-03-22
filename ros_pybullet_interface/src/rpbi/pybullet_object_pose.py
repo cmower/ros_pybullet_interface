@@ -37,6 +37,18 @@ class PybulletObjectPose:
             T[:3, 3] = pos
         return T
 
+    @property
+    def tf_frame_id(self):
+        return self.config.get('tf_frame_id', f'rpbi/{self.pb_obj.name}')
+
+    @property
+    def broadcast_tf(self):
+        return self.config.get('broadcast_tf', False)
+
+    def get_base_from_tf(self):
+        pos, rot = self.pb_obj.node.tf.wait_for_tf('rpbi/world', self.base_tf_id, timeout=self.timeout)
+        self.base = self.pb_obj.node.tf.position_and_quaternion_to_matrix(pos, rot)
+
     def get(self):
         T = self.offset @ self.base
         pos = T[:3,-1].flatten()
