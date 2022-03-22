@@ -8,7 +8,7 @@ class PybulletVisualObject(PybulletObject):
     def init(self):
 
         # Get visual shape index
-        self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
+        self.base_visual_shape_index = self.create_visual_shape(self.createVisualShape)
 
         # Setup object pose handler
         self.pose = PybulletObjectPose(self)
@@ -23,3 +23,7 @@ class PybulletVisualObject(PybulletObject):
             # object base is non static
             self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.base_visual_shape_index)
             self.pose.start_resetter()
+
+    @property
+    def createVisualShape(self):
+        return self.config['createVisualShape']

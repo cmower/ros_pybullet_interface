@@ -9,8 +9,8 @@ class PybulletCollisionObject(PybulletObject):
     def init(self):
 
         # Get visual and collision shape indices
-        self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
-        self.base_collision_shape_index = self.create_collision_shape(self.config['createCollisionShape'])
+        self.base_visual_shape_index = self.create_visual_shape(self.createVisualShape)
+        self.base_collision_shape_index = self.create_collision_shape(self.createCollisionShape)
 
         # Setup object pose handler
         self.pose = PybulletObjectPose(self)
@@ -34,4 +34,16 @@ class PybulletCollisionObject(PybulletObject):
             self.pose.start_resetter()
 
         # Set dynamics
-        self.change_dynamics(self.config['changeDynamics'])
+        self.change_dynamics(self.changeDynamics)
+
+    @property
+    def createVisualShape(self):
+        return self.config['createVisualShape']
+
+    @property
+    def createCollisionShape(self):
+        return self.config['createCollisionShape']
+
+    @property
+    def changeDynamics(self):
+        return self.config['changeDynamics']

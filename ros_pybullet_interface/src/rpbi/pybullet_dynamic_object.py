@@ -11,8 +11,8 @@ class PybulletDynamicObject(PybulletObject):
     def init(self):
 
         # Get visual and collision shape indices
-        self.base_visual_shape_index = self.create_visual_shape(self.config['createVisualShape'])
-        self.base_collision_shape_index = self.create_collision_shape(self.config['createCollisionShape'])
+        self.base_visual_shape_index = self.create_visual_shape(self.createVisualShape)
+        self.base_collision_shape_index = self.create_collision_shape(createCollisionShape)
 
         # Setup object pose
         self.pose = PybulletObjectPose(self)
@@ -21,7 +21,7 @@ class PybulletDynamicObject(PybulletObject):
 
         # Setup multi body
         self.body_unique_id = self.pb.createMultiBody(
-            baseMass=self.config['baseMass'],
+            baseMass=self.baseMass,
             baseVisualShapeIndex=self.base_visual_shape_index,
             baseCollisionShapeIndex=self.base_collision_shape_index,
             basePosition=pos,
@@ -29,13 +29,33 @@ class PybulletDynamicObject(PybulletObject):
         )
 
         # Reset initial velocity
-        reset_base_velocity_input = self.config.get('resetBaseVelocity')
-        if reset_base_velocity_input is not None:
-            self.pb.resetBaseVelocity(self.body_unique_id, **reset_base_velocity_input)
+        if self.reset_base_velocity is not None:
+            self.pb.resetBaseVelocity(self.body_unique_id, **self.reset_base_velocity)
 
         # Set dynamics
-        self.change_dynamics(self.config['changeDynamics'])
+        self.change_dynamics(self.changeDynamics)
 
         # Broadcast pose
         if self.pose.broadcast_tf:
             self.pose.start_pose_broadcaster()
+
+    @property
+    def baseMass(self):
+        return self.config['baseMass']
+
+    @property
+    def createVisualShape(self):
+        return self.config['createVisualShape']
+
+
+    @property
+    def createCollisionShape(self):
+        return self.config['createCollisionShape']
+
+    @property
+    def changeDynamics(self):
+        return self.config['changeDynamics']
+
+    @property
+    def reset_base_velocity(self):
+        return self.config.get('resetBaseVelocity')
