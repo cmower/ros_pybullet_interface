@@ -35,7 +35,8 @@ class PybulletDynamicObject(PybulletObject):
         if object_tf_config.get('broadcast_tf', False):
             freq = object_tf_config.get('broadcast_frequency', 50)
             self.timers['broadcast_dynamic_object_tf'] = self.node.Timer(self.node.Duration(1.0/float(freq)), self.broadcast_dynamic_object_tf)
-
+        # Set dynamics
+        self.change_dynamics(self.config['changeDynamics'])
 
     def broadcast_dynamic_object_tf(self, event):
         """Grabs the current position and orientation of the dynamic object and broadcasts as a ROS tf using tf2 library."""
