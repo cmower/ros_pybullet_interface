@@ -1,3 +1,4 @@
+from functools import partial
 from .config import load_config
 from std_msgs.msg import Int64
 from std_srvs.srv import Trigger, TriggerResponse
@@ -16,10 +17,6 @@ class PybulletInstance:
         # Setup variables
         self.is_active = False
 
-        # Load config
-        config_filename = self.node.get_param('~pybullet_config_filename', '')
-        self.config = load_config(config_filename) if config_filename else {}
-
         # Connect to pybullet
         self.client_id = self.pb.connect(self.pb.GUI)
         if self.client_id == -1:
@@ -30,39 +27,28 @@ class PybulletInstance:
         self.pb.resetSimulation()
 
         # Set gravity
-        if 'gravity' in self.config.keys():
-            gravity = self.config['gravity']
-            self.pb.setGravity(
-                gravX=gravity[0],
-                gravY=gravity[1],
-                gravZ=gravity[2],
-            )
+        if 'gravity' in self.node.config:
+            g = self.node.config['gravity']
+            self.pb.setGravity(gravX=g[0], gravY=g[1], gravZ=g[2])
 
         # Setup time step
-        hz = self.config.get('time_step_frequency', 50)
-        dt = 1.0/float(hz)
-        self.dt = dt
-        self.pb.setTimeStep(dt)
-
-        # Get user option to start pybullet from initialization
-        self.start_pybullet_after_initialization = self.config.get('start_pybullet_after_initialization', True)
+        self.dt = self.node.config.get('timeStep', 0.02)
+        self.pb.setTimeStep(self.dt)
 
         # Setup services
-        self.node.Service('rpbi/start', Trigger, self.service_start)
-        self.node.Service('rpbi/step', Trigger, self.service_step)
-        self.node.Service('rpbi/stop', Trigger, self.service_stop)
+        self.node.Service('rpbi/start', Trigger, partial(self._service, handle=self.start))
+        self.node.Service('rpbi/step', Trigger, partial(self._service, handle=self.step))
+        self.node.Service('rpbi/stop', Trigger, partial(self._service, handle=self.stop))
 
-        # Setup publisher and start status timer
-        self.status_pub = self.node.Publisher('rpbi/status', Int64, queue_size=10)
-        status_hz = self.config.get('status_frequency', 50)
-        status_dt = 1.0/float(status_hz)
-        self.node.Timer(self.node.Duration(status_dt), self.publish_status)
-        self.node.logdebug('initialized Pybullet instance')
+        # Setup status publisher
+        self.status_publisher = StatusPublisher(self)
+
+        self.node.loginfo('initialized Pybullet instance')
 
 
-    def publish_status(self, event):
-        """Timer callback for publishing the status of Pybullet interface."""
-        self.status_pub.publish(Int64(data=int(self.is_active)))
+    @property
+    def start_pybullet_after_initialization(self):
+        return self.node.config.get('start_pybullet_after_initialization', True)
 
 
     def start(self):
@@ -109,7 +95,7 @@ class PybulletInstance:
         return success, message
 
 
-    def _service(self, handle):
+    def _service(self, req, handle):
         """Abstract method for start/stop/step services."""
         try:
             success, message = handle()
@@ -122,21 +108,24 @@ class PybulletInstance:
         return TriggerResponse(success=success, message=message)
 
 
-    def service_start(self, req):
-        """Service callback for starting Pybullet."""
-        return self._service(self.start)
-
-
-    def service_step(self, req):
-        """Service callback for stepping Pybullet."""
-        return self._service(self.step)
-
-
-    def service_stop(self, req):
-        """Service callback for stopping Pybullet."""
-        return self._service(self.stop)
-
-
     def close(self):
         """Close connection to Pybullet."""
+        self.status_publisher.stop()
         self.pb.disconnect()
+
+
+class StatusPublisher:
+
+    def __init__(self, instance):
+        self.instance = instance
+        self.pub = self.instance.node.Publisher('rpbi/status', Int64, queue_size=10)
+        hz = self.instance.node.config.get('status_frequency', 50)
+        dt = self.node.Duration(1.0/float(hz))
+        self.timer = self.instance.node.Timer(dt, self.publish_status)
+
+    def publish_status(self, event):
+        """Timer callback for publishing the status of Pybullet interface."""
+        self.pub.publish(Int64(data=int(self.instance.is_active)))
+
+    def stop(self):
+        self.timer.shutdown()
