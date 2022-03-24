@@ -88,7 +88,11 @@ class PybulletVisualizer:
 
     @property
     def reset_debug_visualizer_camera(self):
-        return self.node.config.get('resetDebugVisualizerCamera', self.reset_debug_visualizer_camera_default)
+        reset_debug_visualizer_camera = self.node.config.get('resetDebugVisualizerCamera', {})
+        for key, default_value in self.reset_debug_visualizer_camera_default.items():
+            if key not in reset_debug_visualizer_camera:
+                reset_debug_visualizer_camera[key] = default_value
+        return reset_debug_visualizer_camera
 
     @reset_debug_visualizer_camera.setter
     def reset_debug_visualizer_camera(self, msg):
