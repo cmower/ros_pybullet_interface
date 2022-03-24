@@ -28,8 +28,7 @@ class PybulletInstance:
 
         # Set gravity
         g = self.gravity
-        if g is not None:
-            self.pb.setGravity(gravX=g[0], gravY=g[1], gravZ=g[2])
+        self.pb.setGravity(gravX=g[0], gravY=g[1], gravZ=g[2])
 
         # Setup time step
         self.dt = self.timeStep
@@ -78,7 +77,7 @@ class PybulletInstance:
 
     @property
     def gravity(self):
-        return self.node.config.get('gravity')
+        return self.node.config.get('gravity', [0.0]*3)
 
     @property
     def timeStep(self):
