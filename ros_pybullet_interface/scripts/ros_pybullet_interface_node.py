@@ -42,6 +42,7 @@ class Node(RosNode):
 
         # Initialize node
         super().__init__('ros_pybullet_interface')
+        self.on_shutdown(self.close)
 
         # Get configuration
         self.config = self.get_param('~config')
@@ -173,6 +174,16 @@ class Node(RosNode):
             self.logerr(message)
 
         return SetStringResponse(message=message, success=success)
+
+    def close(self):
+
+        # Remove all objects
+        while len(self.pybullet_objects.keys()):
+            k = list(self.pybullet_objects.keys())[0]
+            del self.pybullet_objects[k]
+
+        # Disconnect pybullet
+        self.pybullet_instance.close()
 
 
 def main():
