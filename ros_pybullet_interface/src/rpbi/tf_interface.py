@@ -74,9 +74,9 @@ class TfInterface:
 
     @staticmethod
     def msg_to_matrix(msg):
-        p = self.msg_to_position(msg)
-        q = self.msg_to_quternion(msg)
-        return self.position_and_quaternion_to_matrix(p, q)
+        p = TfInterface.msg_to_position(msg)
+        q = TfInterface.msg_to_quaternion(msg)
+        return TfInterface.position_and_quaternion_to_matrix(p, q)
 
     @staticmethod
     def position_and_quaternion_to_matrix(pos, quat):
