@@ -91,7 +91,7 @@ class Node(RosNode):
             success = False
             message = f"did not recognize object type, given '{req.pybullet_object.object_type}', expected either 0, 1, 2, 3. See PybulletObject.msg"
             self.logerr(message)
-            return AddPybulletObjectResponse(success=success, message)
+            return AddPybulletObjectResponse(success=success, message=message)
 
         # Add using filename (if given)
         if req.pybullet_object.filename:
