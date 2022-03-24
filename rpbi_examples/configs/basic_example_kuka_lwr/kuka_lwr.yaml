@@ -17,7 +17,7 @@ initial_joint_position:
 initial_revolute_joint_positions_are_deg: true
 is_visual_robot: false
 
-setJointMotorControlArray:
+setJointMotorControlArrayParameters:
   controlMode: "POSITION_CONTROL"
 
 enabled_joint_force_torque_sensors: ["lwr_arm_6_joint"]

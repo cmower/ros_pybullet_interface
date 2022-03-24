@@ -5,7 +5,16 @@ import rospy
 from std_msgs.msg import Int64
 from sensor_msgs.msg import JointState
 from ros_pybullet_interface.srv import RobotInfo
+from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
 
+def get_srv_handle(srv_name, srv_type):
+    rospy.wait_for_service(srv_name)
+    try:
+        handle = rospy.ServiceProxy(srv_name, srv_type)
+    except rospy.ServiceException as err:
+        rospy.logerr('service call failed: ' + str(err))
+        sys.exit(0)
+    return handle
 
 class Node:
 
@@ -34,14 +43,8 @@ class Node:
         rospy.Subscriber('rpbi/status', Int64, self.active_callback)
 
         # Get ndof
-        service = f'rpbi/{robot_name}/robot_info'
-        rospy.wait_for_service(service)
-        try:
-            handle = rospy.ServiceProxy(service, RobotInfo)
-            res = handle()
-        except rospy.ServiceException as e:
-            rospy.logerr("Service call failed: %s", e)
-            sys.exit(0)
+        handle = get_srv_handle(f'rpbi/{robot_name}/robot_info', RobotInfo)
+        res = handle()
         self.ndof = res.numDof
         self.name = [j.jointName for j in res.joint_info if j.jointTypeStr != 'JOINT_FIXED']
 
@@ -52,11 +55,19 @@ class Node:
         self.traj_index = 0
         self.joint_traj = [math.sin(0.5*2.0*math.pi*float(i)/100.0) for i in range(200)]
 
+        # Move robot to initial goal state
+        rospy.loginfo('moving robot to initial joint state')
+        duration = 3.0
+        handle = get_srv_handle(f'rpbi/{robot_name}/move_to_joint_state', ResetJointState)
+        handle(self.get_goal_joint_state(), duration)
+
         # Setup joint target state publisher
         self.pub = rospy.Publisher(target_joint_state_topic, JointState, queue_size=10)
 
         # Start timer
         rospy.Timer(dur, self.publish_joint_state)
+
+        rospy.loginfo('initialized basic example')
 
     def active_callback(self, msg):
         self.active = bool(msg.data)
@@ -77,10 +88,13 @@ class Node:
             self.position = [0.0]*self.ndof
             self.update_joint_index()
 
+    def get_goal_joint_state(self):
+        return JointState(name=self.name, position=self.position)
+
     def publish_joint_state(self, event):
         if not self.active: return
         self.position[self.joint_index] = self.joint_traj[self.traj_index]
-        self.pub.publish(JointState(name=self.name, position=self.position))
+        self.pub.publish(self.get_goal_joint_state())
         self.update_trajectory_index()
 
     def spin(self):
