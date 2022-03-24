@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pybullet
+import traceback
 from functools import partial
 
 from rpbi.ros_node import RosNode
@@ -14,6 +15,11 @@ from rpbi.pybullet_collision_object import PybulletCollisionObject
 from ros_pybullet_interface.msg import PybulletObject
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectResponse
 from cob_srvs.srv import SetString, SetStringResponse
+
+def print_exc():
+    print("-"*70)
+    traceback.print_exc()
+    print("-"*70)
 
 class PybulletObjects(dict):
 
@@ -132,6 +138,7 @@ class Node(RosNode):
             except Exception as err:
                 success = False
                 message = str(err)
+                print_exc()
                 self.logerr(message)
             return AddPybulletObjectResponse(success=success, message=message)
 
@@ -142,6 +149,7 @@ class Node(RosNode):
             except Exception as err:
                 success = False
                 message = str(err)
+                print_exc()
                 self.logerr(message)
             return AddPybulletObjectResponse(success=success, message=message)
 
@@ -166,6 +174,7 @@ class Node(RosNode):
         except Exception as e:
             success = False
             message = 'failed to remove Pybullet object, exception: ' + str(e)
+            print_exc()
 
         # Log message
         if success:
