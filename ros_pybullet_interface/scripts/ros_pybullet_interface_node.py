@@ -16,11 +16,6 @@ from ros_pybullet_interface.msg import PybulletObject
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectResponse
 from cob_srvs.srv import SetString, SetStringResponse
 
-def print_exc():
-    print("-"*70)
-    traceback.print_exc()
-    print("-"*70)
-
 class PybulletObjects(dict):
 
     def __init__(self, node):
@@ -78,6 +73,10 @@ class Node(RosNode):
         # Start pybullet
         if self.pybullet_instance.start_pybullet_after_initialization:
             self.pybullet_instance.start()
+
+    def print_exc(self):
+        err = traceback.format_exc()
+        self.logerr("Traceback error:\n%s\n%s\n%s", "-"*70, err, "-"*70)
 
     @staticmethod
     def is_list_str(ls):
@@ -138,7 +137,7 @@ class Node(RosNode):
             except Exception as err:
                 success = False
                 message = str(err)
-                print_exc()
+                self.print_exc()
                 self.logerr(message)
             return AddPybulletObjectResponse(success=success, message=message)
 
@@ -149,7 +148,7 @@ class Node(RosNode):
             except Exception as err:
                 success = False
                 message = str(err)
-                print_exc()
+                self.print_exc()
                 self.logerr(message)
             return AddPybulletObjectResponse(success=success, message=message)
 
@@ -174,7 +173,7 @@ class Node(RosNode):
         except Exception as e:
             success = False
             message = 'failed to remove Pybullet object, exception: ' + str(e)
-            print_exc()
+            self.print_exc()
 
         # Log message
         if success:
