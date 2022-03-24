@@ -27,7 +27,10 @@ class TfInterface:
         else:
             quat = np.array(orientation)
 
-        # Pack transform message
+        # Pack transform message and broadcast
+        self.tf_broadcaster.sendTransform(self.pack_tf_msg(parent_frame_id, child_frame_id, position, orientation))
+
+    def pack_tf_msg(self, parent_frame_id, child_frame_id, position, rotation):
         msg = TransformStamped()
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = parent_frame_id
@@ -35,11 +38,11 @@ class TfInterface:
         msg.transform.translation.x = position[0]
         msg.transform.translation.y = position[1]
         msg.transform.translation.z = position[2]
-        msg.transform.rotation.x = quat[0]
-        msg.transform.rotation.y = quat[1]
-        msg.transform.rotation.z = quat[2]
-        msg.transform.rotation.w = quat[3]
-        self.tf_broadcaster.sendTransform(msg)
+        msg.transform.rotation.x = rotation[0]
+        msg.transform.rotation.y = rotation[1]
+        msg.transform.rotation.z = rotation[2]
+        msg.transform.rotation.w = rotation[3]
+        return msg
 
     def get_tf_msg(self, parent_frame_id, child_frame_id):
         try:
