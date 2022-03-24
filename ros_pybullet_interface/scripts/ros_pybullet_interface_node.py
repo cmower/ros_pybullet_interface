@@ -29,7 +29,7 @@ class PybulletObjects(dict):
         if name in self:
             raise KeyError(f'{name} already exists, pybullet objects must be given unique names!')
         super().__setitem__(name, obj)
-        self.loginfo(f'added pybullet object "{name}"')
+        self.node.loginfo(f'added pybullet object "{name}"')
 
     def __delitem__(self, name):
         self[name].destroy()
@@ -65,7 +65,7 @@ class Node(RosNode):
         add_list(self.config.get('robots', []), PybulletRobot)
 
         # Start services
-        self.Service('rpbi/add_pybullet_object', AddPybulletObject, service_add_pybullet_object)
+        self.Service('rpbi/add_pybullet_object', AddPybulletObject, self.service_add_pybullet_object)
         self.Service('rpbi/remove_pybullet_object', SetString, self.service_remove_pybullet_object)
 
         # Start pybullet

@@ -28,6 +28,7 @@ class PybulletObjectPose:
     @property
     def offset(self):
         offset = self.config.get('offset', [0.0]*3)
+        T = np.eye(4)
         T[:3, 3] = np.array(offset[:3])
         if len(offset) == 6:
             T = tf_conversions.transformations.euler_matrix(offset[3], offset[4], offset[5])
@@ -46,7 +47,7 @@ class PybulletObjectPose:
         return self.config.get('broadcast_tf', False)
 
     def get_base_from_tf(self):
-        pos, rot = self.pb_obj.node.tf.wait_for_tf('rpbi/world', self.base_tf_id, timeout=self.timeout)
+        pos, rot = self.pb_obj.node.wait_for_tf('rpbi/world', self.base_tf_id, timeout=self.timeout)
         self.base = self.pb_obj.node.tf.position_and_quaternion_to_matrix(pos, rot)
 
     def get(self):

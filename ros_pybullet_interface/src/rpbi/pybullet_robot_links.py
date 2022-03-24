@@ -5,13 +5,13 @@ class Links:
         self.pb_obj = pb_obj
         self.urdf = urdf
         self.joint = joints
-        self.root_link_name = self.get_root_link_name()
+        self.root_link_name = self.get_root_link_name()  # HACK: see method below
 
-        if self.publish_link_states:
+        if self.broadcast_link_states:
             dt = self.node.Duration(1.0/float(self.broadcast_link_states_hz))
-            self.pb_obj.timers['publish_link_states'] = self.node.Timer(dt, self._publish_link_states)
+            self.pb_obj.timers['publish_link_states'] = self.node.Timer(dt, self._broadcast_link_states)
 
-    def _publish_link_states(self, event):
+    def _broadcast_link_states(self, event):
 
         # Get base position/orientation for root link
         pos, rot = self.pb_obj.pb.getBasePositionAndOrientation(self.pb_obj.body_unique_id)

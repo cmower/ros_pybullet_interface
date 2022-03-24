@@ -1,22 +1,30 @@
 import time
-from .config import ros_package_path
+from .config import ros_package_path, replace_package
 from .pybullet_object_pose import PybulletObjectPose
 
 class URDF:
 
     def __init__(self, pb_obj):
         self.pb_obj = pb_obj
+
+        # Ensure urdf filename is an absolute path
+        self.pb_obj.config['loadURDF']['fileName'] = replace_package(self.pb_obj.config['loadURDF']['fileName'])
+
+        # Ensure no package:// statements appear in urdf (handle otherwise)
         if self.urdf_contains_ros_package_statements():
             self.replace_ros_package_statements()
+
+        # Create pose object
         self.pose = PybulletObjectPose(pb_obj)
 
+        # Setup pose
         self.after_load_urdf_reset_base_velocity = False
         if self.is_fixed_base:
             self.set_base_position_and_orientation_in_config()
         else:
             if not self.pb_obj.is_visual_robot:
                 self.set_base_position_and_orientation_in_config()  # initial pose
-                self.after_load_urdf_reset_base_velocity = True  # inital velocity (set after pybullet.loadURDF is called)
+                self.after_load_urdf_reset_base_velocity = True  # inital velocity (set after pybullet.loadURDF is called in load method)
             else:
                 self.pose.start_resetter()
 
@@ -65,7 +73,7 @@ class URDF:
 
     @property
     def filename(self):
-        return self.pb_obj.config['loadURDF']['fileName']
+        return replace_package(self.pb_obj.config['loadURDF']['fileName'])
 
     @filename.setter
     def filename(self, value):

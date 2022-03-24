@@ -260,33 +260,54 @@ class Joints(list):
     def start_joint_state_publisher(self):
 
         # Setup publisher
-        self.pb_obj.pubs['joint_state'] = self.node.Publisher(f'rpbi/{self.pb_obj.name}/joint_states', JointState, queue_size=10)
+        self.pb_obj.pubs['joint_state'] = self.pb_obj.node.Publisher(f'rpbi/{self.pb_obj.name}/joint_states', JointState, queue_size=10)
 
         # Start timer
-        dt = self.pb_oj.node.Duration(1.0/float(self.joint_state_publisher_hz))
-        self.pb_obj.timers['joint_state_publisher'] = self.node.Timer(dt, self._publish_joint_state)
+        dt = self.pb_obj.node.Duration(1.0/float(self.joint_state_publisher_hz))
+        self.pb_obj.timers['joint_state_publisher'] = self.pb_obj.node.Timer(dt, self._publish_joint_state)
 
     def _publish_joint_state(self, event):
 
         # Get joint states from pybullet
         joint_states = self.pb_obj.pb.getJointStates(self.pb_obj.body_unique_id, self.indices)
 
-        # Get joint state
-        joint_state = JointState(name=self.names)
+        # Publish ft sensor states
         for joint, joint_state in zip(self, joint_states):
-            joint_state.position.append(joint_state[0])
-            velocity.append(joint_state[1])
-            effort.append(joint_state[3])
             if joint.ft_sensor_enabled:
                 joint.publish_wrench(joint_state[2])
 
-        # Publish joint state
-        joint_state.header.stamp = self.pb_obj.node.time_now()
-        self.pb_obj.pubs['joint_state'].publish(joint_state)
+        # Publish joint state message
+        self.pb_obj.pubs['joint_state'].publish(self.pack_joint_state_msg(joint_states))
+
+    @staticmethod
+    def position_from_joint_states(joint_states):
+        return np.array([js[0] for js in joint_states])
+
+    @staticmethod
+    def velocity_from_joint_states(joint_states):
+        return np.array([js[1] for js in joint_states])
+
+    @staticmethod
+    def applied_joint_motor_torque_from_joint_states(joint_states):
+        return np.array([js[3] for js in joint_states])
 
     def get_current_joint_state_as_np(self):
         joint_states = self.pb_obj.pb.getJointStates(self.pb_obj.body_unique_id, self.indices)
-        return np.array([js[0] for js in joints_states])
+        return self.position_from_joint_states(joint_states)
+
+    def pack_joint_state_msg(self, joint_states):
+        msg = JointState(
+            name=self.names,
+            position=self.position_from_joint_states(joint_states),
+            velocity=self.velocity_from_joint_states(joint_states),
+            effort=self.applied_joint_motor_torque_from_joint_states(joint_states),
+        )
+        msg.header.stamp = self.pb_obj.node.time_now()
+        return msg
+
+    def get_current_joint_state_as_msg(self):
+        joint_states = self.pb_obj.pb.getJointStates(self.pb_obj.body_unique_id, self.indices)
+        return self.pack_joint_state_msg(joint_states)
 
     def move_to_joint_state(self, target_joint_state_msg, duration):
 
@@ -294,7 +315,7 @@ class Joints(list):
         duration = np.clip(duration, 0.04, np.inf)  # prevent zero-division
 
         # Get current joint state as np array
-        current_joint_state = get_current_joint_state_as_np()
+        current_joint_state = self.get_current_joint_state_as_np()
 
         # Convert target_joint_state_msg to np array
         # NOTE: any missing target joint positions will be given the current joint state

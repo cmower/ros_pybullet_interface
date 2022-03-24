@@ -124,7 +124,7 @@ class StatusPublisher:
     def __init__(self, instance):
         self.instance = instance
         self.pub = self.instance.node.Publisher('rpbi/status', Int64, queue_size=10)
-        dt = self.node.Duration(1.0/float(self.status_hz))
+        dt = self.instance.node.Duration(1.0/float(self.status_hz))
         self.timer = self.instance.node.Timer(dt, self.publish_status)
 
     @property

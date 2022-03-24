@@ -42,6 +42,7 @@ class PybulletRobot(PybulletObject):
             numDof=self.joints.ndof,
             joint_info=[j.joint_info_msg for j in self.joints],
             enabled_ft_sensors=[j.jointName for j in self.joints if j.ft_sensor_enabled],
+            current_joint_state=self.joints.get_current_joint_state_as_msg(),
         )
 
     def service_move_to_joint_state(self, req):
@@ -62,6 +63,11 @@ class PybulletRobot(PybulletObject):
         except Exception as err:
             success = False
             message = 'failed to move robot to target joint state, exception: ' + str(err)
+
+        if success:
+            self.node.loginfo(message)
+        else:
+            self.node.logerr(message)
 
         return ResetJointStateResponse(message=message, success=success)
 
