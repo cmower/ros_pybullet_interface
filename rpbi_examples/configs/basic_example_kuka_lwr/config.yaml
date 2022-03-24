@@ -8,6 +8,7 @@
 #
 connect:
   connection_mode: 'GUI'
+  options: '--mp4=$HOME/basic_example_kuka_lwr.mp4'
 
 gravity: [0.0, 0.0, -9.81]
 timeStep: 0.01
