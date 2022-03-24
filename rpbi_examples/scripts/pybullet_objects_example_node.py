@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from rpbi.ros_node import RosNode
 from cob_srvs.srv import SetString, SetStringRequest
+from ros_pybullet_interface.msg import PybulletObject
+from ros_pybullet_interface.srv import AddPybulletObject
 
 
 class Node(RosNode):
@@ -17,11 +19,13 @@ class Node(RosNode):
 
 
     def add_pybullet_object(self):
-        srv = 'rpbi/add_pybullet_dynamic_object'
+        srv = 'rpbi/add_pybullet_object'
         self.wait_for_service(srv)
         try:
-            handle = self.ServiceProxy(srv, SetString)
-            req = SetStringRequest(data='{rpbi_examples}/configs/pybullet_objects_example/dynamic_box.yaml')
+            handle = self.ServiceProxy(srv, AddPybulletObject)
+            req = PybulletObject()
+            req.object_type=PybulletObject.DYNAMIC
+            req.filename='{rpbi_examples}/configs/pybullet_objects_example/dynamic_box.yaml'
             resp = handle(req)
             if resp.success:
                 self.loginfo('successfully added object')
