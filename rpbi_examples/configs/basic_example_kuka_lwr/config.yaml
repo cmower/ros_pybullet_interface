@@ -14,6 +14,7 @@ timeStep: 0.01
 start_pybullet_after_initialization: true
 status_hz: 50
 
+
 #
 # Pybullet visualizer
 #
@@ -26,6 +27,7 @@ resetDebugVisualizerCamera:
   cameraYaw: 0.0
   cameraPitch: -45.0
   cameraTargetPosition: [0.0, 0.0, 0.0]
+
 
 #
 # Pybullet objects
