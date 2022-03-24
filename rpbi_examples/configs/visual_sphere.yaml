@@ -1,9 +1,0 @@
-name: 'visual_sphere'
-
-createVisualShape:
-  shapeType: "GEOM_SPHERE"
-  radius: 0.3
-  rgbaColor: [0, 0, 1, 1.0]
-
-object_tf:
-  offset: [0.0, 0.0, 1.0]

@@ -1,4 +1,0 @@
-gravity: [0.0, 0.0, -9.81]
-time_step_frequency: 100
-start_pybullet_after_initialization: true
-status_frequency: 50
