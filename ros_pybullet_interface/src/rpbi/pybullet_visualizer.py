@@ -99,7 +99,7 @@ class PybulletVisualizer:
 
     def service_get_debug_visualizer_camera(self, req):
         resp = GetDebugVisualizerCameraResponse()
-        for key, value in self.reset_debug_visualizer_camera.items(): setattr(resp, key, value)
+        for key, value in self.reset_debug_visualizer_camera.items(): setattr(resp.debug_visualizer_config, key, value)
         return resp
 
     def callback(self, msg):
