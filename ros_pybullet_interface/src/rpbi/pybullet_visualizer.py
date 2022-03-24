@@ -49,40 +49,7 @@ class PybulletVisualizer:
 
         # Handle flags
         if 'flag' in configure_debug_visualizer:
-
-            flag_success = True
-
-            if isinstance(configure_debug_visualizer['flag'], int):
-                pass
-            elif isinstance(configure_debug_visualizer['flag'], str):
-                flag = ['self.pb.' + f for f in configure_debug_visualizer['flag'].split('|')]
-                configure_debug_visualizer['flag'] = eval('|'.join(flag))
-            elif isinstance(configure_debug_visualizer['flag'], list):
-                if all(isinstance(f, (str, int)) for f in configure_debug_visualizer['flag']):
-
-                    # Set initial flag
-                    def to_int(f):
-                        if isinstance(f, str):
-                            return eval('self.pb.' + f)
-                        else:
-                            return f
-
-                    flag = to_int(configure_debug_visualizer['flag'][0])
-
-                    # Iterate over remaining flags
-                    for f in configure_debug_visualizer['flag'][1:]:
-                        flag |= to_int(f)
-
-                    # Set flag
-                    configure_debug_visualizer['flag'] = eval('|'.join(flag))
-
-                else:
-                    flag_success = False
-            else:
-                flag_success = False
-
-            if not flag_success:
-                raise TypeError("the type used for the flag argument in configureDebugVisualizer config is not recognized")
+            configure_debug_visualizer['flag'] = self.node.parse_options(configure_debug_visualizer['flag'])
 
         return configure_debug_visualizer
 

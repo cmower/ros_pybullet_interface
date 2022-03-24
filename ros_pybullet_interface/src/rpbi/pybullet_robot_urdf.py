@@ -38,34 +38,7 @@ class URDF:
 
         # Parse loadURDF input
         if 'flags' in self.pb_obj.config['loadURDF']:
-            if isinstance(self.pb_obj.config['loadURDF']['flags'], str):
-                self.pb_obj.config['loadURDF']['flags'] = self.flags_str_to_int(self.pb_obj.config['loadURDF']['flags'])
-            elif isinstance(self.pb_obj.config['loadURDF']['flags'], list):
-                if self.is_list_elements_all_same_type(self.pb_obj.config['loadURDF']['flags'], str):
-                    self.pb.obj.config['loadURDF']['flags'] = self.flags_list_str_to_int(self.pb.obj.config['loadURDF']['flags'])
-                elif self.is_list_elements_all_same_type(self.pb_obj.config['loadURDF']['flags'], int):
-                    self.pb.obj.config['loadURDF']['flags'] = self.flags_list_int_to_int(self.pb.obj.config['loadURDF']['flags'])
-                else:
-                    raise ValueError("user given flags parameter as list, elements must all be either all str or all int")
-            elif isinstance(self.pb_obj.config['loadURDF']['flags'], int):
-                pass
-            else:
-                raise TypeError("the type of given flags in loadURDF config is not supported")
-
-    def is_list_elements_all_same_type(self, flags_list, el_type):
-        return all(isinstance(f, el_type) for f in flags_list)
-
-    def flags_str_to_int(self, flags_str):
-        return eval('|'.join(['self.pb_obj.pb.' + f for f in flags_str.split('|')]))
-
-    def flags_list_str_to_int(self, flags_list_str):
-        return eval('|'.join(['self.pb_obj.pb.'+f for f in flags_list_str]))
-
-    def flags_list_int_to_int(self, flags_list_int):
-        out = flags_list_int[0]
-        for f in flags_list_int[1:]:
-            out |= f
-        return out
+            self.pb_obj.config['loadURDF']['flags'] = self.pb_obj.node.parse_options(self.pb_obj.config['loadURDF']['flags'])
 
     @property
     def is_fixed_base(self):

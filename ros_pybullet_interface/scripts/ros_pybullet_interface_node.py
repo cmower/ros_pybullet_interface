@@ -72,6 +72,37 @@ class Node(RosNode):
         if self.pybullet_instance.start_pybullet_after_initialization:
             self.pybullet_instance.start()
 
+    @staticmethod
+    def is_list_str(ls):
+        return all(isinstance(el, str) for el in ls)
+
+    @staticmethod
+    def is_list_int(ls):
+        return all(isinstance(el, int) for el in ls)
+
+    @staticmethod
+    def parse_options(options):
+
+        # Special case
+        if isinstance(options, int):
+            return options
+
+        # When string make list of strings
+        if isinstance(options, str):
+            options = options.split('|')
+
+        # Make list of strings a list of ints
+        if Node.is_list_str(options):
+            options = [getattr(pybullet, opt) for opt in options]
+
+        # Make list of ints an int
+        if Node.is_list_int(options):
+            out = options[0]
+            for opt in options[1:]:
+                out |= opt
+            return out
+
+        raise ValueError("did not recognize options type!")
 
     def service_add_pybullet_object(self, req):
 
