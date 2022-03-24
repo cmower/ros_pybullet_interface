@@ -16,3 +16,6 @@ geometry_msgs/Point jointAxis
 geometry_msgs/Point parentFramePos
 geometry_msgs/Quaternion parentFrameOrn
 int64 parentIndex
+
+bool is_fixed
+bool is_revolute

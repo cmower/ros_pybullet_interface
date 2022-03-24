@@ -41,6 +41,7 @@ class PybulletRobot(PybulletObject):
             numJoints=self.joints.num_joints,
             numDof=self.joints.ndof,
             joint_info=[j.joint_info_msg for j in self.joints],
+            enabled_ft_sensors=[j.jointName for j in self.joints if j.ft_sensor_enabled],
         )
 
     def service_move_to_joint_state(self, req):

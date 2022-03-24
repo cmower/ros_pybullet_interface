@@ -45,6 +45,7 @@ class Joint:
             jointLowerLimit = self.jointLowerLimit, jointUpperLimit = self.jointUpperLimit,
             jointMaxForce = self.jointMaxForce, jointMaxVelocity = self.jointMaxVelocity,
             linkName = self.linkName, parentIndex = self.parentIndex,
+            is_fixed = self.is_fixed(), is_revolute = self.is_revolute(),
         )
         self.joint_info_msg.jointAxis.x = self.jointAxis[0]
         self.joint_info_msg.jointAxis.y = self.jointAxis[1]
