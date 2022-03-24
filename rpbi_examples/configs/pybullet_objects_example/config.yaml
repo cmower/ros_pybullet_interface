@@ -9,7 +9,11 @@
 connect:
   connection_mode: 'GUI'
 
-gravity: [0.0, 0.0, -9.81]
+setGravity:
+  gravX: 0.0
+  gravY: 0.0
+  gravZ: -9.81
+
 timeStep: 0.01
 start_pybullet_after_initialization: true
 status_hz: 50
