@@ -12,7 +12,7 @@ class PybulletDynamicObject(PybulletObject):
 
         # Get visual and collision shape indices
         self.base_visual_shape_index = self.create_visual_shape(self.createVisualShape)
-        self.base_collision_shape_index = self.create_collision_shape(createCollisionShape)
+        self.base_collision_shape_index = self.create_collision_shape(self.createCollisionShape)
 
         # Setup object pose
         self.pose = PybulletObjectPose(self)
