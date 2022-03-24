@@ -14,32 +14,20 @@ class TfInterface:
         self.tf_buffer = tf2_ros.Buffer()
         tf2_ros.TransformListener(self.tf_buffer)
 
-    def set_tf(self, parent_frame_id, child_frame_id, position, orientation=[0, 0, 0, 1]):
-        """Set the position and orientation of a child frame with respect to a parent frame.
+    def set_tf(self, parent_frame_id, child_frame_id, position, orientation=[0, 0, 0, 1], eul_deg=False):
+        """Set the position and orientation of a child frame with respect to a parent frame."""
 
-Syntax
-------
+        # Handle euler angles
+        if len(orientation) == 3:
+            if eul_deg:
+                eul = np.deg2rad(orientation)
+            else:
+                eul = np.array(orientation)
+            quat = tf_conversions.transformations.quaternion_from_euler(eul)
+        else:
+            quat = np.array(orientation)
 
-    tf_interface.set_tf(parent_frame_id, child_frame_id, position, orientation=[0, 0, 0, 1])
-
-Parameters
-----------
-
-    parent_frame_id (string)
-        The parent frame ID.
-
-    child_frame_id (string)
-        The child frame ID.
-
-    position (list[float])
-        The 3D position of the child frame with respect to the parent
-        frame.
-
-    orientation (list[float], optional)
-        The orientation, as a quaternion (xyzw), of the child frame
-        with respect to the parent frame. If not specified, then [0,
-        0, 0, 1] is used.
-"""
+        # Pack transform message
         msg = TransformStamped()
         msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = parent_frame_id
@@ -47,10 +35,10 @@ Parameters
         msg.transform.translation.x = position[0]
         msg.transform.translation.y = position[1]
         msg.transform.translation.z = position[2]
-        msg.transform.rotation.x = orientation[0]
-        msg.transform.rotation.y = orientation[1]
-        msg.transform.rotation.z = orientation[2]
-        msg.transform.rotation.w = orientation[3]
+        msg.transform.rotation.x = quat[0]
+        msg.transform.rotation.y = quat[1]
+        msg.transform.rotation.z = quat[2]
+        msg.transform.rotation.w = quat[3]
         self.tf_broadcaster.sendTransform(msg)
 
     def get_tf_msg(self, parent_frame_id, child_frame_id):
