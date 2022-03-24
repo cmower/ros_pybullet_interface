@@ -29,7 +29,8 @@ is_visual_robot: false
 setJointMotorControlArrayParameters:
   controlMode: "POSITION_CONTROL"
 
-enabled_joint_force_torque_sensors: ["lwr_arm_6_joint"]
+enabled_joint_force_torque_sensors:
+  - "lwr_arm_6_joint"
 
 publish_joint_state_frequency: 30
 
