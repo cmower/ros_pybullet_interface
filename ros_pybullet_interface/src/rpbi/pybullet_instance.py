@@ -27,8 +27,7 @@ class PybulletInstance:
         self.pb.resetSimulation()
 
         # Set gravity
-        g = self.gravity
-        self.pb.setGravity(gravX=g[0], gravY=g[1], gravZ=g[2])
+        self.pb.setGravity(**self.setGravity)
 
         # Setup time step
         self.dt = self.timeStep
@@ -74,6 +73,15 @@ class PybulletInstance:
     @property
     def start_pybullet_after_initialization(self):
         return self.node.config.get('start_pybullet_after_initialization', True)
+
+    @property
+    def setGravity(self):
+        set_gravity_default = {'gravX': 0.0, 'gravY': 0.0, 'gravZ': 0.0}
+        grav = self.node.config.get('setGravity', {})
+        for key, default in set_gravity_default.items():
+            if key not in grav:
+                grav[key] = default
+        return grav
 
     @property
     def gravity(self):
