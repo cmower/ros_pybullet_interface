@@ -4,12 +4,12 @@ class Links:
     def __init__(self, pb_obj, joints, urdf):
         self.pb_obj = pb_obj
         self.urdf = urdf
-        self.joint = joints
+        self.joints = joints
         self.root_link_name = self.get_root_link_name()  # HACK: see method below
 
         if self.broadcast_link_states:
-            dt = self.node.Duration(1.0/float(self.broadcast_link_states_hz))
-            self.pb_obj.timers['publish_link_states'] = self.node.Timer(dt, self._broadcast_link_states)
+            dt = self.pb_obj.node.Duration(1.0/float(self.broadcast_link_states_hz))
+            self.pb_obj.timers['publish_link_states'] = self.pb_obj.node.Timer(dt, self._broadcast_link_states)
 
     def _broadcast_link_states(self, event):
 
@@ -18,9 +18,9 @@ class Links:
         self.pb_obj.node.tf.set_tf('rpbi/world', f'rpbi/{self.pb_obj.name}/{self.root_link_name}', pos, rot)
 
         # Iterate over joints
-        link_states = self.pb.getLinkStates(self.pb_obj.body_unique_id, self.joints.indices, computeForwardKinematics=1)
+        link_states = self.pb_obj.pb.getLinkStates(self.pb_obj.body_unique_id, self.joints.indices, computeForwardKinematics=1)
         for joint, link_state in zip(self.joints, link_states):
-            self.node.tf.set_tf('rpbi/world', f'rpbi/{self.pb_obj.name}/{joint.linkName}', link_state[0], link_state[1])
+            self.pb_obj.node.tf.set_tf('rpbi/world', f'rpbi/{self.pb_obj.name}/{joint.linkName}', link_state[0], link_state[1])
 
     @property
     def broadcast_link_states(self):
