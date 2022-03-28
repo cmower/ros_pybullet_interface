@@ -43,8 +43,8 @@ class Ik:
             kwargs['jointDamping'] = problem.jointDamping
         if problem.solver:
             kwargs['solver'] = problem.solver
-        if problem.currentPosition:
-            kwargs['currentPosition'] = problem.currentPosition
+        # if problem.currentPosition:
+        #     kwargs['currentPosition'] = problem.currentPosition
         if problem.maxNumIterations > 0:
             kwargs['maxNumIterations'] = problem.maxNumIterations
         if problem.residualThreshold:
