@@ -130,13 +130,13 @@ class Joints(list):
 
         # Setup target joint state subscriber
         if not self.pb_obj.is_visual_robot:
-            callback = self.set_target
+            self.joint_state_target_callback = self.set_target
         else:
-            callback = self.reset
+            self.joint_state_target_callback = self.reset
             self.turn_off_all_collisions()
 
         topic_name = f'rpbi/{self.pb_obj.name}/joint_states/target'
-        self.pb_obj.subs['target_joint_state'] = self.pb_obj.node.Subscriber(topic_name, JointState, callback)
+        self.pb_obj.subs['target_joint_state'] = self.pb_obj.node.Subscriber(topic_name, JointState, self.joint_state_target_callback)
 
         # Start joint state publisher
         if not self.pb_obj.is_visual_robot:
