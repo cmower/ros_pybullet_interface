@@ -5,7 +5,7 @@ float64[] targetOrientation
 float64[] lowerLimits
 float64[] upperLimits
 float64[] jointRanges
-float64[] restPoses
+float64[] resetPoses
 float64[] jointDamping
 int64 solver  # use 0 for p.IK_DLS or 1 for p.IK_SDLS
 float64[] currentPosition

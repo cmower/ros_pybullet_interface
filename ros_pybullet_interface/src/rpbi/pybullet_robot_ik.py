@@ -37,8 +37,8 @@ class Ik:
             kwargs['upperLimits'] = problem.upperLimits
         if problem.jointRanges:
             kwargs['jointRanges'] = problem.jointRanges
-        if problem.restPoses:
-            kwargs['restPoses'] = problem.restPoses
+        if problem.resetPoses:
+            kwargs['resetPoses'] = problem.resetPoses
         if problem.jointDamping:
             kwargs['jointDamping'] = problem.jointDamping
         if problem.solver:
