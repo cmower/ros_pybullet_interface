@@ -6,15 +6,7 @@ from std_msgs.msg import Int64
 from sensor_msgs.msg import JointState
 from ros_pybullet_interface.srv import RobotInfo
 from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
-
-def get_srv_handle(srv_name, srv_type):
-    rospy.wait_for_service(srv_name)
-    try:
-        handle = rospy.ServiceProxy(srv_name, srv_type)
-    except rospy.ServiceException as err:
-        rospy.logerr('service call failed: ' + str(err))
-        sys.exit(0)
-    return handle
+from custom_ros_tools.ros_comm import get_srv_handler
 
 class Node:
 
@@ -43,7 +35,7 @@ class Node:
         rospy.Subscriber('rpbi/status', Int64, self.active_callback)
 
         # Get ndof
-        handle = get_srv_handle(f'rpbi/{robot_name}/robot_info', RobotInfo)
+        handle = get_srv_handler(f'rpbi/{robot_name}/robot_info', RobotInfo)
         res = handle()
         self.ndof = res.numDof
         self.name = [j.jointName for j in res.joint_info if j.jointTypeStr != 'JOINT_FIXED']
@@ -58,7 +50,7 @@ class Node:
         # Move robot to initial goal state
         rospy.loginfo('moving robot to initial joint state')
         duration = 3.0
-        handle = get_srv_handle(f'rpbi/{robot_name}/move_to_joint_state', ResetJointState)
+        handle = get_srv_handler(f'rpbi/{robot_name}/move_to_joint_state', ResetJointState)
         handle(self.get_goal_joint_state(), duration)
 
         # Setup joint target state publisher
