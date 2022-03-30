@@ -37,11 +37,12 @@ class Node:
 
         # Get service handlers
         self.move_to_eff_state = get_srv_handler(f'rpbi/kuka_lwr/move_to_eff_state', ResetEffState, persistent=True)
-        self.start_human_interface = get_srv_handler('operator_node/toggle', SetBool, persistent=True)
+        self.reset_teleop_transform = get_srv_handler('reset_teleop_transform_to_zero', Trigger, persistent=True)
+
+        self.toggle_human_interface = get_srv_handler('operator_node/toggle', SetBool, persistent=True)
         self.toggle_teleop_tf = get_srv_handler('toggle_teleop_tf', SetBool, persistent=True)
-        self.reset_zero = get_srv_handler('reset_zero', Trigger, persistent=True)
-        self.ik_setup_toggle = get_srv_handler('ik/setup/trac_ik/toggle', SetBool, persistent=True)
-        self.ik_solver_toggle = get_srv_handler('ik/solver/trac_ik/toggle', SetBool, persistent=True)
+        self.toggle_ik_setup = get_srv_handler('ik/setup/trac_ik/toggle', SetBool, persistent=True)
+        self.toggle_ik_solver = get_srv_handler('ik/solver/trac_ik/toggle', SetBool, persistent=True)
 
         rospy.Subscriber('keyboard/keydown', Key, self.keyboard_callback)
 
@@ -98,22 +99,22 @@ class Node:
             return
 
         # Ensure teleop transform is zero
-        self.reset_zero()
+        self.reset_teleop_transform()
 
         rospy.loginfo('started teleoperation')
 
-        self.start_human_interface(True)
+        self.toggle_human_interface(True)
         self.toggle_teleop_tf(True)
-        self.ik_setup_toggle(True)
-        self.ik_solver_toggle(True)
+        self.toggle_ik_setup(True)
+        self.toggle_ik_solver(True)
 
         self.teleop_is_on = True
 
     def stop_teleop(self):
-        self.start_human_interface(False)
+        self.toggle_human_interface(False)
         self.toggle_teleop_tf(False)
-        self.ik_setup_toggle(False)
-        self.ik_solver_toggle(False)
+        self.toggle_ik_setup(False)
+        self.toggle_ik_solver(False)
         self.teleop_is_on = False
         rospy.loginfo('stopped teleoperation')
 
