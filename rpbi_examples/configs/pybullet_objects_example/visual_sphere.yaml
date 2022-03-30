@@ -7,5 +7,5 @@ createVisualShape:
 
 object_tf:
   is_static: false
-  base_tf_id: "visual_sphere"
+  base_tf_id: "figure_eight"
   listener_frequency: 30
