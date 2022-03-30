@@ -1,5 +1,5 @@
 import time
-from .config import ros_package_path, replace_package
+from custom_ros_tools.config import ros_package_path, replace_package
 from .pybullet_object_pose import PybulletObjectPose
 
 class URDF:

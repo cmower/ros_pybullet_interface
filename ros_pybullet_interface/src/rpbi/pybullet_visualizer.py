@@ -1,4 +1,4 @@
-from .config import load_config
+from custom_ros_tools.config import load_config
 from ros_pybullet_interface.msg import ResetDebugVisualizerCamera
 from ros_pybullet_interface.srv import GetDebugVisualizerCamera, GetDebugVisualizerCameraResponse
 

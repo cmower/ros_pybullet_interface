@@ -4,7 +4,6 @@ import traceback
 from functools import partial
 
 from rpbi.ros_node import RosNode
-from rpbi.config import load_config, load_configs
 from rpbi.pybullet_instance import PybulletInstance
 from rpbi.pybullet_visualizer import PybulletVisualizer
 from rpbi.pybullet_robot import PybulletRobot
@@ -14,6 +13,8 @@ from rpbi.pybullet_collision_object import PybulletCollisionObject
 
 from ros_pybullet_interface.msg import PybulletObject
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectResponse
+
+from custom_ros_tools.config import load_config, load_configs
 from cob_srvs.srv import SetString, SetStringResponse
 
 class PybulletObjects(dict):

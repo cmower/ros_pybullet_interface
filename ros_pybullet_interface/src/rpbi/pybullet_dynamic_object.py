@@ -1,5 +1,4 @@
 import numpy as np
-import tf_conversions
 from .pybullet_object import PybulletObject
 from .pybullet_object_pose import PybulletObjectPose
 
