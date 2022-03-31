@@ -3,6 +3,7 @@ import numpy as np
 from math import radians
 from ros_pybullet_interface.msg import JointInfo
 from sensor_msgs.msg import JointState
+from geometry_msgs.msg import WrenchStamped
 
 class Joint:
 
@@ -79,7 +80,7 @@ class Joint:
     def ft_sensor_enabled(self):
         return self.ft_pub_key is not None
 
-    def publish_wrench(self, joint_reaction_force):
+    def publish_wrench(self, joint_reaction_forces):
         msg = WrenchStamped()
         msg.header.stamp = self.pb_obj.node.time_now()
         msg.wrench.force.x = joint_reaction_forces[0]
@@ -124,8 +125,9 @@ class Joints(list):
 
         # Enable ft sensors
         # NOTE: if robot is visual then this data will not be published, even if this is set in config file
-        if self.pb_obj.is_visual_robot:
+        if not self.pb_obj.is_visual_robot:
             for name in self.enabled_joint_force_torque_sensors:
+
                 self[name].enable_ft_sensor()
 
         # Setup target joint state subscriber
