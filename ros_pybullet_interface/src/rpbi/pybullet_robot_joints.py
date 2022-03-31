@@ -105,7 +105,7 @@ class Joints(list):
 
         # Set control mode
         self.control_mode = None
-        cm = self.pb_obj.config['setJointMotorControlArrayParameters']['controlMode']
+        cm = self.pb_obj.config['setJointMotorControlArray']['controlMode']
         if isinstance(cm, str):
             self.control_mode = getattr(self.pb_obj.pb, cm)
         elif isinstance(cm, int):
@@ -198,10 +198,10 @@ class Joints(list):
             raise ValueError("did not recognize control mode!")
 
         # Set gains if supplied by user
-        if 'positionGains' in self.pb_obj.config['setJointMotorControlArrayParameters']:
-            target['positionGains'] = self.pb_obj.config['setJointMotorControlArrayParameters']['positionGains']
-        if 'velocityGains' in self.pb_obj.config['setJointMotorControlArrayParameters']:
-            target['velocityGains'] = self.pb_obj.config['setJointMotorControlArrayParameters']['velocityGains']
+        if 'positionGains' in self.pb_obj.config['setJointMotorControlArray']:
+            target['positionGains'] = self.pb_obj.config['setJointMotorControlArray']['positionGains']
+        if 'velocityGains' in self.pb_obj.config['setJointMotorControlArray']:
+            target['velocityGains'] = self.pb_obj.config['setJointMotorControlArray']['velocityGains']
 
         # Set target
         self.pb_obj.pb.setJointMotorControlArray(

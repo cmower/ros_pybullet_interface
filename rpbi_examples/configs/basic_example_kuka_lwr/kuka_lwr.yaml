@@ -26,7 +26,7 @@ initial_joint_position:
 initial_revolute_joint_positions_are_deg: true
 is_visual_robot: false
 
-setJointMotorControlArrayParameters:
+setJointMotorControlArray:
   controlMode: "POSITION_CONTROL"
 
 enabled_joint_force_torque_sensors:
@@ -34,5 +34,5 @@ enabled_joint_force_torque_sensors:
 
 publish_joint_state_frequency: 30
 
-publish_link_states: true
-publish_link_states_frequency: 30
+broadcast_link_states: true
+brodcast_link_states_frequency: 30
