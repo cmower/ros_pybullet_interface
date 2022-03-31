@@ -15,10 +15,10 @@ string filename
 #
 # If you want to use this then you need to send the configuration as a
 # string that is ultimately a yaml file. The best way to do this is is
-# to use the config_to_str method provided in config.py. See example
-# below.
+# to use the config_to_str method provided in
+# custom_ros_tools.config. See example below.
 #
-#   from rpbi.config import config_to_str
+#   from custom_ros_tools.config import config_to_str
 #   from ros_pybullet_interface.msg import PybulletObject
 #
 #   # make config
