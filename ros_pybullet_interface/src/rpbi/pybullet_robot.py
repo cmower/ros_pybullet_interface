@@ -26,6 +26,7 @@ class PybulletRobot(PybulletObject):
         self.srvs['robot_info'] = self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
         if not self.is_visual_robot:
             self.srvs['move_to_joint_state'] = self.node.Service(f'rpbi/{self.name}/move_to_joint_state', ResetJointState, self.service_move_to_joint_state)
+            self.srvs['move_to_init_joint_state'] = self.node.Service(f'rpbi/{self.name}/move_to_initial_joint_state', ResetJointState, self.service_move_to_initial_joint_state)
             self.srvs['move_to_eff_state'] = self.node.Service(f'rpbi/{self.name}/move_to_eff_state', ResetEffState, self.service_move_eff_to_state)
         self.srvs['ik'] = self.node.Service(f'rpbi/{self.name}/ik', CalculateInverseKinematics, self.service_ik)
 
@@ -44,6 +45,10 @@ class PybulletRobot(PybulletObject):
             enabled_ft_sensors=[j.jointName for j in self.joints if j.ft_sensor_enabled],
             current_joint_state=self.joints.get_current_joint_state_as_msg(),
         )
+
+    def service_move_to_initial_joint_state(self, req):
+        req.joint_state = self.joints.initial_joint_state
+        return self.service_move_to_joint_state(req)
 
     def service_move_to_joint_state(self, req):
 
