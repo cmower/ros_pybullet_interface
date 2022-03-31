@@ -69,6 +69,9 @@
   <!-- Visualization -->
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ik_ros_examples)/rviz/kuka_lwr_example.rviz" />
 
+  <!-- Plot z-force from sensor -->
+  <node name="plot" pkg="rqt_plot" type="rqt_plot" args="/rpbi/kuka_lwr/force_torque_sensor_mount/ft_sensor/wrench/force/z"/>
+
   <!-- Run example -->
   <!-- =========== -->
 
