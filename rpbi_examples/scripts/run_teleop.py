@@ -50,9 +50,10 @@ class Node:
         if msg.code == Key.KEY_1:
             self.move_to_initial_pose()
         elif msg.code == Key.KEY_2:
-            self.start_teleop()
-        elif msg.code == Key.KEY_3:
-            self.stop_teleop()
+            if not self.teleop_is_on:
+                self.start_teleop()
+            else:
+                self.stop_teleop()
 
     def move_to_initial_pose(self):
 
