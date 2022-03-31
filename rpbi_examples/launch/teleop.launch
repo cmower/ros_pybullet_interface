@@ -25,11 +25,9 @@
 
   <!-- Teleop transform -->
   <node pkg="teleop" type="teleop_tf_node.py" name="teleop_tf" output="screen">
-    <param name="parent_frame_id" type="str" value="teleop_origin"/>
-    <param name="child_frame_id" type="str" value="teleop_target"/>
+    <rosparam param="config" file="$(find rpbi_examples)/configs/teleop/teleop.yaml"/>
     <param name="start_on_init" type="bool" value="false"/>
   </node>
-
 
   <!-- IK -->
   <!-- == -->
@@ -39,6 +37,9 @@
     <param name="parent_frame_id" type="str" value="rpbi/kuka_lwr/lwr_arm_0_link"/>
     <param name="child_frame_id" type="str" value="teleop_target"/>
     <param name="start_on_init" type="bool" value="false"/>
+    <param name="init_brx" type="double" value="10.0"/>
+    <param name="init_bry" type="double" value="10.0"/>
+    <param name="init_brz" type="double" value="10.0"/>
     <remap from="ik/setup/trac_ik/qinit" to="rpbi/kuka_lwr/joint_states"/>
   </node>
 
