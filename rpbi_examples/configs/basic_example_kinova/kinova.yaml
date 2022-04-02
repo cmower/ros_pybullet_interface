@@ -1,5 +1,10 @@
 name: "kinova"
 
+#
+# This example requires the kortex_descrition ROS package.
+# https://github.com/Kinovarobotics/ros_kortex/tree/noetic-devel/kortex_description
+#
+
 loadURDF:
   fileName: "robot_description"   # gets urdf from ros parameter
   useFixedBase: 1
