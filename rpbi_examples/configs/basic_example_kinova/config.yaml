@@ -27,10 +27,10 @@ configureDebugVisualizer:
   flag: 'COV_ENABLE_GUI'
 
 resetDebugVisualizerCamera:
-  cameraDistance: 2.0
-  cameraYaw: 0.0
+  cameraDistance: 1.4
+  cameraYaw: 30.0
   cameraPitch: -45.0
-  cameraTargetPosition: [0.0, 0.0, 0.0]
+  cameraTargetPosition: [0.0, 0.0, 0.4]
 
 
 #
