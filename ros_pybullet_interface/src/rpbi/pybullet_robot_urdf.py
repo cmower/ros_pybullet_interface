@@ -7,6 +7,10 @@ class URDF:
     def __init__(self, pb_obj):
         self.pb_obj = pb_obj
 
+        # If user specifies robot_description then get it from ros parameter
+        if self.pb_obj.config['loadURDF']['fileName'] == 'robot_description':
+            self.pb_obj.config['loadURDF']['fileName'] = self.get_urdf_from_robot_description()
+
         # Ensure urdf filename is an absolute path
         self.pb_obj.config['loadURDF']['fileName'] = replace_package(self.pb_obj.config['loadURDF']['fileName'])
 
@@ -52,6 +56,21 @@ class URDF:
     def filename(self, value):
         self.pb_obj.config['loadURDF']['fileName'] = value
 
+    def get_urdf_from_robot_description(self):
+        # remamber to return the new filename
+
+        # Get urdf string from ROS
+        urdf_str = self.pb_obj.node.get_param('robot_description')
+
+        # Dump urdf to temp file
+        stamp = time.time_ns()  # ensure filename uniqueness
+        temp_filename = f'/tmp/pybullet_robot_urdf_robot_description_{stamp}.urdf'
+
+        with open(temp_filename, 'w') as fout:
+            fout.write(urdf_str)
+
+        return temp_filename
+
     def user_given_base_position(self):
         return 'basePosition' in self.pb_obj.config['loadURDF']
 
@@ -68,11 +87,11 @@ class URDF:
 
         # Load urdf
         with open(self.filename, 'r') as fin:
-            lines = fin.readlines()
+            urdf_file_lines = fin.readlines()
 
         # Create new urdf in /tmp
         stamp = time.time_ns()  # ensure filename uniqueness
-        temp_filename = '/tmp/pybullet_robot_urdf_{stamp}.urdf'
+        temp_filename = f'/tmp/pybullet_robot_urdf_{stamp}.urdf'
         with open(temp_filename, 'w') as fout:
 
             # Loop over urdf file lines
