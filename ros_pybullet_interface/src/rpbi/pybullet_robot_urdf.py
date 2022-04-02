@@ -57,7 +57,6 @@ class URDF:
         self.pb_obj.config['loadURDF']['fileName'] = value
 
     def get_urdf_from_robot_description(self):
-        # remamber to return the new filename
 
         # Get urdf string from ROS
         urdf_str = self.pb_obj.node.get_param('robot_description')
