@@ -1,7 +1,0 @@
-string obj_name
-float64[] pos
-float64[] quat
-float64[] lin_vel
-float64[] ang_vel
----
-string success

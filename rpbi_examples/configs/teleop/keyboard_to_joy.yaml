@@ -1,0 +1,4 @@
+axes:
+  - ["RIGHT", "LEFT"]
+  - ["UP", "DOWN"]
+  - ["b", "f"]
