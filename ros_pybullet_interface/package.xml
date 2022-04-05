@@ -4,7 +4,7 @@
   schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ros_pybullet_interface</name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <description>The ros_pybullet_interface package</description>
   <maintainer email="chris.mower@ed.ac.uk">Christopher E. Mower</maintainer>
   <license>BSD</license>
