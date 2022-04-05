@@ -1,3 +1,7 @@
+# NOTE
+
+This is a copy of version 1 of the ROS-Pybullet interface. This branch is no longer supported.
+
 # ros_pybullet_interface
 
 Note, this package only supports Python3 + ROS Noetic or later. There are custom solutions - see wiki.
