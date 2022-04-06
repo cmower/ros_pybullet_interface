@@ -106,13 +106,14 @@ class Joints(list):
 
         # Set control mode
         self.control_mode = None
-        cm = self.pb_obj.config['setJointMotorControlArray']['controlMode']
-        if isinstance(cm, str):
-            self.control_mode = getattr(self.pb_obj.pb, cm)
-        elif isinstance(cm, int):
-            self.control_mode = cm
-        else:
-            raise TypeError("did not recognize type for controlMode in configuration, expected either str of int")
+        if not self.pb_obj.is_visual_robot:
+            cm = self.pb_obj.config['setJointMotorControlArray']['controlMode']
+            if isinstance(cm, str):
+                self.control_mode = getattr(self.pb_obj.pb, cm)
+            elif isinstance(cm, int):
+                self.control_mode = cm
+            else:
+                raise TypeError("did not recognize type for controlMode in configuration, expected either str of int")
 
         # Setup other class variables
         self.ndof = sum([not j.is_fixed() for j in self])
