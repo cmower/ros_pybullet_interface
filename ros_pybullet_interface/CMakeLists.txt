@@ -44,5 +44,6 @@ include_directories(
 
 catkin_install_python(PROGRAMS
   scripts/ros_pybullet_interface_node.py
+  scripts/rpbi_controls_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
