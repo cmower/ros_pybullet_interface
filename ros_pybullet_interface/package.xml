@@ -23,6 +23,7 @@
   <depend>cob_srvs</depend>
   <depend>python3-pybullet-pip</depend>
   <depend>python3-numpy</depend>
+  <depend>custom_ros_tools</depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
 </package>
