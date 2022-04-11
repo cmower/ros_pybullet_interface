@@ -5,6 +5,9 @@
     <rosparam param="config" file="$(find rpbi_examples)/configs/basic_example_kuka_lwr/config.yaml"/>
   </node>
 
+  <!-- Controls -->
+  <node pkg="ros_pybullet_interface" name="controls" type="rpbi_controls_node.py" output="screen"/>
+
   <!-- Example node that generates target joint positions -->
   <node pkg="rpbi_examples" name="example" type="basic_robot_example_node.py" args="kuka_lwr" output="screen"/>
 
