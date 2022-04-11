@@ -166,9 +166,11 @@ class PybulletInstance:
         """Step Pybullet by one time step."""
         if not self.is_active:
             self.is_active = True
+            self.status_publisher.publish_status()
             self.pb.stepSimulation()
             self.node.sleep(self.dt)
             self.is_active = False
+            self.status_publisher.publish_status()
             success = True
             message = 'stepped Pybullet'
         else:
@@ -209,7 +211,7 @@ class StatusPublisher:
     def status_hz(self):
         return self.instance.node.config.get('status_hz', 50)
 
-    def publish_status(self, event):
+    def publish_status(self, event=None):
         """Timer callback for publishing the status of Pybullet interface."""
         self.pub.publish(Int64(data=int(self.instance.is_active)))
 
