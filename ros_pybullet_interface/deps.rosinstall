@@ -1,0 +1,1 @@
+- git: {local-name: custom_ros_tools, uri: "https://github.com/cmower/custom_ros_tools.git"}

@@ -17,8 +17,12 @@
   <depend>rospy</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf_conversions</depend>
+  <depend>std_srvs</depend>
   <depend>cob_srvs</depend>
   <depend>python3-pybullet-pip</depend>
+  <depend>python3-numpy</depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
 </package>
