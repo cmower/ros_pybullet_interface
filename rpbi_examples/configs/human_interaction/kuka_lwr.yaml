@@ -22,7 +22,9 @@ setJointMotorControlArray:
 enabled_joint_force_torque_sensors:
   - "force_torque_sensor_mount"
 
-publish_joint_state_frequency: 30
+publish_joint_state_frequency: 100
 
 broadcast_link_states: true
 broadcast_link_states_frequency: 30
+
+start_ik_callback: true

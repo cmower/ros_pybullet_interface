@@ -23,3 +23,4 @@ changeDynamics:
 
 object_tf:
   offset: [-0.5377569885, 0.0, 0.06]
+  broadcast_tf: true

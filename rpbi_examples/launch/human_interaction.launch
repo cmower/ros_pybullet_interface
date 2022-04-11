@@ -38,24 +38,11 @@
   <!-- IK -->
   <!-- == -->
 
-  <!-- Setup IK -->
-  <node pkg="ik_ros" name="ik_setup" type="ik_setup_node.py" args="trac_ik" output="screen">
-    <param name="parent_frame_id" type="str" value="rpbi/kuka_lwr/lwr_arm_0_link"/>
-    <param name="child_frame_id" type="str" value="teleop_target"/>
+  <node pkg="ik_ros" name="ik_setup" type="ik_setup_node.py" args="pybullet" output="screen">
+    <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/ik.yaml"/>
     <param name="start_on_init" type="bool" value="true"/>
-    <!-- <param name="init_brx" type="double" value="10.0"/> -->
-    <!-- <param name="init_bry" type="double" value="10.0"/> -->
-    <param name="init_brz" type="double" value="10.0"/>
-    <remap from="ik/setup/trac_ik/qinit" to="rpbi/kuka_lwr/joint_states"/>
-  </node>
-
-  <!-- IK solver interface -->
-  <node pkg="ik_ros" name="ik_node" type="ik_solver_node.py" args="trac_ik" output="screen">
-    <param name="urdf_filename" type="string" value="{ik_ros_examples}/robots/kuka_lwr2.urdf"/>
-    <param name="tip_link" type="string" value="end_effector_sponge"/>
-    <param name="base_link" type="string" value="lwr_arm_0_link"/>
-    <param name="start_on_init" type="bool" value="true"/>
-    <remap from="joint_states/target" to="rpbi/kuka_lwr/joint_states/target"/>
+    <remap from="ik/setup/pybullet/currentPosition" to="rpbi/kuka_lwr/joint_states"/>
+    <remap from="ik" to="rpbi/kuka_lwr/ik"/>
   </node>
 
   <!-- Simulation -->
