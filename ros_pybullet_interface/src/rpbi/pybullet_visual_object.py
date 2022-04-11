@@ -19,10 +19,14 @@ class PybulletVisualObject(PybulletObject):
             self.pose.get_base_from_tf()
             pos, rot = self.pose.get()
             self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.base_visual_shape_index, basePosition=pos, baseOrientation=rot)
+            if self.pose.broadcast_tf:
+                self.pose.start_pose_broadcaster()
         else:
             # object base is non static
             self.body_unique_id = self.pb.createMultiBody(baseVisualShapeIndex=self.base_visual_shape_index)
             self.pose.start_resetter()
+            if self.pose.broadcast_tf:
+                self.node.logwarn("can not broadcast a non-static pose")
 
     @property
     def createVisualShape(self):

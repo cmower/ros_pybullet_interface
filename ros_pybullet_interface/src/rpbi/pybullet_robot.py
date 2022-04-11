@@ -22,6 +22,14 @@ class PybulletRobot(PybulletObject):
         self.links = Links(self, self.joints, self.urdf)
         self.ik = Ik(self, self.joints)
 
+        # Handle robot with transparency
+        if self.color_alpha is not None:
+            for data in self.pb.getVisualShapeData(self.body_unique_id):
+                link_index = data[1]
+                rgba = data[7]
+                new_rgba = (rgba[0], rgba[1], rgba[2], self.color_alpha)
+                self.pb.changeVisualShape(self.body_unique_id, link_index, rgbaColor=new_rgba)
+
         # Setup services
         self.srvs['robot_info'] = self.node.Service(f'rpbi/{self.name}/robot_info', RobotInfo, self.service_robot_info)
         if not self.is_visual_robot:
@@ -29,6 +37,10 @@ class PybulletRobot(PybulletObject):
             self.srvs['move_to_init_joint_state'] = self.node.Service(f'rpbi/{self.name}/move_to_initial_joint_state', ResetJointState, self.service_move_to_initial_joint_state)
             self.srvs['move_to_eff_state'] = self.node.Service(f'rpbi/{self.name}/move_to_eff_state', ResetEffState, self.service_move_eff_to_state)
         self.srvs['ik'] = self.node.Service(f'rpbi/{self.name}/ik', CalculateInverseKinematics, self.service_ik)
+
+    @property
+    def color_alpha(self):
+        return self.config.get('color_alpha', None)
 
     @property
     def is_visual_robot(self):

@@ -1,0 +1,11 @@
+name: 'visual_sphere'
+
+createVisualShape:
+  shapeType: "GEOM_BOX"
+  halfExtents: [0.1, 0.1, 0.075]
+  rgbaColor: [0.0, 1.0, 0, 0.6]
+
+
+object_tf:
+  is_static: true
+  offset: [-0.75, -0.15, 0.1]

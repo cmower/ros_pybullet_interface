@@ -1,15 +1,18 @@
-name: "box"
+name: "pushing_box"
 
 createVisualShape:
   shapeType: "GEOM_BOX"
-  halfExtents: [0.1, 0.1, 0.06]
-  rgbaColor: [0.1, 0.2, 0.4, 1.0]
-
+  halfExtents: [0.1, 0.1, 0.075]
+  rgbaColor: [0.9, 1.0, 0.3, 1.0]
 
 createCollisionShape:
   shapeType: "GEOM_BOX"
-  halfExtents: [0.1, 0.1, 0.06]
+  halfExtents: [0.1, 0.1, 0.075]
 
+baseMass: 1.0
+
+object_tf:
+  offset: [-0.6, 0.0, 0.3]
 
 changeDynamics:
   lateralFriction: 1.0
@@ -20,7 +23,3 @@ changeDynamics:
   angularDamping: 0.04
   contactStiffness: 2000.0
   contactDamping: 0.7
-
-object_tf:
-  offset: [-0.5377569885, 0.0, 0.06]
-  broadcast_tf: true
