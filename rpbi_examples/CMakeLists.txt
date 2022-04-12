@@ -22,3 +22,5 @@ catkin_install_python(PROGRAMS
   scripts/run_lfd.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(DIRECTORY configs launch robots DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/)
