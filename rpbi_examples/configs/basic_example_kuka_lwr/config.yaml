@@ -41,3 +41,20 @@ collision_objects:
   - "{rpbi_examples}/configs/floor.yaml"
 robots:
   - "{rpbi_examples}/configs/basic_example_kuka_lwr/kuka_lwr.yaml"
+
+
+#
+# Sensors
+#
+
+image_sensor:
+  hz: 30
+  getCameraImage:
+    width: 100
+    height: 100
+
+rgbd_sensor:
+  hz: 30
+  getCameraImage:
+    width: 50
+    height: 50
