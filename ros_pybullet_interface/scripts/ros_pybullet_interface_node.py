@@ -10,7 +10,6 @@ from rpbi.pybullet_robot import PybulletRobot
 from rpbi.pybullet_visual_object import PybulletVisualObject
 from rpbi.pybullet_dynamic_object import PybulletDynamicObject
 from rpbi.pybullet_collision_object import PybulletCollisionObject
-from rpbi.pybullet_image_sensor import PybulletImageSensor
 from rpbi.pybullet_rgbd_sensor import PybulletRGBDSensor
 
 from ros_pybullet_interface.msg import PybulletObject
@@ -68,10 +67,6 @@ class Node(RosNode):
         add_list(self.config.get('collision_objects', []), PybulletCollisionObject)
         add_list(self.config.get('dynamic_objects', []), PybulletDynamicObject)
         add_list(self.config.get('robots', []), PybulletRobot)
-
-        image_sensor = self.config.get('image_sensor')
-        if image_sensor:
-            self.pybullet_objects.add(image_sensor, PybulletImageSensor)
 
         rgbd_sensor = self.config.get('rgbd_sensor')
         if rgbd_sensor:

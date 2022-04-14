@@ -47,13 +47,6 @@ robots:
 # Sensors
 #
 
-image_sensor:
-  name: 'image_sensor'
-  hz: 30
-  getCameraImage:
-    width: 640
-    height: 480
-
 rgbd_sensor:
   name: 'rgbd_sensor'
   hz: 30
