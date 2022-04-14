@@ -1,9 +1,10 @@
 from std_msgs.msg import Header
-from sensor_msgs.msg import Image, CameraInfo, PointCloud2
-from sensor_msgs.point_cloud2 import create_cloud_xyz32
+from sensor_msgs.msg import Image, CameraInfo, PointCloud2, PointField
+from sensor_msgs.point_cloud2 import create_cloud
 from .pybullet_sensor import PybulletSensor
 from cv_bridge import CvBridge
 import numpy as np
+import struct
 
 class PybulletRGBDSensor(PybulletSensor):
 
@@ -103,5 +104,17 @@ class PybulletRGBDSensor(PybulletSensor):
         # projection to 3D via precomputed coordinates
         points = self.xy1 * depth.reshape((-1,1))
 
-        msg_pc = create_cloud_xyz32(hdr, points)
+        xyzrgb = []
+        for xyz, rgb in zip(points, colour[...,:3].reshape((-1,3))):
+            # pack 3 x uint8 into float32 in order (0,r,g,b)
+            rgb_f = struct.unpack('>f', struct.pack('4B', 0, *rgb))
+            xyzrgb.append([*xyz, *rgb_f])
+
+        fields = [PointField('x', 0, PointField.FLOAT32, 1),
+                  PointField('y', 4, PointField.FLOAT32, 1),
+                  PointField('z', 8, PointField.FLOAT32, 1),
+                  PointField('rgb', 12, PointField.FLOAT32, 1)]
+
+        msg_pc = create_cloud(hdr, fields, xyzrgb)
+
         self.pubs['pointcloud'].publish(msg_pc)
