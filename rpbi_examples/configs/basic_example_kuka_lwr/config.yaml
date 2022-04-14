@@ -50,6 +50,10 @@ robots:
 rgbd_sensor:
   name: 'rgbd_sensor'
   hz: 30
-  getCameraImage:
+  # this will project the depth to a point cloud
+  # pointcloud: True
+  intrinsics:
     width: 640
     height: 480
+    fov: 40
+    range: [0.01, 10000]

@@ -11,6 +11,8 @@ class PybulletRGBDSensor(PybulletSensor):
     def init(self):
         self.cv_bridge = CvBridge()
 
+        self.cfg_camera = self.config['intrinsics']
+
         self.pubs['colour'] = self.node.Publisher('rpbi/colour/image', Image, queue_size=10)
         self.pubs['depth'] = self.node.Publisher('rpbi/depth/image', Image, queue_size=10)
         self.pubs['ci/c'] = self.node.Publisher('rpbi/colour/camera_info', CameraInfo, queue_size=10)
@@ -18,21 +20,24 @@ class PybulletRGBDSensor(PybulletSensor):
 
         self.pubs['segmentation'] = self.node.Publisher('rpbi/segmentation', Image, queue_size=10)
 
-        self.pubs['pointcloud'] = self.node.Publisher('rpbi/pointcloud', PointCloud2, queue_size=10)
+        # publish point cloud?
+        self.pub_pc = self.config.get("pointcloud", False)
+
+        if self.pub_pc:
+            self.pubs['pointcloud'] = self.node.Publisher('rpbi/pointcloud', PointCloud2, queue_size=10)
 
         self.timers['mainloop'] = self.node.Timer(self.dt, self.main_loop)
-
-        self.cfg_camera = self.config['getCameraImage']
 
         # TODO: expose other getCameraImage parameters so that user
         # can define view/projection matrix from a tf (if possible?)
 
         # intrinsics
-        self.w = self.cfg_camera["width"]
-        self.h = self.cfg_camera["height"]
-        fov = 40
-        self.near = 0.01
-        self.far = 10000
+        self.w = self.cfg_camera.get("width", 640)
+        self.h = self.cfg_camera.get("height", 480)
+        fov = self.cfg_camera.get("fov", 40)
+        depth_range = self.cfg_camera.get("range", [0.01, 100])
+        self.near = depth_range[0]
+        self.far = depth_range[1]
         self.pm = self.pb.computeProjectionMatrixFOV(fov = fov, aspect = self.w / self.h, nearVal = self.near, farVal = self.far)
 
         # bullet only supports a scalar field-of-view
@@ -53,12 +58,13 @@ class PybulletRGBDSensor(PybulletSensor):
         target=[0, 0, 1]
         self.vm = self.pb.computeViewMatrixFromYawPitchRoll(distance=distance, yaw=yaw, pitch=pitch, roll=roll, upAxisIndex=2, cameraTargetPosition=target)
 
-        # precompute coordinates
-        uv = np.dstack(np.meshgrid(range(self.w), range(self.h), indexing='xy'))
-        uv_list = uv.reshape((-1,2))
-        # projection up to scale (scale with metric depth)
-        xy = (uv_list - np.array([self.w/2, self.h/2])) / self.fs
-        self.xy1 = np.concatenate((xy, np.ones((uv_list.shape[0],1))), axis=1)
+        if self.pub_pc:
+            # precompute coordinates
+            uv = np.dstack(np.meshgrid(range(self.w), range(self.h), indexing='xy'))
+            uv_list = uv.reshape((-1,2))
+            # projection up to scale (scale with metric depth)
+            xy = (uv_list - np.array([self.w/2, self.h/2])) / self.fs
+            self.xy1 = np.concatenate((xy, np.ones((uv_list.shape[0],1))), axis=1)
 
 
     @property
@@ -66,7 +72,6 @@ class PybulletRGBDSensor(PybulletSensor):
         return self.node.Duration(1.0/float(self.config.get('hz', 30)))
 
     def main_loop(self, event):
-
         (width, height, colour, depth_gl, segmentation) = \
             self.pb.getCameraImage(self.w, self.h, self.vm, self.pm, renderer=self.pb.ER_BULLET_HARDWARE_OPENGL)
 
@@ -101,20 +106,19 @@ class PybulletRGBDSensor(PybulletSensor):
         self.pubs['ci/c'].publish(ci)
         self.pubs['ci/d'].publish(ci)
 
-        # projection to 3D via precomputed coordinates
-        points = self.xy1 * depth.reshape((-1,1))
-
-        xyzrgb = []
-        for xyz, rgb in zip(points, colour[...,:3].reshape((-1,3))):
+        if self.pub_pc:
+            # projection to 3D via precomputed coordinates
+            points = self.xy1 * depth.reshape((-1,1))
             # pack 3 x uint8 into float32 in order (0,r,g,b)
-            rgb_f = struct.unpack('>f', struct.pack('4B', 0, *rgb))
-            xyzrgb.append([*xyz, *rgb_f])
+            rgb_f = np.empty((points.shape[0],1))
+            for i, rgb in enumerate(colour[...,:3].reshape((-1,3))):
+                rgb_f[i] = struct.unpack('>f', struct.pack('4B', 0, *rgb))[0]
 
-        fields = [PointField('x', 0, PointField.FLOAT32, 1),
-                  PointField('y', 4, PointField.FLOAT32, 1),
-                  PointField('z', 8, PointField.FLOAT32, 1),
-                  PointField('rgb', 12, PointField.FLOAT32, 1)]
+            fields = [PointField('x', 0, PointField.FLOAT32, 1),
+                      PointField('y', 4, PointField.FLOAT32, 1),
+                      PointField('z', 8, PointField.FLOAT32, 1),
+                      PointField('rgb', 12, PointField.FLOAT32, 1)]
 
-        msg_pc = create_cloud(hdr, fields, xyzrgb)
+            msg_pc = create_cloud(hdr, fields, np.concatenate((points, rgb_f), axis=1))
 
-        self.pubs['pointcloud'].publish(msg_pc)
+            self.pubs['pointcloud'].publish(msg_pc)
