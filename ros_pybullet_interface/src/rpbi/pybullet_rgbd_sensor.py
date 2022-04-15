@@ -13,18 +13,18 @@ class PybulletRGBDSensor(PybulletSensor):
 
         self.cfg_camera = self.config['intrinsics']
 
-        self.pubs['colour'] = self.node.Publisher('rpbi/colour/image', Image, queue_size=10)
-        self.pubs['depth'] = self.node.Publisher('rpbi/depth/image', Image, queue_size=10)
-        self.pubs['ci/c'] = self.node.Publisher('rpbi/colour/camera_info', CameraInfo, queue_size=10)
-        self.pubs['ci/d'] = self.node.Publisher('rpbi/depth/camera_info', CameraInfo, queue_size=10)
+        self.pubs['colour'] = self.node.Publisher('rpbi/camera/colour/image', Image, queue_size=10)
+        self.pubs['depth'] = self.node.Publisher('rpbi/camera/depth/image', Image, queue_size=10)
+        self.pubs['ci/c'] = self.node.Publisher('rpbi/camera/colour/camera_info', CameraInfo, queue_size=10)
+        self.pubs['ci/d'] = self.node.Publisher('rpbi/camera/depth/camera_info', CameraInfo, queue_size=10)
 
-        self.pubs['segmentation'] = self.node.Publisher('rpbi/segmentation', Image, queue_size=10)
+        self.pubs['segmentation'] = self.node.Publisher('rpbi/camera/segmentation', Image, queue_size=10)
 
         # publish point cloud?
         self.pub_pc = self.config.get("pointcloud", False)
 
         if self.pub_pc:
-            self.pubs['pointcloud'] = self.node.Publisher('rpbi/pointcloud', PointCloud2, queue_size=10)
+            self.pubs['pointcloud'] = self.node.Publisher('rpbi/camera/pointcloud', PointCloud2, queue_size=10)
 
         self.timers['mainloop'] = self.node.Timer(self.dt, self.main_loop)
 
