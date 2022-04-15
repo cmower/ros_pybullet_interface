@@ -79,6 +79,8 @@ class PybulletRGBDSensor(PybulletSensor):
 
     def main_loop(self, event):
 
+        if not self.pose.is_defined(): return
+
         # extrinsics
         p, q = self.pose.get()
         T = transformations.translation_matrix(p) @ transformations.quaternion_matrix(q)

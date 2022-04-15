@@ -50,6 +50,9 @@ class PybulletObjectPose:
         pos, rot = self.pb_obj.node.wait_for_tf('rpbi/world', self.base_tf_id, timeout=self.timeout)
         self.base = self.pb_obj.node.tf.pos_quat_to_matrix(pos, rot)
 
+    def is_defined(self):
+        return self.base is not None
+
     def get(self):
         T = self.offset @ self.base
         pos = T[:3,-1].flatten()
