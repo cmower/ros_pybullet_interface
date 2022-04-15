@@ -6,6 +6,7 @@ from cv_bridge import CvBridge
 import numpy as np
 import struct
 from .pybullet_object_pose import PybulletObjectPose
+from tf_conversions import transformations
 
 class PybulletRGBDSensor(PybulletSensor):
 
@@ -79,18 +80,24 @@ class PybulletRGBDSensor(PybulletSensor):
     def main_loop(self, event):
 
         # extrinsics
-        T = self.pose.get()  # T is a transform as a 4-by-4 numpy array
-        # TODO: convert T to pybullet format for viewMatrix
-        #self.vm = ...
+        p, q = self.pose.get()
+        T = transformations.translation_matrix(p) @ transformations.quaternion_matrix(q)
+        # convert from OpenCV coordinate frame to OpenGL coordinate frame
+        # rotate 180 deg about x-axis (have y and z point in the opposite direction)
+        T[:,1:3] *= -1
+        T = np.linalg.inv(T)
+        # serialise column-wise
+        vm = T.T.ravel()
 
         (width, height, colour, depth_gl, segmentation) = \
-            self.pb.getCameraImage(self.w, self.h, self.vm, self.pm, renderer=self.pb.ER_BULLET_HARDWARE_OPENGL)
+            self.pb.getCameraImage(self.w, self.h, vm, self.pm, renderer=self.pb.ER_BULLET_HARDWARE_OPENGL)
 
         depth = self.far * self.near / (self.far - (self.far - self.near) * depth_gl)
 
         hdr = Header()
         hdr.stamp = self.node.time_now()
-        hdr.frame_id = 'rpbi/camera'
+        # hdr.frame_id = 'rpbi/camera'
+        hdr.frame_id = self.pose.base_tf_id
 
         # publish colour and depth image
         msg_colour = self.cv_bridge.cv2_to_imgmsg(colour[...,:3], encoding="rgb8")
