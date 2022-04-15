@@ -5,6 +5,7 @@ from .pybullet_sensor import PybulletSensor
 from cv_bridge import CvBridge
 import numpy as np
 import struct
+from .pybullet_object_pose import PybulletObjectPose
 
 class PybulletRGBDSensor(PybulletSensor):
 
@@ -50,14 +51,6 @@ class PybulletRGBDSensor(PybulletSensor):
                            [0, 0,          1       ]])
         self.P = np.concatenate((self.K, np.zeros((3,1))), axis=1)
 
-        # extrinsics
-        distance=2
-        yaw=0
-        pitch=-40
-        roll=0
-        target=[0, 0, 1]
-        self.vm = self.pb.computeViewMatrixFromYawPitchRoll(distance=distance, yaw=yaw, pitch=pitch, roll=roll, upAxisIndex=2, cameraTargetPosition=target)
-
         if self.pub_pc:
             # precompute coordinates
             uv = np.dstack(np.meshgrid(range(self.w), range(self.h), indexing='xy'))
@@ -67,11 +60,29 @@ class PybulletRGBDSensor(PybulletSensor):
             self.xy1 = np.concatenate((xy, np.ones((uv_list.shape[0],1))), axis=1)
 
 
+        # Setup object pose
+        self.pose = PybulletObjectPose(self)
+
+        if self.pose.is_static:
+            self.pose.get_base_from_tf()
+            if self.pose.broadcast_tf:
+                self.pose.start_pose_broadcaster()
+        else:
+            self.pose.start_resetter()
+            if self.pose.broadcast_tf:
+                self.node.logwarn('can not broadcast a non-static pose')
+
     @property
     def dt(self):
         return self.node.Duration(1.0/float(self.config.get('hz', 30)))
 
     def main_loop(self, event):
+
+        # extrinsics
+        T = self.pose.get()  # T is a transform as a 4-by-4 numpy array
+        # TODO: convert T to pybullet format for viewMatrix
+        #self.vm = ...
+
         (width, height, colour, depth_gl, segmentation) = \
             self.pb.getCameraImage(self.w, self.h, self.vm, self.pm, renderer=self.pb.ER_BULLET_HARDWARE_OPENGL)
 
