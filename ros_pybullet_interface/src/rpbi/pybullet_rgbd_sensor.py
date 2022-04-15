@@ -79,7 +79,7 @@ class PybulletRGBDSensor(PybulletSensor):
 
         hdr = Header()
         hdr.stamp = self.node.time_now()
-        hdr.frame_id = 'rpbi/world'
+        hdr.frame_id = 'rpbi/camera'
 
         # publish colour and depth image
         msg_colour = self.cv_bridge.cv2_to_imgmsg(colour[...,:3], encoding="rgb8")
