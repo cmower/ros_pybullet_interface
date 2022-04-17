@@ -30,9 +30,6 @@ class PybulletRGBDSensor(PybulletSensor):
 
         self.timers['mainloop'] = self.node.Timer(self.dt, self.main_loop)
 
-        # TODO: expose other getCameraImage parameters so that user
-        # can define view/projection matrix from a tf (if possible?)
-
         # intrinsics
         self.w = self.cfg_camera.get("width", 640)
         self.h = self.cfg_camera.get("height", 480)
@@ -60,26 +57,14 @@ class PybulletRGBDSensor(PybulletSensor):
             xy = (uv_list - np.array([self.w/2, self.h/2])) / self.fs
             self.xy1 = np.concatenate((xy, np.ones((uv_list.shape[0],1))), axis=1)
 
-
         # Setup object pose
         self.pose = PybulletObjectPose(self)
-
-        if self.pose.is_static:
-            self.pose.get_base_from_tf()
-            if self.pose.broadcast_tf:
-                self.pose.start_pose_broadcaster()
-        else:
-            self.pose.start_resetter()
-            if self.pose.broadcast_tf:
-                self.node.logwarn('can not broadcast a non-static pose')
 
     @property
     def dt(self):
         return self.node.Duration(1.0/float(self.config.get('hz', 30)))
 
     def main_loop(self, event):
-
-        if not self.pose.is_defined(): return
 
         # extrinsics
         p, q = self.pose.get()
