@@ -89,13 +89,13 @@ class OffsetConfig(PoseConfig):
     def transform(self):
         transform = np.array(self.d.get('transform', [0.0]*3))
         T = np.eye(4)
-        T[:3, 3] = offset[:3]
-        if offset.shape[0] == 6:
+        T[:3, 3] = transform[:3]
+        if transform.shape[0] == 6:
             if self.is_deg:
-                offset[3:] = np.deg2rad(offset[3:])
-            T[:3, :3] = tf_conversions.transformations.euler_matrix(offset[3], offset[4], offset[5])[:3, :3]
-        elif offset.shape[0] == 7:
-            T[:3, :3] = tf_conversions.transformations.quaternion_matrix(offset[3:])[:3, :3]
+                transform[3:] = np.deg2rad(transform[3:])
+            T[:3, :3] = tf_conversions.transformations.euler_matrix(transform[3], transform[4], transform[5])[:3, :3]
+        elif transform.shape[0] == 7:
+            T[:3, :3] = tf_conversions.transformations.quaternion_matrix(transform[3:])[:3, :3]
         return T
 
     @property
