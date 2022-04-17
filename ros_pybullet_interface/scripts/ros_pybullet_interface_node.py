@@ -11,6 +11,7 @@ from rpbi.pybullet_visual_object import PybulletVisualObject
 from rpbi.pybullet_dynamic_object import PybulletDynamicObject
 from rpbi.pybullet_collision_object import PybulletCollisionObject
 from rpbi.pybullet_rgbd_sensor import PybulletRGBDSensor
+from rpbi.pybullet_lidar_sensor import PybulletLidarSensor
 
 from ros_pybullet_interface.msg import PybulletObject
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectResponse
@@ -71,6 +72,10 @@ class Node(RosNode):
         rgbd_sensor = self.config.get('rgbd_sensor')
         if rgbd_sensor:
             self.pybullet_objects.add(rgbd_sensor, PybulletRGBDSensor)
+
+        lidar_sensor = self.config.get('lidar_sensor')
+        if lidar_sensor:
+            self.pybullet_objects.add(lidar_sensor, PybulletLidarSensor)
 
         # Start services
         self.Service('rpbi/add_pybullet_object', AddPybulletObject, self.service_add_pybullet_object)
