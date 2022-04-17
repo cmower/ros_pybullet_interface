@@ -15,8 +15,7 @@ class PybulletCollisionObject(PybulletObject):
         # Setup object pose handler
         self.pose = PybulletObjectPose(self)
 
-        if self.pose.is_static:
-            self.pose.get_base_from_tf()
+        if self.pose.config.base.is_static:
             pos, rot = self.pose.get()
             self.body_unique_id = self.pb.createMultiBody(
                 baseMass=0.0,
@@ -25,17 +24,13 @@ class PybulletCollisionObject(PybulletObject):
                 basePosition=pos,
                 baseOrientation=rot
             )
-            if self.pose.broadcast_tf:
-                self.pose.start_pose_broadcaster()
         else:
             self.body_unique_id = self.pb.createMultiBody(
                 baseMass=0.0,
                 baseVisualShapeIndex=self.base_visual_shape_index,
                 baseCollisionShapeIndex=self.base_collision_shape_index
             )
-            self.pose.start_resetter()
-            if self.pose.broadcast_tf:
-                self.node.logwarn("can not broadcast a non-static pose")
+            self.pose.start_reset_base_position_and_orientation()
 
         # Set dynamics
         self.change_dynamics(self.changeDynamics)
