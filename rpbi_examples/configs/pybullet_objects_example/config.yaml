@@ -46,8 +46,7 @@ rgbd_sensor:
     fov: 40
     range: [0.01, 10000]
   object_tf:
-    is_static: true
-    base_tf_id: 'camera'
+    tf_id: 'rpbi/camera'
 
 
 #

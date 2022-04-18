@@ -6,6 +6,5 @@ createVisualShape:
   rgbaColor: [0.0, 1.0, 1, 0.6]
 
 object_tf:
-  is_static: false
-  base_tf_id: "figure_eight"
-  listener_frequency: 30
+  tf_id: "figure_eight"
+  hz: 30
