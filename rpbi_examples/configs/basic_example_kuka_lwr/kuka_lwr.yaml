@@ -3,15 +3,6 @@ name: "kuka_lwr"
 loadURDF:
   fileName: "{rpbi_examples}/robots/kuka_lwr.urdf"
   useFixedBase: 1
-
-  #
-  # NOTE
-  # ====
-  #
-  # The base pose of the robot can be set using object_tf or by
-  # setting basePosition/baseOrientation in loadURDF as below. If
-  # basePosition/baseOrientation is used in loadURDF then it takes
-  # prescendence, i.e. object_tf (including offset) will be ignored.
   basePosition: [0.5, 0., 0.]
 
 initial_joint_position:
