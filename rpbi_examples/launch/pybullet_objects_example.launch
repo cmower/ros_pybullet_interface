@@ -6,7 +6,7 @@
   </node>
 
   <!-- Static transforms -->
-  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf" args="0.5 0 0.5 0 0 0 rpbi/world rpbi/camera"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf" args="0 -1.5 1.5 0 0 -2.3 rpbi/world rpbi/camera"/>
   <node pkg="tf2_ros" type="static_transform_publisher" name="figure_eight_base_in_rpbi_world" args="0.5 0 0.65 0 1.57 0 rpbi/world figure_eight_base"/>
 
   <!-- Generate fig8 motion for visual object -->
