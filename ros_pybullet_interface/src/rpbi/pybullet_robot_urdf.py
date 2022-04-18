@@ -20,7 +20,7 @@ class URDF:
 
         # Parse loadURDF input
         if 'flags' in self.pb_obj.config['loadURDF']:
-            self.pb_obj.config['loadURDF']['flags'] = self.pb_obj.node.parse_options(self.pb_obj.config['loadURDF']['flags'])            
+            self.pb_obj.config['loadURDF']['flags'] = self.pb_obj.node.parse_options(self.pb_obj.config['loadURDF']['flags'])
 
         # Create pose object
         self.pose = PybulletObjectPose(pb_obj)
