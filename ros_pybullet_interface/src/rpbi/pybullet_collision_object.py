@@ -18,9 +18,9 @@ class PybulletCollisionObject(PybulletObject):
             baseVisualShapeIndex=self.base_visual_shape_index,
             baseCollisionShapeIndex=self.base_collision_shape_index,
         )
-        
+
         # Set dynamics
-        self.change_dynamics(self.changeDynamics)        
+        self.change_dynamics(self.changeDynamics)
 
         # Setup object pose handler
         self.pose = PybulletObjectPose(self)
