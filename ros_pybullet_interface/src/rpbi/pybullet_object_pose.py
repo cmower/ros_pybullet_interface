@@ -24,7 +24,8 @@ class PybulletObjectPose:
 
     @property
     def hz(self):
-        return self.config.get('hz', 30)
+        return int(self.config.get('hz', 30))
+
     @property
     def dt(self):
         return self.pb_obj.node.Duration(1.0/float(self.hz))
