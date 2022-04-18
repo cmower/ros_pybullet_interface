@@ -34,6 +34,23 @@ resetDebugVisualizerCamera:
 
 
 #
+# Sensors
+#
+
+rgbd_sensor:
+  name: 'rgbd_sensor'
+  hz: 30
+  intrinsics:
+    width: 640
+    height: 480
+    fov: 40
+    range: [0.01, 10000]
+  object_tf:
+    is_static: true
+    base_tf_id: 'camera'
+
+
+#
 # Pybullet objects
 #
 visual_objects:
