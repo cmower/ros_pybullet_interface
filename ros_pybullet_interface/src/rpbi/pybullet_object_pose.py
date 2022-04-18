@@ -12,10 +12,9 @@ class PybulletObjectPose:
 
         # Setup pose
         self.pose = np.zeros(3), np.array([0., 0., 0., 1.])
-        if self.tf_id:
+        if self.tf_specified():
             # user specified /tf -> start listener
-            dt = self.pb_obj.node.Duration(1.0/float(self.hz))
-            self.pb_obj.timers['pose_listener'] = self.pb_obj.node.Timer(dt, self.listener)
+            self.pb_obj.timers['pose_listener'] = self.pb_obj.node.Timer(self.dt, self.listener)
         # else: pose is always identity
 
     @property
@@ -29,6 +28,13 @@ class PybulletObjectPose:
     @property
     def dt(self):
         return self.pb_obj.node.Duration(1.0/float(self.hz))
+
+    @property
+    def max_debug_limit(self):
+        return self.hz*2  # i.e. 2 secs worth
+
+    def tf_specified(self):
+        return self.tf_id is not None
 
     def listener(self, event):
         tf = self.pb_obj.node.tf.get_tf_msg('rpbi/world', self.tf_id)
