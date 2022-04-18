@@ -1,6 +1,5 @@
 import numpy as np
 from .pybullet_object import PybulletObject
-from .pybullet_object_pose import PybulletObjectPose
 
 
 class PybulletDynamicObject(PybulletObject):
@@ -13,18 +12,13 @@ class PybulletDynamicObject(PybulletObject):
         self.base_visual_shape_index = self.create_visual_shape(self.createVisualShape)
         self.base_collision_shape_index = self.create_collision_shape(self.createCollisionShape)
 
-        # Setup object pose
-        self.pose = PybulletObjectPose(self)
-        self.pose.get_base_from_tf()
-        pos, ori = self.pose.get()
-
         # Setup multi body
         self.body_unique_id = self.pb.createMultiBody(
             baseMass=self.baseMass,
             baseVisualShapeIndex=self.base_visual_shape_index,
             baseCollisionShapeIndex=self.base_collision_shape_index,
-            basePosition=pos,
-            baseOrientation=ori,
+            basePosition=self.basePosition,
+            baseOrientation=self.baseOrientation,
         )
 
         # Reset initial velocity
@@ -35,17 +29,29 @@ class PybulletDynamicObject(PybulletObject):
         self.change_dynamics(self.changeDynamics)
 
         # Broadcast pose
-        if self.pose.broadcast_tf:
-            self.pose.start_pose_broadcaster()
+        if self.broadcast_hz > 0:
+            dt = self.pb_obj.node.Duration(1.0/float(self.broadcast_hz))
+            self.timers['broadcast_tf'] = self.pb_obj.node.Timer(dt, self.broadcast)
+
+    def broadcast(self, event):
+        pos, ori = self.pb.getBasePositionAndOrientation(self.body_unique_id)
+        self.node.tf.set_tf('rpbi/world', f'rpbi/{self.name}', pos, ori)
 
     @property
     def baseMass(self):
         return self.config['baseMass']
 
     @property
+    def basePosition(self):
+        return self.config.get('basePosition', [0., 0., 0.])
+
+    @property
+    def baseOrientation(self):
+        return self.config.get('baseOrientation', [0., 0., 0., 1.])
+
+    @property
     def createVisualShape(self):
         return self.config['createVisualShape']
-
 
     @property
     def createCollisionShape(self):
@@ -58,3 +64,7 @@ class PybulletDynamicObject(PybulletObject):
     @property
     def reset_base_velocity(self):
         return self.config.get('resetBaseVelocity')
+
+    @property
+    def broadcast_hz(self):
+        return self.config.get('broadcast_hz', 0)
