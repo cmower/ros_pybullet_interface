@@ -18,31 +18,25 @@ class URDF:
         if self.urdf_contains_ros_package_statements():
             self.replace_ros_package_statements()
 
+        # Parse loadURDF input
+        if 'flags' in self.pb_obj.config['loadURDF']:
+            self.pb_obj.config['loadURDF']['flags'] = self.pb_obj.node.parse_options(self.pb_obj.config['loadURDF']['flags'])            
+
         # Create pose object
         self.pose = PybulletObjectPose(pb_obj)
 
         # Setup pose
         self.after_load_urdf_reset_base_velocity = False
-        if self.is_fixed_base:
-            self.set_base_position_and_orientation_in_config()
-        else:
-            if not self.pb_obj.is_visual_robot:
-                self.set_base_position_and_orientation_in_config()  # initial pose
-                self.after_load_urdf_reset_base_velocity = True  # inital velocity (set after pybullet.loadURDF is called in load method)
-            else:
-                self.pose.start_resetter()
 
-    def set_base_position_and_orientation_in_config(self):
-        self.pose.get_base_from_tf()
-        tf_base_pos, tf_base_ori = self.pose.get()
-        if not self.user_given_base_position():
-            self.pb_obj.config['loadURDF']['basePosition'] = tf_base_pos
-        if not self.user_given_base_orientation():
-            self.pb_obj.config['loadURDF']['baseOrientation'] = tf_base_ori
-
-        # Parse loadURDF input
-        if 'flags' in self.pb_obj.config['loadURDF']:
-            self.pb_obj.config['loadURDF']['flags'] = self.pb_obj.node.parse_options(self.pb_obj.config['loadURDF']['flags'])
+        if self.is_fixed_base and self.pose.tf_specified():
+            # robot is fixed base and /tf is specified
+            self.pose.start_reset_pose()  # this can be used when the real robot base is defined by a /tf
+        elif (not self.is_fixed_base) and (not self.pb_obj.is_visual_robot):
+            # robot not fixed base and not visual (e.g. simulated quadruped)
+            self.after_load_urdf_reset_base_velocity = True # inital velocity (set after pybullet.loadURDF is called in load method)
+        elif (not self.is_fixed_base) and self.pb_obj.is_visual_robot and self.pose.tf_specified():
+            # robot is not fixed base, is visual, and tf specified (e.g. visual quadruped)
+            self.pose.start_reset_pose()
 
     @property
     def is_fixed_base(self):
@@ -128,9 +122,5 @@ class URDF:
                 pass
             else:
                 raise ValueError("resetBaseVelocity config type is not supported")
-
-        # If user wants to broadcast base pose -> start broadcaster
-        if self.pose.broadcast_tf:
-            self.pose.start_pose_broadcaster()
 
         return body_unique_id
