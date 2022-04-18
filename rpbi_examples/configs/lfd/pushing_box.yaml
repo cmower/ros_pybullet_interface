@@ -10,9 +10,7 @@ createCollisionShape:
   halfExtents: [0.1, 0.1, 0.075]
 
 baseMass: 1.0
-
-object_tf:
-  offset: [-0.6, 0.0, 0.3]
+basePosition: [-0.6, 0.0, 0.3]
 
 changeDynamics:
   lateralFriction: 1.0
