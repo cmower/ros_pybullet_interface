@@ -18,7 +18,10 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/basic_robot_example_node.py
   scripts/pybullet_objects_example_node.py
+  scripts/orbit_node.py
   scripts/run_teleop.py
   scripts/run_lfd.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(DIRECTORY configs launch robots DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/)

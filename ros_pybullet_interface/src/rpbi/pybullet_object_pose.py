@@ -4,77 +4,65 @@ import numpy as np
 class PybulletObjectPose:
 
     def __init__(self, pb_obj):
+
+        # Initial setup
         self.pb_obj = pb_obj
         self.config = pb_obj.config.get('object_tf', {})
-        self.base = None
+        self.num_debug_thrown = 0
+
+        # Setup pose
+        self.pose = np.zeros(3), np.array([0., 0., 0., 1.])
+        if self.tf_specified():
+            # user specified /tf -> start listener
+            self.pb_obj.timers['pose_listener'] = self.pb_obj.node.Timer(self.dt, self.listener)
+        # else: pose is always identity
 
     @property
-    def is_static(self):
-        return self.config.get('is_static', True)
+    def tf_id(self):
+        return self.config.get('tf_id')
 
     @property
-    def base_tf_id(self):
-        return self.config.get('base_tf_id', 'rpbi/world')
-
-    @property
-    def timeout(self):
-        return self.config.get('timeout', 5.0)
+    def hz(self):
+        return int(self.config.get('hz', 30))
 
     @property
     def dt(self):
-        hz = self.config.get('hz', 50)
-        return self.pb_obj.node.Duration(1.0/float(hz))
+        return self.pb_obj.node.Duration(1.0/float(self.hz))
 
     @property
-    def offset(self):
-        offset = self.config.get('offset', [0.0]*3)
-        T = np.eye(4)
-        T[:3, 3] = np.array(offset[:3])
-        if len(offset) == 6:
-            T = tf_conversions.transformations.euler_matrix(offset[3], offset[4], offset[5])
-            T[:3, 3] = pos
-        elif len(offset) == 7:
-            T = tf_conversions.transformations.quaternion_matrix(offset[3:])
-            T[:3, 3] = pos
-        return T
+    def max_debug_limit(self):
+        return self.hz*2  # i.e. 2 secs worth
 
-    @property
-    def tf_frame_id(self):
-        return self.config.get('tf_frame_id', f'rpbi/{self.pb_obj.name}')
+    def tf_specified(self):
+        return self.tf_id is not None
 
-    @property
-    def broadcast_tf(self):
-        return self.config.get('broadcast_tf', False)
-
-    def get_base_from_tf(self):
-        pos, rot = self.pb_obj.node.wait_for_tf('rpbi/world', self.base_tf_id, timeout=self.timeout)
-        self.base = self.pb_obj.node.tf.pos_quat_to_matrix(pos, rot)
+    def listener(self, event):
+        tf = self.pb_obj.node.tf.get_tf_msg('rpbi/world', self.tf_id)
+        if tf:
+            self.pose = self.pb_obj.node.tf.msg_to_pos_quat(tf)
 
     def get(self):
-        T = self.offset @ self.base
-        pos = T[:3,-1].flatten()
-        ori = tf_conversions.transformations.quaternion_from_matrix(T)
-        return pos, ori
+        return self.pose  # pose is the tuple pos,quat
 
-    def start_resetter(self):
-        self.pb_obj.timers['pose_resetter'] = self.pb_obj.node.Timer(self.dt, self._update_pose)
+    def start_reset_pose(self):
+        self.pb_obj.timers['pose_reset'] = self.pb_obj.node.Timer(self.dt, self.reset_pose)
 
-    def _update_pose(self, event):
-        if self.pb_obj.body_unique_id is None: return
+    def reset_pose(self, event):
 
-        # Update base
-        msg = self.pb_obj.node.tf.get_tf_msg('rpbi/world', self.base_tf_id)
-        if msg is None: return
-        self.base = self.pb_obj.node.tf.msg_to_matrix(msg)
+        # Check that pybullet object has body unique id
+        if self.pb_obj.body_unique_id is None:
+            if self.num_debug_thrown < self.max_debug_limit:
+                self.pb_obj.node.logdebug(f'body unique id for pybullet object {self.pb_obj.name} is None')
+                self.num_debug_thrown += 1
+                return
+            else:
+                msg = f'body unique id for pybullet object {self.pb_obj.name} is None max number of iterations without this changing has been reached!'
+                self.pb_obj.node.logerr(msg)
+                raise RuntimeError(msg)
+            
+        # Reset num_debug_thrown to 0
+        self.num_debug_thrown = 0
 
-        # Reset base position and orientation
+        # Update pose
         pos, ori = self.get()
         self.pb_obj.pb.resetBasePositionAndOrientation(self.pb_obj.body_unique_id, pos, ori)
-
-    def start_pose_broadcaster(self):
-        self.pb_obj.timers['broadcast_pose'] = self.pb_obj.node.Timer(self.dt, self._broadcast_pose)
-
-    def _broadcast_pose(self, event):
-        if not isinstance(self.pb_obj.body_unique_id, int): return
-        pos, ori = self.pb_obj.pb.getBasePositionAndOrientation(self.pb_obj.body_unique_id)
-        self.pb_obj.node.tf.set_tf('rpbi/world', self.tf_frame_id, pos, ori)
