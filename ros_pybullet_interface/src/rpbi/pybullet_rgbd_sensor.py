@@ -60,18 +60,10 @@ class PybulletRGBDSensor(PybulletSensor):
             xy = (uv_list - np.array([self.w/2, self.h/2])) / self.fs
             self.xy1 = np.concatenate((xy, np.ones((uv_list.shape[0],1))), axis=1)
 
-
         # Setup object pose
         self.pose = PybulletObjectPose(self)
-
-        if self.pose.is_static:
-            self.pose.get_base_from_tf()
-            if self.pose.broadcast_tf:
-                self.pose.start_pose_broadcaster()
-        else:
-            self.pose.start_resetter()
-            if self.pose.broadcast_tf:
-                self.node.logwarn('can not broadcast a non-static pose')
+        if not self.pose.tf_specified():
+            raise RuntimeError("an object_tf/tf_id must be specified for RGBD sensor")
 
     @property
     def dt(self):
@@ -97,7 +89,7 @@ class PybulletRGBDSensor(PybulletSensor):
         hdr = Header()
         hdr.stamp = self.node.time_now()
         # hdr.frame_id = 'rpbi/camera'
-        hdr.frame_id = self.pose.base_tf_id
+        hdr.frame_id = self.pose.tf_id
 
         # publish colour and depth image
         msg_colour = self.cv_bridge.cv2_to_imgmsg(colour[...,:3], encoding="rgb8")
