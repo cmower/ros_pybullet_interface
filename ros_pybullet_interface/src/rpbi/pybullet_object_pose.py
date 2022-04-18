@@ -8,6 +8,7 @@ class PybulletObjectPose:
         # Initial setup
         self.pb_obj = pb_obj
         self.config = pb_obj.config.get('object_tf', {})
+        self.num_debug_thrown = 0
 
         # Setup pose
         self.pose = np.zeros(3), np.array([0., 0., 0., 1.])
@@ -24,6 +25,9 @@ class PybulletObjectPose:
     @property
     def hz(self):
         return self.config.get('hz', 30)
+    @property
+    def dt(self):
+        return self.pb_obj.node.Duration(1.0/float(self.hz))
 
     def listener(self, event):
         tf = self.pb_obj.node.tf.get_tf_msg('rpbi/world', self.tf_id)
@@ -33,25 +37,25 @@ class PybulletObjectPose:
     def get(self):
         return self.pose  # pose is the tuple pos,quat
 
-    # def start_resetter(self):
-    #     self.pb_obj.timers['pose_resetter'] = self.pb_obj.node.Timer(self.dt, self._update_pose)
+    def start_reset_pose(self):
+        self.pb_obj.timers['pose_reset'] = self.pb_obj.node.Timer(self.dt, self.reset_pose)
 
-    # def _update_pose(self, event):
-    #     if self.pb_obj.body_unique_id is None: return
+    def reset_pose(self, event):
 
-    #     # Update base
-    #     msg = self.pb_obj.node.tf.get_tf_msg('rpbi/world', self.base_tf_id)
-    #     if msg is None: return
-    #     self.base = self.pb_obj.node.tf.msg_to_matrix(msg)
+        # Check that pybullet object has body unique id
+        if self.pb_obj.body_unique_id is None:
+            if self.num_debug_thrown < self.max_debug_limit:
+                self.pb_obj.node.logdebug(f'body unique id for pybullet object {self.pb_obj.name} is None')
+                self.num_debug_thrown += 1
+                return
+            else:
+                msg = f'body unique id for pybullet object {self.pb_obj.name} is None max number of iterations without this changing has been reached!'
+                self.pb_obj.node.logerr(msg)
+                raise RuntimeError(msg)
+            
+        # Reset num_debug_thrown to 0
+        self.num_debug_thrown = 0
 
-    #     # Reset base position and orientation
-    #     pos, ori = self.get()
-    #     self.pb_obj.pb.resetBasePositionAndOrientation(self.pb_obj.body_unique_id, pos, ori)
-
-    # def start_pose_broadcaster(self):
-    #     self.pb_obj.timers['broadcast_pose'] = self.pb_obj.node.Timer(self.dt, self._broadcast_pose)
-
-    # def _broadcast_pose(self, event):
-    #     if not isinstance(self.pb_obj.body_unique_id, int): return
-    #     pos, ori = self.pb_obj.pb.getBasePositionAndOrientation(self.pb_obj.body_unique_id)
-    #     self.pb_obj.node.tf.set_tf('rpbi/world', self.tf_frame_id, pos, ori)
+        # Update pose
+        pos, ori = self.get()
+        self.pb_obj.pb.resetBasePositionAndOrientation(self.pb_obj.body_unique_id, pos, ori)
