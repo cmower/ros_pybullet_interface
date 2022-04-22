@@ -1,0 +1,14 @@
+<launch>
+
+  <arg name="model" default="$(find abb_mp_myumi_description)/urdf/myumi_v2.urdf"/>
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+
+  <!-- ROS-Pybullet interface -->
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface" type="ros_pybullet_interface_node.py" output="screen">
+    <rosparam param="config" file="$(find rpbi_examples)/configs/basic_example_abb_yumi/config.yaml"/>
+  </node>
+
+  <!-- Example node that generates target joint positions -->
+  <!-- <node pkg="rpbi_examples" name="example" type="basic_robot_example_node.py" args="kuka_lwr" output="screen"/> -->
+
+</launch>
