@@ -32,7 +32,7 @@ class PybulletObjects(dict):
         if name in self:
             raise KeyError(f'{name} already exists, pybullet objects must be given unique names!')
         super().__setitem__(name, obj)
-        self.node.loginfo(f'added pybullet object "{name}"')
+        # self.node.loginfo(f'added pybullet object "{name}"')
 
     def __delitem__(self, name):
         self[name].destroy()
