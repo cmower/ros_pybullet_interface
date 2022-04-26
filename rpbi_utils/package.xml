@@ -18,7 +18,7 @@
   <depend>tf2</depend>
   <depend>tf2_ros</depend>
   <depend>python-numpy</depend>
-  <depend>python-scipy</depend>
+  <depend>python3-scipy</depend>
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
 </package>
