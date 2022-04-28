@@ -148,7 +148,7 @@ class Joints(list):
         # Start logging joint limit violations (optional)
         # NOTE: this is only available for visual robots
         if self.do_log_joint_limit_violations:
-            dt = self.log_joint_limit_violations_hz
+            dt = self.pb_obj.node.Duration(1.0/float(self.log_joint_limit_violations_hz))
             self.pb_obj.timers['joint_limit_violations'] = self.pb_obj.node.Timer(dt, self._log_joint_limit_violations)
 
     @property
