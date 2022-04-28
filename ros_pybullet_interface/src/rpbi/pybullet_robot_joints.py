@@ -233,24 +233,17 @@ class Joints(list):
     @property
     def initial_joint_state(self):
 
-        # Setup
-        names = []
-        positions = []
+        init_joint_state = JointState(name=self.names, position=[0.0]*len(self))
 
-        # Iterate over joint states
-        for name, position in self.pb_obj.config.get('initial_joint_position', {}).items():
+        init_joint_pos = self.pb_obj.config.get('initial_joint_position', {})
+        for i, name in enumerate(self.names):
+            if name in init_joint_pos:
+                pos = init_joint_pos[name]
+                if self[name].is_revolute() and self.init_is_deg:
+                    pos = radians(pos)
+                init_joint_state.position[i] = pos
 
-            # Append name
-            names.append(name)
-
-            # Append position
-            if self[name].is_revolute() and self.init_is_deg:
-                p = radians(position)
-            else:
-                p = position
-            positions.append(p)
-
-        return JointState(name=names, position=positions)
+        return init_joint_state
 
     def turn_off_all_collisions(self):
         for j in self:
