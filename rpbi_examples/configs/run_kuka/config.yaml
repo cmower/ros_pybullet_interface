@@ -8,7 +8,7 @@
 #
 connect:
   connection_mode: 'GUI'
-  options: "--mp4=$HOME/fig8.mp4"
+  # options: "--mp4=$HOME/fig8.mp4"
 
 setGravity:
   gravX: 0.0
