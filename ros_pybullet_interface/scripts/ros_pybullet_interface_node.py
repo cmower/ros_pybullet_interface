@@ -26,6 +26,8 @@ class PybulletObjects(dict):
 
     def add(self, config, object_type):
         name = config['name']
+        if name in self:
+            raise KeyError(f'{name} already exists, pybullet objects must be given unique names!')
         self[name] = object_type(pybullet, self.node, config)
 
     def __setitem__(self, name, obj):
