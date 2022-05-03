@@ -72,9 +72,6 @@ class PybulletObject(ABC):
     def destroy(self):
         """Removes the object from Pybullet and closes any communication with ROS."""
 
-        # Remove object from pybullet
-        self.pb.removeBody(self.body_unique_id)
-
         # Close all ROS communication
         for t in self.timers.values():
             t.shutdown()
@@ -84,6 +81,9 @@ class PybulletObject(ABC):
             p.unregister()
         for s in self.srvs.values():
             s.shutdown()
+
+        # Remove object from pybullet
+        self.pb.removeBody(self.body_unique_id)
 
 
 class PybulletObjectArray:
