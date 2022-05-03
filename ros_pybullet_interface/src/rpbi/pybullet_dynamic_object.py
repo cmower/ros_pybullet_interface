@@ -30,8 +30,8 @@ class PybulletDynamicObject(PybulletObject):
 
         # Broadcast pose
         if self.broadcast_hz > 0:
-            dt = self.pb_obj.node.Duration(1.0/float(self.broadcast_hz))
-            self.timers['broadcast_tf'] = self.pb_obj.node.Timer(dt, self.broadcast)
+            dt = self.node.Duration(1.0/float(self.broadcast_hz))
+            self.timers['broadcast_tf'] = self.node.Timer(dt, self.broadcast)
 
     def broadcast(self, event):
         pos, ori = self.pb.getBasePositionAndOrientation(self.body_unique_id)
