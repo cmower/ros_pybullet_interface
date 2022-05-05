@@ -65,7 +65,7 @@ class PybulletInstance:
 
     @property
     def set_additional_search_paths(self):
-        set_additional_search_paths = self.config.get('setAdditionalSearchPath', [])
+        set_additional_search_paths = self.node.config.get('setAdditionalSearchPath', [])
         if isinstance(set_additional_search_paths, list):
             return set_additional_search_paths
         elif isinstance(set_additional_search_paths, str):
@@ -75,7 +75,7 @@ class PybulletInstance:
 
     @property
     def set_physics_engine_parameter(self):
-        return self.config.get('setPhysicsEngineParameter', {})
+        return self.node.config.get('setPhysicsEngineParameter', {})
 
     @property
     def reset_simulation(self):
