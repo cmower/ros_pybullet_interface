@@ -1,3 +1,4 @@
+import pybullet_data
 from functools import partial
 from std_msgs.msg import Int64
 from std_srvs.srv import Trigger, TriggerResponse
@@ -25,7 +26,11 @@ class PybulletInstance:
 
         # Set additional search path
         for path in self.set_additional_search_paths:
-            self.pb.setAdditionalSearchPath(path)
+            if path == 'pybullet_data_path':
+                p = pybullet_data.getDataPath()
+            else:
+                p = path
+            self.pb.setAdditionalSearchPath(p)
 
         # Reset simulation
         self.pb.resetSimulation(**self.reset_simulation)
