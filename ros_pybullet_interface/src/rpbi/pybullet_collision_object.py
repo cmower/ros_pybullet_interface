@@ -20,7 +20,8 @@ class PybulletCollisionObject(PybulletObject):
         )
 
         # Set dynamics
-        self.change_dynamics(self.changeDynamics)
+        if self.changeDynamics:
+            self.change_dynamics(self.changeDynamics)
 
         # Setup object pose handler
         self.pose = PybulletObjectPose(self)
@@ -37,4 +38,4 @@ class PybulletCollisionObject(PybulletObject):
 
     @property
     def changeDynamics(self):
-        return self.config['changeDynamics']
+        return self.config.get('changeDynamics')
