@@ -24,7 +24,7 @@ class PybulletInstance:
         self.node.loginfo(f'connected to Pybullet with client id {self.client_id}')
 
         # Reset simulation
-        self.pb.resetSimulation()
+        self.pb.resetSimulation(**self.reset_simulation)
 
         # Set gravity
         self.pb.setGravity(**self.setGravity)
@@ -50,6 +50,13 @@ class PybulletInstance:
         self.status_publisher = StatusPublisher(self)
 
         self.node.loginfo('initialized Pybullet instance')
+
+    @property
+    def reset_simulation(self):
+        reset_simulation =  self.node.config.copy().get('resetSimulation', {})
+        if 'flags' in reset_simulation:
+            reset_simulation['flags'] = self.node.parse_options(reset_simulation['flags'])
+        return reset_simulation
 
     @property
     def connection_mode(self):
