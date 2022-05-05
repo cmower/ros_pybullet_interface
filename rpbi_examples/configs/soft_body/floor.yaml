@@ -1,0 +1,12 @@
+name: "floor"
+
+createVisualShape:
+  shapeType: "GEOM_PLANE"
+  planeNormal: [0, 0, 1]
+
+createCollisionShape:
+  shapeType: "GEOM_PLANE"
+  planeNormal: [0, 0, 1]
+
+changeDynamics:
+  lateralFriction: 1.0
