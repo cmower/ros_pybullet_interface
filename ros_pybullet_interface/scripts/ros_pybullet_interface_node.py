@@ -11,6 +11,7 @@ from rpbi.pybullet_visual_object import PybulletVisualObject
 from rpbi.pybullet_dynamic_object import PybulletDynamicObject
 from rpbi.pybullet_collision_object import PybulletCollisionObject
 from rpbi.pybullet_rgbd_sensor import PybulletRGBDSensor
+from rpbi.pybullet_soft_body import PybulletSoftBodyObject
 
 from ros_pybullet_interface.msg import PybulletObject
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectResponse
@@ -69,6 +70,7 @@ class Node(RosNode):
         add_list(self.config.get('collision_objects', []), PybulletCollisionObject)
         add_list(self.config.get('dynamic_objects', []), PybulletDynamicObject)
         add_list(self.config.get('robots', []), PybulletRobot)
+        add_list(self.config.get('soft_objects', []), PybulletSoftBodyObject)
 
         rgbd_sensor = self.config.get('rgbd_sensor')
         if rgbd_sensor:
@@ -132,6 +134,8 @@ class Node(RosNode):
             object_type = PybulletDynamicObject
         elif req.pybullet_object.object_type == PybulletObject.ROBOT:
             object_type = PybulletRobot
+        elif req.pybullet_object.object_type == PybulletObject.SOFT:
+            object_type = PybulletSoftBodyObject
         else:
             success = False
             message = f"did not recognize object type, given '{req.pybullet_object.object_type}', expected either 0, 1, 2, 3. See PybulletObject.msg"

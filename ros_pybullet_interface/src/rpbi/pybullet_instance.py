@@ -23,8 +23,12 @@ class PybulletInstance:
             raise RuntimeError('Unable to connect to Pybullet!')
         self.node.loginfo(f'connected to Pybullet with client id {self.client_id}')
 
+        # Set additional search path
+        for path in self.set_additional_search_paths:
+            self.pb.setAdditionalSearchPath(path)
+
         # Reset simulation
-        self.pb.resetSimulation()
+        self.pb.resetSimulation(**self.reset_simulation)
 
         # Set gravity
         self.pb.setGravity(**self.setGravity)
@@ -32,6 +36,9 @@ class PybulletInstance:
         # Setup time step
         self.dt = self.timeStep
         self.pb.setTimeStep(self.dt)
+
+        # Set physics engine parameters
+        self.pb.setPhysicsEngineParameter(**self.set_physics_engine_parameter)
 
         # Setup start/stop methods
         if self.step_pybullet_manually:
@@ -50,6 +57,27 @@ class PybulletInstance:
         self.status_publisher = StatusPublisher(self)
 
         self.node.loginfo('initialized Pybullet instance')
+
+    @property
+    def set_additional_search_paths(self):
+        set_additional_search_paths = self.config.get('setAdditionalSearchPath', [])
+        if isinstance(set_additional_search_paths, list):
+            return set_additional_search_paths
+        elif isinstance(set_additional_search_paths, str):
+            return [set_additional_search_paths]
+        else:
+            raise ValueError(f"did not recognize given paths {set_additional_search_paths}")
+
+    @property
+    def set_physics_engine_parameter(self):
+        return self.config.get('setPhysicsEngineParameter', {})
+
+    @property
+    def reset_simulation(self):
+        reset_simulation =  self.node.config.copy().get('resetSimulation', {})
+        if 'flags' in reset_simulation:
+            reset_simulation['flags'] = self.node.parse_options(reset_simulation['flags'])
+        return reset_simulation
 
     @property
     def connection_mode(self):
