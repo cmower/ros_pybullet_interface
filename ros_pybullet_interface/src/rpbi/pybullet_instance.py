@@ -23,6 +23,10 @@ class PybulletInstance:
             raise RuntimeError('Unable to connect to Pybullet!')
         self.node.loginfo(f'connected to Pybullet with client id {self.client_id}')
 
+        # Set additional search path
+        for path in self.set_additional_search_paths:
+            self.pb.setAdditionalSearchPath(path)
+
         # Reset simulation
         self.pb.resetSimulation(**self.reset_simulation)
 
@@ -53,6 +57,16 @@ class PybulletInstance:
         self.status_publisher = StatusPublisher(self)
 
         self.node.loginfo('initialized Pybullet instance')
+
+    @property
+    def set_additional_search_paths(self):
+        set_additional_search_paths = self.config.get('setAdditionalSearchPath', [])
+        if isinstance(set_additional_search_paths, list):
+            return set_additional_search_paths
+        elif isinstance(set_additional_search_paths, str):
+            return [set_additional_search_paths]
+        else:
+            raise ValueError(f"did not recognize given paths {set_additional_search_paths}")
 
     @property
     def set_physics_engine_parameter(self):
