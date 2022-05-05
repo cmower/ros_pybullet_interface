@@ -34,8 +34,7 @@ class PybulletInstance:
         self.pb.setTimeStep(self.dt)
 
         # Set physics engine parameters
-        if self.set_physics_engine_parameter:
-            self.pb.setPhysicsEngineParameter(**self.set_physics_engine_parameter)
+        self.pb.setPhysicsEngineParameter(**self.set_physics_engine_parameter)
 
         # Setup start/stop methods
         if self.step_pybullet_manually:
