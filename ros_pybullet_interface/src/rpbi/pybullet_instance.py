@@ -33,6 +33,10 @@ class PybulletInstance:
         self.dt = self.timeStep
         self.pb.setTimeStep(self.dt)
 
+        # Set physics engine parameters
+        if self.set_physics_engine_parameter:
+            self.pb.setPhysicsEngineParameter(**self.set_physics_engine_parameter)
+
         # Setup start/stop methods
         if self.step_pybullet_manually:
             self.start = self.start_manual
@@ -50,6 +54,10 @@ class PybulletInstance:
         self.status_publisher = StatusPublisher(self)
 
         self.node.loginfo('initialized Pybullet instance')
+
+    @property
+    def set_physics_engine_parameter(self):
+        return self.config.get('setPhysicsEngineParameter', {})
 
     @property
     def reset_simulation(self):
