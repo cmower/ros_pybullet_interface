@@ -19,6 +19,7 @@ class PybulletSoftBodyObject(PybulletObject):
         elif 'loadURDF' in self.config:
             return 'loadURDF'
 
+    @property
     def create_soft_body_anchor(self):
         """
 
