@@ -21,6 +21,7 @@ class RosNode:
     def __init__(self, *args, **kwargs):
         rospy.init_node(*args, **kwargs)
         self.tf = TfInterface()
+        self.Time = rospy.Time
 
     def on_shutdown(self, *args, **kwargs):
         rospy.on_shutdown(*args, **kwargs)

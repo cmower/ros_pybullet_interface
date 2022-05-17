@@ -2,6 +2,7 @@ import pybullet_data
 from functools import partial
 from std_msgs.msg import Int64
 from std_srvs.srv import Trigger, TriggerResponse
+from rosgraph_msgs.msg import Clock
 
 
 class PybulletInstance:
@@ -40,15 +41,22 @@ class PybulletInstance:
 
         # Setup time step
         self.dt = self.timeStep
+        self.timeStepNSecs = int(1e9*self.timeStep)
         self.pb.setTimeStep(self.dt)
 
         # Set physics engine parameters
         self.pb.setPhysicsEngineParameter(**self.set_physics_engine_parameter)
 
         # Setup start/stop methods
+        self.use_sim_time = False
+        self.current_time_nsecs = 0
+        self.sim_time_pub = None
         if self.step_pybullet_manually:
             self.start = self.start_manual
             self.stop = self.stop_manual
+            self.use_sim_time = self.node.get_param('use_sim_time', False)
+            if self.use_sim_time:
+                self.sim_time_pub = self.node.Publisher('clock', Clock, queue_size=1)
         else:
             self.start = self.start_real_time_simulation
             self.stop = self.stop_real_time_simulation
@@ -149,6 +157,9 @@ class PybulletInstance:
 
 
     def _step_manual(self, event):
+        if self.use_sim_time:
+            self.sim_time_pub.publish(Clock(clock=self.node.Time(nsecs=self.current_time_nsecs)))
+            self.current_time_nsecs += self.timeStepNSecs
         self.pb.stepSimulation()
 
 
