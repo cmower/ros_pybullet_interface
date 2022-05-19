@@ -3,21 +3,21 @@
   <!-- Human interface -->
   <!-- =============== -->
 
-  <!-- TODO -->
-
+  <!-- Launch TouchX (haptic device) -->
+  <include file="$(find geomagic_touch_x_ros)/launch/basic_control.launch"/>
 
   <!-- ========== -->
   <!-- >>>TEMP<<< -->
   <!-- vvvvvvvvvv -->
 
-  <node pkg="spacenav_node" type="spacenav_node" name="spacenav_driver" output="screen"/>
+  <!-- <node pkg="spacenav_node" type="spacenav_node" name="spacenav_driver" output="screen"/> -->
 
-  <!-- Map raw keyboard commands (sensor_msgs/Joy messages) to operator signal -->
-  <node pkg="operator_node" name="keyboard_scale" type="scale_node.py">
-    <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/spacenav_scale.yaml"/>
-    <remap from="joy" to="spacenav/joy"/>
-    <param name="start_on_init" type="bool" value="true"/>
-  </node>
+  <!-- <!-\- Map raw keyboard commands (sensor_msgs/Joy messages) to operator signal -\-> -->
+  <!-- <node pkg="operator_node" name="keyboard_scale" type="scale_node.py"> -->
+  <!--   <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/spacenav_scale.yaml"/> -->
+  <!--   <remap from="joy" to="spacenav/joy"/> -->
+  <!--   <param name="start_on_init" type="bool" value="true"/> -->
+  <!-- </node> -->
 
   <!-- ^^^^^^^^^^ -->
   <!-- >>>TEMP<<< -->
@@ -30,15 +30,15 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="teleop_origin_broadcaster" args="-0.5377569885 -0.0014016089 0.2435178121 0 0 3.14159 rpbi/world teleop_origin"/>
 
   <!-- Teleop transform -->
-  <node pkg="teleop" type="teleop_tf_node.py" name="teleop_tf" output="screen">
-    <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/teleop.yaml"/>
-    <param name="start_on_init" type="bool" value="true"/>
-  </node>
+  <!-- <node pkg="teleop" type="teleop_tf_node.py" name="teleop_tf" output="screen"> -->
+  <!--   <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/teleop.yaml"/> -->
+  <!--   <param name="start_on_init" type="bool" value="true"/> -->
+  <!-- </node> -->
 
   <!-- IK -->
   <!-- == -->
 
-  <node pkg="ik_ros" name="ik_setup" type="ik_setup_node.py" args="pybullet" output="screen">
+  <node pkg="ik_ros" name="ik_setup" type="ik_setup_node.py" args="pybullet">
     <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/ik.yaml"/>
     <param name="start_on_init" type="bool" value="true"/>
     <remap from="ik/setup/pybullet/currentPosition" to="rpbi/kuka_lwr/joint_states"/>
@@ -49,7 +49,7 @@
   <!-- ========== -->
 
   <!-- ROS-Pybullet interface node simulator -->
-  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py" output="screen">
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py" >
     <rosparam param="config" file="$(find rpbi_examples)/configs/human_interaction/config.yaml"/>
   </node>
 
@@ -66,6 +66,6 @@
   <!-- =========== -->
 
   <!-- TODO -->
-  <!-- <node pkg="rpbi_examples" name="run" type="run_human_interaction.py" output="screen"/> -->
+  <node pkg="rpbi_examples" name="run" type="run_human_interaction.py" output="screen"/>
 
 </launch>
