@@ -18,6 +18,7 @@ include_directories(
 )
 
 catkin_install_python(PROGRAMS
+  scripts/rpbi_controls_node.py
   scripts/interpolation_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

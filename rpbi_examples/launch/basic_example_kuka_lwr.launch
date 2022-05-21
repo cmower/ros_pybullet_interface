@@ -10,7 +10,7 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="camera_tf" args="0 -1.5 1.5 0 0 -2.3 rpbi/world rpbi/camera"/>
 
   <!-- Controls -->
-  <node pkg="ros_pybullet_interface" name="controls" type="rpbi_controls_node.py" output="screen"/>
+  <node pkg="rpbi_utils" name="controls" type="rpbi_controls_node.py" output="screen"/>
 
   <!-- Example node that generates target joint positions -->
   <node pkg="rpbi_examples" name="example" type="basic_robot_example_node.py" args="kuka_lwr" output="screen"/>
