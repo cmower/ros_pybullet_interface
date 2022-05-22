@@ -1,3 +1,5 @@
+.. _mainconfig:
+
 Main Configuration
 ==================
 
