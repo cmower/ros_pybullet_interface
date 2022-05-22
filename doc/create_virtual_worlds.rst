@@ -15,3 +15,6 @@ Dynamic Object
 
 Visual Object
 -------------
+
+Soft bodies
+-----------
