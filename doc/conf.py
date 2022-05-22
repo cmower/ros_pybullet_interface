@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'ROS-PyBullet Interface'
-copyright = '2022, Christopher E. Mower, Theodoros Stouraitis, Sethu Vijayakumar'
+copyright = '2022, Christopher E. Mower, Theodoros Stouraitis, Sethu Vijayakumar, University of Edinburgh'
 author = 'Christopher E. Mower'
 
 
