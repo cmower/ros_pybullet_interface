@@ -3,7 +3,7 @@ name: 'visual_sphere'
 createVisualShape:
   shapeType: "GEOM_SPHERE"
   radius: 0.2
-  rgbaColor: [0.0, 1.0, 1, 0.6]
+  rgbaColor: [0.0, 1.0, 1, 1.0]
 
 object_tf:
   tf_id: "figure_eight"
