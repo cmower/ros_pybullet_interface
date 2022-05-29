@@ -13,12 +13,12 @@ This work is supported by `The Alan Turing Institute <https://www.turing.ac.uk/>
 
 The main contributors to the development of the ROS-PyBullet Interface are as follows.
 
-* `Christopher E. Mower <https://cmower.github.io/>`_
-* `Theodoros Stouraitis <https://stoutheo.github.io/>`_
-* `Lei Yan <https://sites.google.com/view/lei-yan>`_
-* `João Moura <https://web.inf.ed.ac.uk/slmc>`_
-* `Christian Rauch <https://scholar.google.de/citations?user=xb8x12AAAAAJ&hl=de>`_
-* `Nazanin Zamani Behabadi <https://www.linkedin.com/in/nazzb/>`_
-* `Michael Giegner <https://scholar.google.de/citations?user=oU2jyxMAAAAJ&hl=de>`_
-* `Christos Bergeles <https://rvim.online/author/christos-bergeles/>`_
-* `Sethu Vijayakumar <https://homepages.inf.ed.ac.uk/svijayak/>`_
+* `Christopher E. Mower <https://cmower.github.io/>`_, King's College London, UK.
+* `Theodoros Stouraitis <https://stoutheo.github.io/>`_, University of Edinburgh, Edinburgh, UK.
+* `Lei Yan <https://sites.google.com/view/lei-yan>`_, Harbin Institute of Technology, Shenzhen, China.
+* `João Moura <https://web.inf.ed.ac.uk/slmc>`_, University of Edinburgh, Edinburgh, UK.
+* `Christian Rauch <https://scholar.google.de/citations?user=xb8x12AAAAAJ&hl=de>`_, University of Edinburgh, Edinburgh, UK.
+* `Nazanin Zamani Behabadi <https://www.linkedin.com/in/nazzb/>`_, London, UK.
+* `Michael Giegner <https://scholar.google.de/citations?user=oU2jyxMAAAAJ&hl=de>`_, Honda Research Institute, Offenbach, Germany.
+* `Christos Bergeles <https://rvim.online/author/christos-bergeles/>`_, King's College London, UK.
+* `Sethu Vijayakumar <https://homepages.inf.ed.ac.uk/svijayak/>`_, University of Edinburgh, Edinburgh, UK.
