@@ -41,16 +41,22 @@ resetDebugVisualizerCamera:
   cameraDistance: 3
   cameraYaw: -420
   cameraPitch: -30
-  cameraTargetPosition: [0.3, 0.9, 0]
+  cameraTargetPosition: [0.3, 0.8, 0.7]
 
 
 #
 # Pybullet objects
 #
-collision_objects:
-  - "{rpbi_examples}/configs/soft_body/floor.yaml"
+
+urdfs:
+  - "{rpbi_examples}/configs/soft_body/plane.yaml"
+  - "{rpbi_examples}/configs/soft_body/cube.yaml"
+  # - "{rpbi_examples}/configs/soft_body/torus_deform.yaml"  
+# collision_objects:
+  # - "{rpbi_examples}/configs/soft_body/floor.yaml"
 soft_objects:
   - "{rpbi_examples}/configs/soft_body/torus.yaml"
+
 
 
 controls:
