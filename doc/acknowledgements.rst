@@ -16,7 +16,7 @@ The main contributors to the development of the ROS-PyBullet Interface are as fo
 * `Christopher E. Mower <https://cmower.github.io/>`_
 * `Theodoros Stouraitis <https://stoutheo.github.io/>`_
 * `Lei Yan <https://sites.google.com/view/lei-yan>`_
-* `João Moura <https://web.inf.ed.ac.uk/slmc`_
+* `João Moura <https://web.inf.ed.ac.uk/slmc>`_
 * `Christian Rauch <https://scholar.google.de/citations?user=xb8x12AAAAAJ&hl=de>`_
 * `Nazanin Zamani Behabadi <https://www.linkedin.com/in/nazzb/>`_
 * `Michael Giegner <https://scholar.google.de/citations?user=oU2jyxMAAAAJ&hl=de>`_
