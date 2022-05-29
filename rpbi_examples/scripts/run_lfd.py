@@ -209,6 +209,8 @@ class Node:
         # Generate plan
         rospy.loginfo('generating plan from learned dmp...')
         pos0 = self.eff.get_pos()
+        rlim = 0.1
+        pos0[:2] += np.random.uniform(-rlim, rlim, size=(2,))
         vel0 = np.zeros(3)
         t0 = 0.0
         goal_thresh = np.array([0.03, 0.03, 0.03])
