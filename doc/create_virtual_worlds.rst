@@ -1,9 +1,6 @@
 Create Virutal Worlds
 =====================
 
-Loading from URDF
------------------
-
 Robot
 -----
 
@@ -18,3 +15,6 @@ Visual Object
 
 Soft bodies
 -----------
+
+Loading from URDF
+-----------------
