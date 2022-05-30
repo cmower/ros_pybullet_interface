@@ -16,3 +16,4 @@ Future work
 * Port GUI controls to RQT.
 * Add additional features to GUI interface, e.g. move to custom joint states.
 * Support loading from SDF and MuJoCo configuration files.
+* Update ROS communication features for loading objects from URDF configuration files.
