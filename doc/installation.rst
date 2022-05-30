@@ -20,6 +20,8 @@ Requirements
   * Other versions should work, provided Python 3 is installed
     
 * Python 3
+
+* ``urdf_parser_py``, see `here <http://wiki.ros.org/urdfdom_py>`_.
   
 
 From binaries
