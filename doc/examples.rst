@@ -22,6 +22,7 @@ The following list links to the launch file for all the currently available basi
 * `Talos <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_talos.launch>`_
 * `Kinova <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kinova.launch>`_
 * `Human model <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_human_model.launch>`_
+* `Nextage <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_nextage.launch>`_
 
 *Note*, the Kuka LWR example additional demonstrates how to start recording videos and also how to attach a Force-Torque sensor to a robot joint.  
 
