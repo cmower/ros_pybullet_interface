@@ -21,8 +21,7 @@ Configuration files
 We use `yaml <https://yaml.org/>`_ as the format for configuration files.
 Many of the tags used are directly passed to PyBullet functions.
 For example, take the `pybullet.setGravity <https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.d6ihmmtes1id>`_ method.
-To specify gravity, you can use this function in Python code.
-Here, you pass the input to this function in the main configuration file by setting
+In the ROS-PyBullet Interface node, during initialization of the PyBullet instance, if the user provides the ``setGravity`` tag, as follows, in the main yaml configuration file (full in next section) then the ``pybullet.setGravity`` method is called.
 
 .. code-block:: yaml
 
