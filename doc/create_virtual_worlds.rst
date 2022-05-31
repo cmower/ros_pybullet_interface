@@ -25,11 +25,11 @@ The parameters for specifying a robot are listed as follows.
 * ``broadcast_link_states`` [``bool``], when true the robot links for the robot are broadcast to ROS as ``tf2`` frames.
 * ``broadcast_link_states_hz`` [``int``], the frequency that the links of the robot are broadcast to ROS.
 * ``enabled_joint_force_torque_sensors`` [``list[str]``], list of joint names that have Force-Torque sensors enabled. Names of joints should correspond to those defined in the URDF. When these sensors are enabled, they are published to ROS with topic name ``rpbi/NAME/JOINTNAME/ft_sensor`` with type ``geometry_msgs/WrenchStamped`` where ``NAME`` is the PyBullet object name, and ``JOINTNAME`` is the given joint name.
-* ``is_visual_robot`` [``bool``], when ``true`` the robot is treated a visual object, i.e. it will not react to other objects in the environment and other objects will not react to the robot. This can be useful for debugging and also visualizing a real robot. 
+* ``is_visual_robot`` [``bool``], when ``true`` the robot is treated a visual object, i.e. it will not react to other objects in the environment and other objects will not react to the robot. This can be useful for debugging and also visualizing a real robot. The default value is ``false``.
 * ``do_log_joint_limit_violations`` [``bool``], when the robot is a visual robot if ``true`` then the joint limit violations are reported to the terminal.
 * ``log_joint_limit_violations_hz`` [``int``], the frequency that the joint limit violations are checked.
 * ``start_ik_callback`` [``bool``], when true a subscriber is started for the topic ``rpbi/NAME/ik`` of message type ``ros_pybullet_interface/CalculateInverseKinematicsProblem`` where ``NAME`` is the name of the Pybullet object. This allows you to implement task space controller. Rather than streaming target joint states to the robot, you can stream goal states (defined as a ``ros_pybullet_interface/CalculateInverseKinematicsProblem`` message).  This option can only be used when the robot is in the ``POSITION_CONTROL`` or ``VELOCITY_CONTROL`` control modes.
-* ``color_alpha`` [``float``], the alpha value for the robot in range [0.0, 1.0]. This allows you to make the robot transparent. By default, this option is not used.
+* ``color_alpha`` [``float``], the alpha value for the robot in range ``[0.0, 1.0]``. This allows you to make the robot transparent. By default, this option is not used.
 
 You can move the robot in several ways.
 The most common way is to stream target joint states by publishing to the topic ``rpbi/NAME/joint_states/target`` where ``NAME`` is the name of the Pybullet object.
@@ -38,8 +38,16 @@ Finally, several services are provided that will move the robot to desired state
 
 Several ROS services are started when a PyBullet robot is instantiated.
 These are listed as follows.
+*Note*, in the following ``NAME`` is the name of the Pybullet object.
 
-* hello
+* ``rpbi/NAME/robot_info`` [``ros_pybullet_interface/RobotInfo``], returns information about the robot (i.e. the name, link/joint names, body unique ID, number of joints, number of degrees of freedom, joint information from PyBullet ``pybullet.getJointInfo`` method, see the `documentation <https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.la294ocbo43o>`_, enabled Force-Torque sensors, and the current joint state).
+* ``rpbi/NAME/ik`` [``ros_pybullet_interface/CalculateInverseKinematics``], compute a single IK. The target joint state is returned.
+
+The following ROS services are only created for robots that are *not visual* (i.e. the tag ``is_visual_robot``, see above, is ommited or set to ``false``).
+
+* ``rpbi/NAME/move_to_joint_state`` [``ros_pybullet_interface/ResetJointState``], given a target joint state and duration the robot is moved from the current state to the goal. The duration (in seconds) is the time it will take for the robot to move from the current state to the goal state. *Note*, there is no collision avoidance.
+* ``rpbi/NAME/move_to_init_joint_state`` [``ros_pybullet_interface/ResetJointState``], moves the robot to the initial joint state specified in the yaml configuration file under the tag ``initial_joint_positions`` (see above). *Note*, we re-use the ``ros_pybullet_interface/ResetJointState`` service type here. That means when you call the service you will need to include the duration (i.e. time it takes for the robot to move from the current configuration to the goal) and an empty ``sensor_msgs/JointState`` message - the joint state message will be ignored. *Note*, there is no collision avoidance.
+* ``rpbi/NAME/move_to_eff_state`` [``ros_pybullet_interface/ResetEffState``], given a task space target and a duration the robot is moved from the current configuration to a goal configuration (computed using PyBullet's Inverse Kinematics feature). *Note*, there is no collision avoidnace.
  
 
 Collision Object
