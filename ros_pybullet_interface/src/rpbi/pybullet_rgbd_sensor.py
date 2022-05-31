@@ -13,7 +13,7 @@ class PybulletRGBDSensor(PybulletSensor):
     def init(self):
         self.cv_bridge = CvBridge()
 
-        self.cfg_camera = self.config['intrinsics']
+        self.cfg_camera = self.config.get('intrinsics', {})
 
         self.pubs['colour'] = self.node.Publisher('rpbi/camera/colour/image', Image, queue_size=10)
         self.pubs['depth'] = self.node.Publisher('rpbi/camera/depth/image', Image, queue_size=10)
