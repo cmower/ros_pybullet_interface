@@ -42,7 +42,7 @@ The PyBullet library uses the ``camelCase`` style for its methods/parameters, we
 There are some tags that are used to generate different behavior with regards to the interface itself.
 In this case, we use ``snake_case`` style to differentiate these parameters.
 The benefit for this style-guide is that it allows you to easily tell the difference between parameters that are linked to PyBullet and those that are linked to the interface.
-Furthermore, you can look up these functions/parameters in the `PyBullet Quickstart Guide <https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.2ye70wns7io3>`_.
+Furthermore, for the ``camelCase`` functions/parameters, you can look these up in the `PyBullet Quickstart Guide <https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.2ye70wns7io3>`_.
 Note, there are some exceptions to the rules however these are documented when necessary.
 
 Our basic "hello world example" is launched using `basic_example_kuka_lwr.launch <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kuka_lwr.launch>`_.
