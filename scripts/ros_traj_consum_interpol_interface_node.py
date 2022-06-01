@@ -24,7 +24,7 @@ import ros_pybullet_interface.interpolation as interpol
 # Constants
 # ------------------------------------------------------
 
-FREQ = 200 # Resolution of trajectory knots --- sampling frequency
+FREQ = 50 # Resolution of trajectory knots --- sampling frequency
 
 class TrajManager:
 
