@@ -615,7 +615,7 @@ if __name__=='__main__':
 
     # get object and robot state from pybullet
     print("Manual initial pose", initObjPos)
-    initObjPos, initObjVel = Initials.startEstimation()
+    # initObjPos, initObjVel = Initials.startEstimation()
     #
     # # throw rocket filters
     pos_low = np.array([-5.28,  -5.25,  0.0, -1.5, -0.2, -0.8])
@@ -780,6 +780,10 @@ if __name__=='__main__':
 
     time.sleep(0.1)
 
+    # Visualize the planning result for capturing flying object
+    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
+
+
     # activate streaming of commands
     # initIndex = initIndex-60 #15#10 #9 #6 #5
     # if PlanInterpWithTO.stateMachine(posBodyPre[:, initIndex]):
@@ -788,8 +792,6 @@ if __name__=='__main__':
         rospy.set_param('/stream_interpolated_motion_flag', True)
         print('Time till activation of execution:', time.time()-start_time)
 
-    # Visualize the planning result for capturing flying object
-    PlanInterpWithTO.HybOpt_DAC.plotResult(timeSeq, posBody, velBody, posLimb1, velLimb1, forLimb1, posLimb2, velLimb2, forLimb2, animateFlag=False)
 
 
     rospy.spin()
