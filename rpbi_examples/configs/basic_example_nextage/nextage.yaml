@@ -1,9 +1,9 @@
-name: "kuka_lwr"
+name: "nextage"
 
 loadURDF:
   fileName: "robot_description"
   useFixedBase: 1
-  basePosition: [0., 0., 0.9]
+  basePosition: [0., 0., 0.85]
 
 is_visual_robot: false
 
