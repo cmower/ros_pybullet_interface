@@ -17,3 +17,8 @@ Future work
 * Add additional features to GUI interface, e.g. move to custom joint states.
 * Support loading from SDF and MuJoCo configuration files.
 * Update ROS communication features for loading objects from URDF configuration files.
+
+Known issues
+------------
+
+* Objects with alpha color values less than 1.0 are rendedered in RGB images but not the depth image for the RGBD sensor simulation. To make sure the depth image contains the object, ensure the alpha value is set to 1.0.
