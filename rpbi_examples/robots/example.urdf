@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<robot name="tom">
+  <link name="link1">
+    <visual>
+      <origin xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.02"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="link2">
+    <visual>
+      <origin xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.02"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="link3">
+    <visual>
+      <origin xyz="0 0 0.1"/>
+      <geometry>
+        <cylinder length="0.2" radius="0.02"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="joint1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0.20"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="3.14159265359"/>
+    <parent link="link1"/>
+    <child link="link2"/>
+  </joint>
+
+  <joint name="joint2" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0.20"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="3.14159265359"/>
+    <parent link="link2"/>
+    <child link="link3"/>
+  </joint>
+</robot>
