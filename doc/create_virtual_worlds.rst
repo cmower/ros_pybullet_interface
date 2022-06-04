@@ -33,7 +33,8 @@ The parameters for specifying a robot are listed as follows.
 
 You can move the robot in several ways.
 The most common way is to stream target joint states by publishing to the topic ``rpbi/NAME/joint_states/target`` where ``NAME`` is the name of the Pybullet object.
-Another way is to stream task space targets, see the tag ``start_ik_callback`` above.
+Note, that joint state messages must include the ``name`` parameter, i.e. a list of joint names that specify the order of the ``position``/``velocity``/``effort`` attributes.
+Another way to generate motion is to stream task space targets, see the tag ``start_ik_callback`` above.
 Finally, several services are provided that will move the robot to desired states - see below.
 
 Several ROS services are started when a PyBullet robot is instantiated.
