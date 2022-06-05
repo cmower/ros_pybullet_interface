@@ -34,6 +34,8 @@ class Republish4Rviz(object):
         marker = Marker()
         self.plan_box_marker = self.makeMarker(marker, marker.CUBE, 0.55, 0.405, 0.415, 0.4, 0.5, 0.5, 0.5)
         marker = Marker()
+        self.plan_sphere_marker = self.makeMarker(marker, marker.SPHERE, 0.58, 0.58, 0.58, 0.4, 0.5, 0.5, 0.5)
+        marker = Marker()
         self.real_box_marker = self.makeMarker(marker, marker.CUBE, 0.55, 0.405, 0.415, 0.5, 0.5, 0.2, 0.3)
         marker = Marker()
         self.yin_sphere = self.makeMarker(marker, marker.SPHERE, 0.05, 0.05, 0.05, 1, 0.8, 0.8, 0.0)
@@ -62,10 +64,27 @@ class Republish4Rviz(object):
 
         return marker
 
+    def makeUserDefinedMarker(self, marker, type, x,y,z, a, r,g,b):
+
+        marker.header.frame_id = "ros_pybullet_interface/world"
+        marker.type = 10
+        marker.mesh_resource = "../objects/base.dae"
+
+        marker.action = marker.ADD
+        marker.scale.x = x
+        marker.scale.y = y
+        marker.scale.z = z
+        marker.color.a = a
+        marker.color.r = r
+        marker.color.g = g
+        marker.color.b = b
+
 
     def read_publ_all(self):
 
-        self.read_publish("ros_pybullet_interface/target_visual", self.pub_plan_box, self.plan_box_marker)
+        # self.read_publish("ros_pybullet_interface/target_visual", self.pub_plan_box, self.plan_box_marker)
+        self.read_publish("ros_pybullet_interface/target_visual", self.pub_plan_box, self.plan_sphere_marker)
+
         self.read_publish("vicon_offset/hanging_obj_plate/hanging_obj_plate", self.pub_real_box, self.real_box_marker)
 
         self.read_publish("ros_pybullet_interface/sphere", self.pub_yin_sphere, self.yin_sphere)
