@@ -26,7 +26,7 @@ import ros_pybullet_interface.utils as utils
 # Constants
 # ------------------------------------------------------
 
-FREQ = 200 # IK sampling frequency
+FREQ = 50 # IK sampling frequency
 TARGET_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/target' # publishes  for joint states on this topic
 CURRENT_JOINT_STATE_TOPIC = 'ros_pybullet_interface/joint_state/current' # listens joint states on this topic
 WORLD_FRAME_ID = 'ros_pybullet_interface/world'
