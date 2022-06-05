@@ -49,9 +49,10 @@
     <!-- List visual objects (optional) -->
     <rosparam param="visual_object_config_file_names">
       [
-     '{ros_pybullet_interface}/configs/sphere.yaml', 
-     '{ros_pybullet_interface}/configs/sphere2.yaml',
+     <!-- '{ros_pybullet_interface}/configs/sphere.yaml', 
+     '{ros_pybullet_interface}/configs/sphere2.yaml', -->
       '{ros_pybullet_interface}/configs/target_obj_visual_demo.yaml',
+<!--       '{ros_pybullet_interface}/configs/target_obj_visual_demo.yaml', -->
 <!--       '{ros_pybullet_interface}/configs/yang_workspace_visual.yaml', -->
 <!--       '{ros_pybullet_interface}/configs/yin_workspace_visual.yaml', -->
       ]
@@ -61,6 +62,8 @@
     <rosparam param="object_config_file_names">
       [
       '{ros_pybullet_interface}/configs/target_obj_demo.yaml',
+
+      <!-- '{ros_pybullet_interface}/configs/target_obj_demo.yaml', -->
       ]
     </rosparam>
 
@@ -199,7 +202,7 @@
   <!-- Testing node trajectory publisher -->
   <node name="test_dual_arm_capturing_obj3D"
       pkg="ros_pybullet_interface"
-      type="test_dual_arm_catching_FlyingObject.py"
+      type="test_dual_arm_catching_FlyingArbitraryObject.py"
       output="screen">
 
 <!-- type="test_dual_arm_capturing_prediction_v3.py" -->
