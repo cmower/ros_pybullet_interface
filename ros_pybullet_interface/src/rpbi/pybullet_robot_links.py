@@ -20,7 +20,7 @@ class Links:
         # Iterate over joints
         link_states = self.pb_obj.pb.getLinkStates(self.pb_obj.body_unique_id, self.joints.indices, computeForwardKinematics=1)
         for joint, link_state in zip(self.joints, link_states):
-            self.pb_obj.node.tf.set_tf('rpbi/world', f'rpbi/{self.pb_obj.name}/{joint.linkName}', link_state[0], link_state[1])
+            self.pb_obj.node.tf.set_tf('rpbi/world', f'rpbi/{self.pb_obj.name}/{joint.linkName}', link_state[4], link_state[5])
 
     @property
     def broadcast_link_states(self):
