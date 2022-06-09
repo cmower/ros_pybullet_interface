@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
+<!-- Model modified based on: https://github.com/robotology/human-gazebo -->
+
+
 <!--URDF MODEL 48 DoFs-->
 
 <robot name="XSensStyleModel_template">
