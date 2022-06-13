@@ -21,5 +21,6 @@ catkin_install_python(PROGRAMS
   scripts/rpbi_controls_node.py
   scripts/interpolation_node.py
   scripts/map_geomagic_touch_x_to_tf.py
+  scripts/control_debug_visualizer_camera_with_touch_x.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
