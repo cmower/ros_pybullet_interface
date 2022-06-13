@@ -4,6 +4,10 @@ import numpy as np
 from geometry_msgs.msg import PoseStamped
 from custom_ros_tools.tf import TfInterface
 
+"""
+This node maps geometry_msgs/PoseStamped messages to tf messages.
+"""
+
 class Node:
 
     def __init__(self):
