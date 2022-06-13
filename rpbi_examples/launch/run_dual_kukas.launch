@@ -1,0 +1,11 @@
+<launch>
+
+  <!-- ROS-Pybullet interface -->
+  <node pkg="ros_pybullet_interface" name="ros_pybullet_interface" type="ros_pybullet_interface_node.py" output="screen">
+    <rosparam param="config" file="$(find rpbi_examples)/configs/run_kuka/config_dual.yaml"/>
+  </node>
+
+  <!-- Static transforms -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf" args="0 0 0 0 0 0 rpbi/world rpbi/floor"/>
+
+</launch>
