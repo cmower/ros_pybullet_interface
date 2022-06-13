@@ -20,5 +20,6 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/rpbi_controls_node.py
   scripts/interpolation_node.py
+  scripts/map_geomagic_touch_x_to_tf.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
