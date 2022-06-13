@@ -43,8 +43,8 @@ robots:
   # - "{rpbi_examples}/configs/run_pose/human_model.yaml"
   # - "{rpbi_examples}/configs/run_pose/kinova.yaml"  
 
-# collision_objects:
-  # - "{rpbi_examples}/configs/floor.yaml"
+collision_objects:
+  - "{rpbi_examples}/configs/floor.yaml"
 
 visual_objects:
   - "{rpbi_examples}/configs/run_pose/whiteboard.yaml"
