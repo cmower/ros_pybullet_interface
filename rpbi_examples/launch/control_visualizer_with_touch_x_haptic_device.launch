@@ -1,0 +1,20 @@
+<launch>
+
+  <include file="$(find geomagic_touch_x_ros)/launch/basic_control.launch"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="haptic" args="1 1 1 1.5 0 0 rpbi/world haptic"/>
+
+  <include file="$(find rpbi_examples)/launch/run_dual_kukas.launch"/>
+
+  <node pkg="rpbi_utils" name="mapper" type="map_geomagic_touch_x_to_tf.py">
+    <param name="parent_frame_id" type="str" value="haptic"/>
+    <param name="child_frame_id" type="str" value="haptic_pose"/>
+  </node>
+
+  <node pkg="rpbi_utils" name="visualizer_control" type="control_debug_visualizer_camera_with_touch_x.py">
+    <param name="parent_frame_id" type="str" value="rpbi/world"/>
+    <param name="child_frame_id" type="str" value="haptic_pose"/>    
+  </node>
+  
+  
+</launch>
