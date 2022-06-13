@@ -28,8 +28,8 @@ configureDebugVisualizer:
 
 resetDebugVisualizerCamera:
   cameraDistance: 2.0
-  cameraYaw: 45
-  cameraPitch: -45.0
+  cameraYaw: 135
+  cameraPitch: -30.0
   cameraTargetPosition: [0.0, 0.0, 0.75]
 
 
@@ -43,8 +43,8 @@ robots:
   # - "{rpbi_examples}/configs/run_pose/human_model.yaml"
   - "{rpbi_examples}/configs/run_pose/kinova.yaml"  
 
-# collision_objects:
-#   - "{rpbi_examples}/configs/floor.yaml"
+collision_objects:
+  - "{rpbi_examples}/configs/floor.yaml"
 
 visual_objects:
   - "{rpbi_examples}/configs/run_pose/table.yaml"  
