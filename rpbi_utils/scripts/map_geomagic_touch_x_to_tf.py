@@ -5,7 +5,7 @@ from geometry_msgs.msg import PoseStamped
 from custom_ros_tools.tf import TfInterface
 
 """
-This node maps geometry_msgs/PoseStamped messages to tf messages.
+This node maps geometry_msgs/PoseStamped messages from the TouchX driver to tf messages.
 """
 
 class Node:
