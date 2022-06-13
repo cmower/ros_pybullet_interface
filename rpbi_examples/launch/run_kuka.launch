@@ -9,7 +9,7 @@
   <node pkg="tf2_ros" type="static_transform_publisher" name="floor_tf" args="0 0 0 0 0 0 rpbi/world rpbi/floor"/>
 
   <!-- Controls -->
-  <node pkg="ros_pybullet_interface" name="controls" type="rpbi_controls_node.py" output="screen">
+  <node pkg="rpbi_utils" name="controls" type="rpbi_controls_node.py" output="screen">
     <rosparam param="config" file="$(find rpbi_examples)/configs/run_kuka/config.yaml"/>
   </node>
 
