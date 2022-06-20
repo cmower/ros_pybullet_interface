@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<!-- Model modified based on: https://github.com/robotology/human-gazebo -->
+<!--
+  Model modified based on: https://github.com/robotology/human-gazebo
+  See licence at doc/thirdparty_human_urdf_LICENSE
+-->
 
 
 <!--URDF MODEL 48 DoFs-->
