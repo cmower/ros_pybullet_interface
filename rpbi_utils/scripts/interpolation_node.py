@@ -10,7 +10,6 @@ from scipy.spatial.transform import Slerp
 # ROS message types
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Float64MultiArray
-from std_msgs.msg import Float32
 
 import rpbi_utils.interpolation as interpol
 from custom_ros_tools.config import load_config
@@ -20,15 +19,13 @@ from custom_ros_tools.config import load_config
 # Constants
 # ------------------------------------------------------
 
-FREQ = 200  # Resolution of trajectory knots --- sampling frequency
-
 
 class TrajManager:
 
     def __init__(self, mot_dim, interpol):
 
         self.nochange_win_len = interpol['nochange_window_length']
-        self.interFreq = 1.0/interpol['interDt']
+        self.interFreq = 1.0/interpol['inter_dt']
         self.use_interp = interpol['use_interpolation']
 
         # number of dimentions of the trajectory plan
@@ -54,20 +51,20 @@ class TrajManager:
         """A function that maps dimensions of the Traj to 6D"""
 
         # translation
-        if self.mot_dim['trans']['translationX'] is not None:
-            x = self.mot_dim['trans']['translationX']
+        if self.mot_dim['trans']['translation_x'] is not None:
+            x = self.mot_dim['trans']['translation_x']
         else:
-            x = way_pt[self.mot_dim['trans']['translationX_index']]
+            x = way_pt[self.mot_dim['trans']['translation_x_index']]
 
-        if self.mot_dim['trans']['translationY'] is not None:
-            y = self.mot_dim['trans']['translationY']
+        if self.mot_dim['trans']['translation_y'] is not None:
+            y = self.mot_dim['trans']['translation_y']
         else:
-            y = way_pt[self.mot_dim['trans']['translationY_index']]
+            y = way_pt[self.mot_dim['trans']['translation_y_index']]
 
-        if self.mot_dim['trans']['translationZ'] is not None:
-            z = self.mot_dim['trans']['translationZ']
+        if self.mot_dim['trans']['translation_z'] is not None:
+            z = self.mot_dim['trans']['translation_z']
         else:
-            z = way_pt[self.mot_dim['trans']['translationZ_index']]
+            z = way_pt[self.mot_dim['trans']['translation_z_index']]
 
         pos = np.array([x, y, z])
 
@@ -212,22 +209,22 @@ class TrajManager:
         else:
             # for each translational dimension of the motion compute the interpolated trajectory
             # using position and derivatives
-            if self.mot_dim['trans']['translationX'] is None:
-                i = self.mot_dim['trans']['translationX_index']
+            if self.mot_dim['trans']['translation_x'] is None:
+                i = self.mot_dim['trans']['translation_x_index']
                 interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(
                     time_vector[0, :], traj_plan[i, :], dtraj_plan[i, :], sampleFreq=self.interFreq, plotFlag=False, plotTitle="XVsTime")
                 tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
                 row_len += 1
 
-            if self.mot_dim['trans']['translationY'] is None:
-                i = self.mot_dim['trans']['translationY_index']
+            if self.mot_dim['trans']['translation_y'] is None:
+                i = self.mot_dim['trans']['translation_y_index']
                 interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(
                     time_vector[0, :], traj_plan[i, :], dtraj_plan[i, :], sampleFreq=self.interFreq, plotFlag=False, plotTitle="YVsTime")
                 tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
                 row_len += 1
 
-            if self.mot_dim['trans']['translationZ'] is None:
-                i = self.mot_dim['trans']['translationZ_index']
+            if self.mot_dim['trans']['translation_z'] is None:
+                i = self.mot_dim['trans']['translation_z_index']
                 interSeqTime, interSeq_I = interpol.interpolateCubicHermiteSpline(
                     time_vector[0, :], traj_plan[i, :], dtraj_plan[i, :], sampleFreq=self.interFreq, plotFlag=False, plotTitle="ZVsTime")
                 tempMotionInterpPlan = np.append(tempMotionInterpPlan, interSeq_I, axis=0)
@@ -272,13 +269,14 @@ class ROSTrajInterface(object):
         # Initialization message
         rospy.loginfo("%s: Initializing class", self.name)
 
+        # Setup constants
+        consuming_freq = rospy.get_param('~consuming_freq', 100)
+        self.dt = 1.0/float(consuming_freq)
+
         # safety check
-        if FREQ > 200:
+        if consuming_freq > 200:
             rospy.loginfo("%s: Shutting down to high FREQUENCY of consuming in node ", self.name)
             self.cleanShutdown()
-
-        # Setup constants
-        self.dt = 1.0/float(FREQ)
 
         # Get ros parameters
         self.traj_config_file_name = rospy.get_param('~traj_config')
@@ -323,7 +321,7 @@ class ROSTrajInterface(object):
         self.msg_child_frame_id = f"{namespace}/{config['communication']['publisher']['msg_child_frame_id']}"
 
         # set info for listener
-        self.current_traj_topic = f"{namespace}/{config['communication']['listener']['topic']}"
+        self.current_traj_topic = "ros_pybullet_interface/waypt_traj"
 
         # Create trajectory manager instance
         self.trajManag = TrajManager(mot_dim, interpol)
