@@ -28,7 +28,7 @@ configureDebugVisualizer:
 
 resetDebugVisualizerCamera:
   cameraDistance: 1.0
-  cameraYaw: 45
+  cameraYaw: -45
   cameraPitch: -45.0
   cameraTargetPosition: [-0.6, 0.0, 0.3]
 
