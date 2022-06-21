@@ -48,6 +48,11 @@
   <node  pkg="rpbi_utils" name="interpolation"  type="interpolation_node.py" output="screen">
     <!-- Traj config (required) -->
     <param name="traj_config" value="$(find rpbi_examples)/configs/interpolation/traj_lwr.yaml" type="str"/>
+    <param name="consuming_freq" value="100.0" type="double"/>
+
+    <remap from="ros_pybullet_interface/waypt_traj" to="kuka_lwr/ros_pybullet_interface/end_effector/waypt_traj"/>
+
+
  </node>
 
   <!-- Run example -->
@@ -55,7 +60,7 @@
 
   <node pkg="rpbi_examples" name="run" type="run_interpolation.py" output="screen">
     <!-- Waypoints topic (required) -->
-    <param name="topic_name_4_waypoints" value="ros_pybullet_interface/end_effector/traj" type="str"/>
+    <param name="topic_name_4_waypoints" value="kuka_lwr/ros_pybullet_interface/end_effector/waypt_traj" type="str"/>
   </node>
 
 </launch>

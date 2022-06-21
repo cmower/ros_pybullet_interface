@@ -2,12 +2,12 @@ motion_dimensions:
   number: 7
 
   trans:
-    translationX:
-    translationX_index: 0
-    translationY:
-    translationY_index: 1
-    translationZ:
-    translationZ_index: 2
+    translation_x:
+    translation_x_index: 0
+    translation_y:
+    translation_y_index: 1
+    translation_z:
+    translation_z_index: 2
 
   #  'Quat' and [3,7] for quaternion, 'Euler' and [3,6] for euler angles
   rotation:
@@ -20,11 +20,9 @@ motion_dimensions:
 interpolation:
   nochange_window_length: 1
   use_interpolation: True
-  interDt: 0.005
+  inter_dt: 0.005
 
 communication:
   publisher:
     header_frame_id: 'rpbi/kuka_lwr/lwr_arm_0_link'
     msg_child_frame_id: 'interpol_target'
-  listener:
-      topic: 'ros_pybullet_interface/end_effector/traj'

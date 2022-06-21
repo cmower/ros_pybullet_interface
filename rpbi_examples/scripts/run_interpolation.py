@@ -16,25 +16,22 @@ class Node:
         # initialize empty trajectory plan
         self.trajPlan = np.empty(0)
 
-        if rospy.has_param('~topic_name_4_waypoints'):
-            wpts_topic_name = rospy.get_param('~topic_name_4_waypoints')
-        else:
-            rospy.logerr(
-                f"The topic where the waypoints are to be published is not set in {rospy.get_name()}")
-            sys.exit(0)
+        # topic where sequence of waypoints is published
+        wpts_topic_name = rospy.get_param(
+            '~topic_name_4_waypoints', 'ros_pybullet_interface/waypt_traj')
 
         # init the publisher
         self.new_traj_publisher = rospy.Publisher(
             f"{wpts_topic_name}", Float64MultiArray, queue_size=1)
 
-    def publishTrajectory(self, event):
+    def publish_trajectory(self, event):
 
-        message = self.np2DtoROSmsg(self.trajPlan)
+        message = self.np2D_to_ROSmsg(self.trajPlan)
 
         if message is not None:
             self.new_traj_publisher.publish(message)
 
-    def np2DtoROSmsg(self, data2Darray):
+    def np2D_to_ROSmsg(self, data2Darray):
 
         # check if there is nothing to publish
         if data2Darray.size == 0:
@@ -71,17 +68,17 @@ class Node:
         # Execute plan
         rospy.loginfo('generating waypoints ...')
 
-        init_eff_pos = None
-        while (init_eff_pos is None):
-            init_eff_pos, init_eff_rot = self.tf.get_tf(
-                'rpbi/world', 'rpbi/kuka_lwr/end_effector_ball')
+        # init_eff_pos = None
+        # while (init_eff_pos is None):
+        init_eff_pos, init_eff_rot = self.tf.wait_for_tf(
+            'rpbi/world', 'rpbi/kuka_lwr/end_effector_ball')
 
         #
         # Manually create a sequence of waypoints
         #
 
         # make the time axis of the waypoints
-        timeSeq = np.array([0.0, 9.0, 18.0, 27.0])
+        timeSeq = np.array([0.0, 4.0, 9.0, 14.0])
 
         # initial position of the robot
         initpose = np.hstack((init_eff_pos, init_eff_rot))
@@ -111,19 +108,18 @@ class Node:
 
         # publish the waypoint plan
         self.writeCallbackTimer = rospy.Timer(
-            rospy.Duration(1.0/float(2)), self.publishTrajectory)
+            rospy.Duration(1.0/float(2)), self.publish_trajectory)
 
         rospy.loginfo("Waypoints were published!")
 
     def spin(self):
-        rate = rospy.Rate(100.0)
-        while not rospy.is_shutdown():
-            rate.sleep()
+        rospy.spin()
 
 
 def main():
-    Node().exec_plan()
-    Node().spin()
+    node = Node()
+    node.exec_plan()
+    node.spin()
 
 
 if __name__ == '__main__':
