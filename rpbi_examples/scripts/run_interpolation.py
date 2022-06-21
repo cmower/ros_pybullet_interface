@@ -43,7 +43,7 @@ class Node:
 
         # check if there is nothing to publish
         if data2D_array.size == 0:
-            return None
+            return
 
         r, c = data2D_array.shape
 

@@ -47,7 +47,7 @@
 
 
   <!-- Interpolation -->
-  <!-- =========================== -->
+  <!-- ============= -->
   <node  pkg="rpbi_utils" name="interpolation"  type="interpolation_node.py" output="screen">
     <!-- Traj config (required) -->
     <param name="traj_config" value="$(find rpbi_examples)/configs/interpolation/traj_lwr.yaml" type="str"/>

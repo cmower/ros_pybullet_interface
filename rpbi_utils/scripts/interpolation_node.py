@@ -5,7 +5,6 @@ import rospy
 import tf2_ros
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from scipy.spatial.transform import Slerp
 
 # ROS message types
 from geometry_msgs.msg import TransformStamped
