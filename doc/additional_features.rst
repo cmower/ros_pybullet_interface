@@ -129,9 +129,9 @@ interpolation related parameters
 
 output related parameters
 
-* ``[communication][publisher][header_frame_id]` [``str``] (required), specifies header_frame_id of the TF streamed in /tf.
+* ``[communication][publisher][header_frame_id]`` [``str``] (required), specifies header_frame_id of the TF streamed in /tf.
 
-* ``[communication][publisher][msg_child_frame_id]` [``str``] (required), specifies msg_child_frame_id of the TF streamed in /tf.
+* ``[communication][publisher][msg_child_frame_id]`` [``str``] (required), specifies msg_child_frame_id of the TF streamed in /tf.
 
 
 ik_ros
