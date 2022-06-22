@@ -1,7 +1,7 @@
 Create Virutal Worlds
 =====================
 
-A virutal world can be created by listing the objects in the main configuration file (see the previous ection).
+A virtual world can be created by listing the objects in the main configuration file (see the previous section).
 In addition, PyBullet objects can be added programatically (see the next section of the documentation) or even from the command line using ``$ rosservice call``.
 We give full details for the the available PyBullet object types in the following sub-sections.
 
@@ -49,7 +49,7 @@ The following ROS services are only created for robots that are *not visual* (i.
 * ``rpbi/NAME/move_to_joint_state`` [``ros_pybullet_interface/ResetJointState``], given a target joint state and duration the robot is moved from the current state to the goal. The duration (in seconds) is the time it will take for the robot to move from the current state to the goal state. *Note*, there is no collision avoidance.
 * ``rpbi/NAME/move_to_init_joint_state`` [``ros_pybullet_interface/ResetJointState``], moves the robot to the initial joint state specified in the yaml configuration file under the tag ``initial_joint_positions`` (see above). *Note*, we re-use the ``ros_pybullet_interface/ResetJointState`` service type here. That means when you call the service you will need to include the duration (i.e. time it takes for the robot to move from the current configuration to the goal) and an empty ``sensor_msgs/JointState`` message - the joint state message will be ignored. *Note*, there is no collision avoidance.
 * ``rpbi/NAME/move_to_eff_state`` [``ros_pybullet_interface/ResetEffState``], given a task space target and a duration the robot is moved from the current configuration to a goal configuration (computed using PyBullet's Inverse Kinematics feature). *Note*, there is no collision avoidnace.
- 
+
 
 Collision Object
 ----------------
@@ -60,9 +60,9 @@ The parameters to setup this object are listed as follows.
 
 * ``createVisualShape`` (required), see PyBullet documentation.
 * ``createCollisionShape`` (required), see PyBullet documentation.
-* ``changeDynamics``, see PyBullet documentation.  
+* ``changeDynamics``, see PyBullet documentation.
 * ``object_tf``, if unspecified the default is the identity.
-  
+
   * ``tf_id`` [``str``], the ``tf2`` frame ID that defines the camera pose. This frame **must** be defined with respect to the ``rpbi/world`` frame.
   * ``hz`` [``int``], the frequency that the pose is queried. Default is ``30``.
 
@@ -80,8 +80,8 @@ The parameters for this object type are as follows.
 * ``basePosition`` [``list[float]``], base position in the ``rpbi/world`` frame.
 * ``baseOrientation`` [``list[float]``], base orientation in the ``rpbi/world`` frame (as a quaternion).
 * ``resetBaseVelocity``, see PyBullet documentation. Note, the ``bodyUniqueId`` does not need to be passed. This will specify the initial velocity of the object.
-* ``broadcast_hz`` [``int``], this is the frequency that the object pose is broadcast to ``tf2``. Default is ``0`` (i.e. the pose is not broadcast). The frame is always published with respect to the ``rpbi/world`` frame and given the name ``rpbi/NAME`` where ``NAME`` is the name of the PyBullet object. 
-  
+* ``broadcast_hz`` [``int``], this is the frequency that the object pose is broadcast to ``tf2``. Default is ``0`` (i.e. the pose is not broadcast). The frame is always published with respect to the ``rpbi/world`` frame and given the name ``rpbi/NAME`` where ``NAME`` is the name of the PyBullet object.
+
 Visual Object
 -------------
 
@@ -91,11 +91,11 @@ To specify this object the following parameters can be used.
 
 * ``createVisualShape`` (required), see the PyBullet documentation. Note the ``fileName`` can be given relative to a ROS package using curley brackets ``{ros_package}``. Also, the ``shapeType`` parameter can be passed as a string.
 * ``object_tf``, if unspecified the default is the identity.
-  
+
   * ``tf_id`` [``str``], the ``tf2`` frame ID that defines the camera pose. This frame **must** be defined with respect to the ``rpbi/world`` frame.
   * ``hz`` [``int``], the frequency that the pose is queried. Default is ``30``.
-  
-  
+
+
 
 Soft bodies
 -----------
