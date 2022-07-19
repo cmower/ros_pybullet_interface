@@ -2,11 +2,13 @@
 import sys
 import math
 import rospy
+from std_srvs.srv import SetBool
 from std_msgs.msg import Int64
 from sensor_msgs.msg import JointState
 from ros_pybullet_interface.srv import RobotInfo
 from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
 from custom_ros_tools.ros_comm import get_srv_handler
+from custom_ros_tools.robot import get_joint_state
 
 class Node:
 
@@ -45,18 +47,38 @@ class Node:
         self.position = [0.0]*self.ndof
         self.d = 1
         self.traj_index = 0
-        self.joint_traj = [math.sin(0.5*2.0*math.pi*float(i)/100.0) for i in range(200)]
+        n = 800
+        self.joint_traj = [math.sin(2.0*0.5*2.0*math.pi*float(i)/float(n)) for i in range(n)]
+
+        # Get service for moving simulated robot to joint state
+        move_handle = get_srv_handler(f'rpbi/{robot_name}/move_to_joint_state', ResetJointState, persistent=True)
+
+        # Check if we are running a real robot
+        real_robot = rospy.get_param('~real_robot', False)
+        if real_robot:
+
+            # sync simulator with real robot
+            topic = rospy.get_param('~real_robot_joint_states_topic', 'joint_states')
+            curr_js = get_joint_state(topic=topic)
+            duration = 0.5 # secs
+            move_handle(curr_js, duration)
+
+            # Start remapper
+            rospy.sleep(2.0)
+            self.remapper_handle = get_srv_handler('remap_joint_state/toggle', SetBool, persistent=True)
+            self.remapper_handle(True)
 
         # Move robot to initial goal state
         rospy.loginfo('moving robot to initial joint state')
         duration = 3.0
-        handle = get_srv_handler(f'rpbi/{robot_name}/move_to_joint_state', ResetJointState)
-        handle(self.get_goal_joint_state(), duration)
+        move_handle(self.get_goal_joint_state(), duration)
 
         # Setup joint target state publisher
         self.pub = rospy.Publisher(target_joint_state_topic, JointState, queue_size=10)
 
         # Start timer
+        if real_robot:
+            rospy.sleep(2.0)
         rospy.Timer(dur, self.publish_joint_state)
 
         rospy.loginfo('initialized basic example')
@@ -91,7 +113,6 @@ class Node:
 
     def spin(self):
         rospy.spin()
-
 
 def main():
     Node().spin()
