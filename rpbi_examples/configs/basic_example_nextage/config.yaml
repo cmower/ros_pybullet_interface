@@ -38,8 +38,8 @@ resetDebugVisualizerCamera:
 #
 collision_objects:
   - "{rpbi_examples}/configs/floor.yaml"
-visual_objects:
-  - "{rpbi_examples}/configs/basic_example_nextage/table.yaml"  
+# visual_objects:
+#   - "{rpbi_examples}/configs/basic_example_nextage/table.yaml"  
 robots:
   - "{rpbi_examples}/configs/basic_example_nextage/nextage.yaml"
 
@@ -48,15 +48,15 @@ robots:
 # Sensors
 #
 
-rgbd_sensor:
-  name: 'rgbd_sensor'
-  hz: 30
-  # this will project the depth to a point cloud
-  # pointcloud: True
-  intrinsics:
-    width: 640
-    height: 480
-    fov: 40
-    range: [0.01, 10000]
-  object_tf:
-    tf_id: 'rpbi/camera'
+# rgbd_sensor:
+#   name: 'rgbd_sensor'
+#   hz: 30
+#   # this will project the depth to a point cloud
+#   # pointcloud: True
+#   intrinsics:
+#     width: 640
+#     height: 480
+#     fov: 40
+#     range: [0.01, 10000]
+#   object_tf:
+#     tf_id: 'rpbi/camera'
