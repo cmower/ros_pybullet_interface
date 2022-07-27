@@ -1,4 +1,8 @@
 from custom_ros_tools.config import load_config
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+from std_msgs.msg import Int64MultiArray
+import numpy as np
 from ros_pybullet_interface.msg import ResetDebugVisualizerCamera
 from ros_pybullet_interface.srv import GetDebugVisualizerCamera, GetDebugVisualizerCameraResponse
 
@@ -33,10 +37,62 @@ class PybulletVisualizer:
         # Setup subcscriber
         self.node.Subscriber('rpbi/reset_debug_visualizer_camera', ResetDebugVisualizerCamera, self.callback)
 
+        self.pub_debug_vis = self.node.Publisher('rpbi/debug_visualizer_camera', ResetDebugVisualizerCamera, queue_size=10)
+        self.node.Timer(self.node.Duration(1.0/30.0), self.debug_visualizer_camera_publish)
+
+
+        # Setup publisher/timer for visualizer image
+        self.cv_bridge = CvBridge()
+        if self.publish_visualizer_image_hz > 0:
+            self.visualizer_image_pub = self.node.Publisher(
+                'rpbi/visualizer_image', Image, queue_size=10
+            )
+            self.visualizer_image_int_pub = self.node.Publisher(
+                'rpbi/visualizer_image_int', Int64MultiArray, queue_size=10
+            )
+            dt = 1.0/float(self.publish_visualizer_image_hz)
+            self.node.Timer(self.node.Duration(dt), self.publish_visualizer_image)
+
         # Setup service
         self.node.Service('rpbi/get_debug_visualizer_camera', GetDebugVisualizerCamera, self.service_get_debug_visualizer_camera)
 
         self.node.loginfo('initialized Pybullet visualizer')
+
+    def debug_visualizer_camera_publish(self, event):
+        msg = ResetDebugVisualizerCamera()
+        for key, value in self.reset_debug_visualizer_camera.items():
+            setattr(msg, key, value)
+        self.pub_debug_vis.publish(msg)
+
+    @property
+    def publish_visualizer_image_hz(self):
+        return self.node.config.get('publish_visualizer_image_hz', 0)
+
+    @property
+    def visualizer_image_height(self):
+        return self.node.config.get('visualizer_image_height', 480)
+
+    @property
+    def visualizer_image_width(self):
+        return self.node.config.get('visualizer_image_width', 640)
+
+    def publish_visualizer_image(self, event):
+
+        # Get image
+        _, _, colour, _, _ = self.pb.getCameraImage(
+            self.visualizer_image_width,
+            self.visualizer_image_height,
+            renderer=self.pb.ER_BULLET_HARDWARE_OPENGL,
+        )
+
+        self.visualizer_image_int_pub.publish(Int64MultiArray(data=colour.flatten().astype(int).tolist()))
+
+        # Pack message
+        msg = self.cv_bridge.cv2_to_imgmsg(colour[...,:3], encoding="rgb8")
+        msg.header.stamp = self.node.time_now()
+
+        # Publish image
+        self.visualizer_image_pub.publish(msg)
 
     @property
     def configure_debug_visualizer(self):
