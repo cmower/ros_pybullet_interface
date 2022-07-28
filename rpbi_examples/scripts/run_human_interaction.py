@@ -72,7 +72,8 @@ class Node:
         if self.zpos is None: return
 
         # Specify ik target
-        self.tf.set_tf('teleop_origin', 'teleop_target', [0, 0, self.zpos])
+        offsetz = -0.1
+        self.tf.set_tf('teleop_origin', 'teleop_target', [0, 0, self.zpos-offsetz])
 
         if self.dev_pos is None: return
         if self.ft_reading is None: return
