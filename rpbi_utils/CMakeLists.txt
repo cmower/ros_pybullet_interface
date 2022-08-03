@@ -20,5 +20,6 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/rpbi_controls_node.py
   scripts/interpolation_node.py
+  scripts/control_debug_visualizer_camera_by_tf.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
