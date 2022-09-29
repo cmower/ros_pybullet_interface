@@ -38,6 +38,6 @@ resetDebugVisualizerCamera:
 # Pybullet objects
 #
 robots:
-  - "{rpbi_examples}/configs/nsl/kuka_lwr.yaml"
+  - "{rpbi_examples}/configs/nsl_haption/kuka_lwr.yaml"
 collision_objects:
   - "{rpbi_examples}/configs/floor.yaml"

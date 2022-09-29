@@ -1,7 +1,7 @@
 <launch>
   
   <node pkg="ros_pybullet_interface" name="ros_pybullet_interface_node" type="ros_pybullet_interface_node.py">
-    <rosparam param="config" file="$(find rpbi_examples)/configs/nsl/config.yaml"/>
+    <rosparam param="config" file="$(find rpbi_examples)/configs/nsl_haption/config.yaml"/>
   </node>
 
   <node pkg="rpbi_utils" name="wrench_calibration" type="calibrate_wrench_node.py">
@@ -13,16 +13,16 @@
   <node pkg="keyboard" name="keyboard" type="keyboard"/>
 
   <!-- <node pkg="operator_node" name="keyboard_to_joy" type="keyboard_to_joy.py"> -->
-  <!--   <rosparam param="config" file="$(find rpbi_examples)/configs/nsl/keyboard_to_joy.yaml"/> -->
+  <!--   <rosparam param="config" file="$(find rpbi_examples)/configs/nsl_haption/keyboard_to_joy.yaml"/> -->
   <!-- </node> -->
 
   <!-- <node pkg="operator_node" name="keyboard_scale" type="isometric_node.py"> -->
-  <!--   <rosparam param="config" file="$(find rpbi_examples)/configs/nsl/keyboard_scale.yaml"/> -->
+  <!--   <rosparam param="config" file="$(find rpbi_examples)/configs/nsl_haption/keyboard_scale.yaml"/> -->
   <!--   <param name="start_on_init" type="bool" value="true"/> -->
   <!--   <remap from="operator_node/signal" to="goal"/> -->
   <!-- </node>   -->
 
-  <node pkg="rpbi_examples" name="nsl" type="nsl.py" output="screen"/>
+  <node pkg="rpbi_examples" name="nsl_haption" type="nsl_haption.py" output="screen"/>
 
   <node name="virtuose" pkg="virtuose" type="virtuose_node" output="screen"/>
 
