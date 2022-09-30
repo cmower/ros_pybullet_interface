@@ -3,6 +3,7 @@ from functools import partial
 from std_msgs.msg import Int64
 from std_srvs.srv import Trigger, TriggerResponse
 from rosgraph_msgs.msg import Clock
+from ros_pybullet_interface.msg import KeyboardEvent, MouseEvent
 
 
 class PybulletInstance:
@@ -46,6 +47,27 @@ class PybulletInstance:
 
         # Set physics engine parameters
         self.pb.setPhysicsEngineParameter(**self.set_physics_engine_parameter)
+
+        # Setup keyboard event publisher
+        self.keyboard_state_str_map = {
+            self.pb.KEY_IS_DOWN: 'key_is_down',
+            self.pb.KEY_WAS_TRIGGERED: 'key_was_triggered',
+            self.pb.KEY_WAS_RELEASED: 'key_was_released',
+        }
+        self.keyboard_event_pub = None
+        if self.enable_keyboard_publisher:
+            self.keyboard_event_pub = self.node.Publisher('rpbi/keyboard', KeyboardEvent, queue_size=1)
+            self.node.Timer(self.node.Duration(self.timeStep), self.keyboard_update)
+
+        # Setup mouse event publisher
+        self.mouse_event_pub = None
+        self.mouse_event_type_str_map = {
+            1: 'mouse_move_event',
+            2: 'mouse_button_event',
+        }
+        if self.enable_mouse_publisher:
+            self.mouse_event_pub = self.node.Publisher('rpbi/mouse', MouseEvent, queue_size=1)
+            self.node.Timer(self.node.Duration(self.timeStep), self.mouse_update)
 
         # Setup start/stop methods
         self.use_sim_time = False
@@ -141,6 +163,13 @@ class PybulletInstance:
         else:
             return self.node.config.get('step_pybullet_manually', False)
 
+    @property
+    def enable_keyboard_publisher(self):
+        return self.node.config.get('enable_keyboard_publisher', False)
+
+    @property
+    def enable_mouse_publisher(self):
+        return self.node.config.get('enable_mouse_publisher', False)
 
     def start_manual(self):
         """Start Pybullet"""
@@ -235,6 +264,30 @@ class PybulletInstance:
         if success:
             self.node.loginfo('%s Pybullet was successful', handle.__name__)
         return TriggerResponse(success=success, message=message)
+
+    def keyboard_update(self, event):
+        now = self.node.time_now()
+        for key, state in self.pb.getKeyboardEvents().items():
+            msg = KeyboardEvent(
+                key=key,
+                state=state,
+                state_str=self.keyboard_state_str_map.get(state, ''),
+            )
+            msg.header.stamp = now
+            self.keyboard_event_pub.publish(msg)
+
+    def mouse_update(self, event):
+        now = self.node.time_now()
+        for event in self.pb.getMouseEvents():
+            msg = MouseEvent(
+                event_type=event[0],
+                mouse_pos_x=event[1],
+                mouse_pos_y=event[2],
+                button_index=event[3],
+                button_state=event[4],
+                event_type_str=self.mouse_event_type_str_map.get(event[0], ''),
+                button_state_str=self.keyboard_state_str_map.get(event[4], ''),
+            )
 
 
     def close(self):
