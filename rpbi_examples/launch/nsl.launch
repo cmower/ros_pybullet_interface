@@ -31,4 +31,6 @@
 
   <node pkg="tf2_ros" type="static_transform_publisher" name="goal_box_tf_br" args="-1 0 0.15 0 0 0 rpbi/world goal_box" />
 
+  <node name="dmp" pkg="dmp" type="dmp_server" respawn="false" output="screen"/>
+
 </launch>

@@ -3,14 +3,14 @@ import rospy
 import optas
 import tf2_ros
 import numpy as np
-# from keyboard.msg import Key
+from dmp.data_collector import DMPDataCollector
+from dmp.dmp_proc import DMPProcessor
 from cob_srvs.srv import SetString
 from sensor_msgs.msg import JointState
 from ros_pybullet_interface.msg import PybulletObject
 from geometry_msgs.msg import TwistStamped, Wrench, WrenchStamped
 from custom_ros_tools.ros_comm import get_srv_handler
 from custom_ros_tools.config import replace_package
-# from custom_ros_tools.keyboard import KeyDownSubscriber
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectRequest
 from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
 from ros_pybullet_interface.msg import KeyboardEvent
@@ -109,6 +109,8 @@ class KukaController:
         self.kuka_name = kuka_name
         self.actuated_joint_names = kuka.actuated_joint_names
         self.dt = dt
+        self.qnom = qnom.toarray().flatten()
+        self.ee_pos = kuka.get_global_link_position_function(link_ee)
 
         # Start ROS subscriber
         self._qc = np.zeros(kuka.ndof)
@@ -168,14 +170,18 @@ class EEPosGoalListener:
             tf = None
         return tf
 
+    def transform_pos_goal(self, p):
+        return self.scale*np.array([-p[0], p[2], 0.])
+
     def get_ee_pos_goal(self):
         ee = self.get_ee_pos()
         if ee is None: return ee
-        return self.scale*np.array([
-            -ee.transform.translation.x,
+        p = np.array([
+            ee.transform.translation.x,
+            ee.transform.translation.y,
             ee.transform.translation.z,
-            0.,
         ])
+        return self.transform_pos_goal(p)
 
 class EEVelGoalListener:
 
@@ -226,12 +232,20 @@ class Node:
         # self.ee_vel_goal_listener = EEVelGoalListener()
         self.to_centre_force_listener = ToCentreForceListener()
 
+        self._executing_dmp = False
+        self.dmp = None
+        self.goal = self.ee_pos_goal_listener.transform_pos_goal(np.array([-1., 0., 0.15]))
+        self.dmp_proc = DMPProcessor()
+        self.data_collector = DMPDataCollector(interpolate=50)
+
         self._teleop_is_on = False
         self._teleop_start_time = None
         self._teleop_no_ff_delay = 1. # sec
 
         self.move_to_initial_joint_state = get_srv_handler(
             f'rpbi/kuka_lwr/move_to_initial_joint_state', ResetJointState, persistent=True)
+        self.move_to_joint_state = get_srv_handler(
+            f'rpbi/kuka_lwr/move_to_joint_state', ResetJointState, persistent=True)
         self.add_pybullet_object = get_srv_handler(
             'rpbi/add_pybullet_object', AddPybulletObject, persistent=True)
         self.remove_pybullet_object = get_srv_handler(
@@ -239,8 +253,9 @@ class Node:
 
         key_action_map = {
             ord('t'): self.toggle_teleop,
+            ord('l'): self.learn_dmp,
+            ord('e'): self.exec_learned_plan,
         }
-        # KeyDownSubscriber(key_action_map)
         KeyboardListener(key_action_map)
 
         self._teleop_timer = None
@@ -267,6 +282,7 @@ class Node:
             self.move_robot_to_home()
             rospy.sleep(1.)
             self.add_box()
+            self.data_collector.reset()
             self._teleop_start_time = rospy.Time.now().to_sec()
             self._teleop_timer = rospy.Timer(self.dur, self.teleop_update)
         else:
@@ -285,11 +301,66 @@ class Node:
         pg = self.ee_pos_goal_listener.get_ee_pos_goal()
         if pg is None: return
         pg = np.clip(pg, [-0.325, -100, -100], [100, 100, 100]) # prevents haptic device going wild near limits
+        self.data_collector.log(rospy.Time.now().to_sec(), pg)
         self.kuka_controller.command(pg)
+
+    def learn_dmp(self):
+        if self.data_collector.is_empty(): return
+
+        t, pos_traj = self.data_collector.get()
+        k_gain = 100.0
+        d_gain = 2.0*np.sqrt(k_gain)
+        num_bases = 4
+        self.dmp = self.dmp_proc.learn_dmp(t, pos_traj, k_gain, d_gain, num_bases)
+
+        rospy.logwarn("Learned DMP")
+
+    def exec_learned_plan(self):
+        self._executing_dmp = True
+        self.move_robot_to_home()
+
+        # qgoal = self.kuka_controller.qnom + np.random.uniform(-1, 1, size=(7,))
+        # js = JointState(name=self.kuka_controller.actuated_joint_names, position=qgoal)
+        # req = ResetJointStateRequest(duration=3., joint_state=js)
+        # self.move_to_joint_state(req)
+
+        self.add_box()
+
+        # pos0 = self.kuka_controller.ee_pos(qgoal).toarray().flatten()
+
+
+        pos0 = np.array(self.data_collector.get_first()[1])
+        rlim = 0.1
+        vel0 = np.zeros(3)
+        t0 = 0.0
+        goal_thresh = np.array([0.03, 0.03, 0.03])
+        seg_length = -1
+        tau = 2.0*self.dmp.tau
+        dt = 1.0/200.
+        integrate_iter = 5
+        success, t, pos_traj, vel_traj = self.dmp_proc.generate_plan(
+            self.dmp, pos0, vel0, t0, np.array(self.data_collector.get_last()[1]),
+            goal_thresh, seg_length, tau, dt,
+            integrate_iter,
+        )
+        self.t_plan = t
+        self.pos_traj_plan = pos_traj
+
+        rate = rospy.Rate(int(1.0/dt))
+        N = pos_traj.shape[1]
+        for i in range(N):
+            pg = pos_traj[:,i]
+            self.kuka_controller.command(pg)
+            rate.sleep()
+
+        self._executing_dmp = False
+        rospy.logwarn('Executed trajectory')
+        rospy.sleep(2.)
+        self.remove_box()
 
     def force_feedback_update(self, event):
         f2c = self.to_centre_force_listener.get_to_centre_force()
-        ff = self.ft_sensor_listener.get_force()
+        ff = 0.
         if self._teleop_is_on:
             if (rospy.Time.now().to_sec() - self._teleop_start_time) < self._teleop_no_ff_delay:
 
@@ -306,6 +377,8 @@ class Node:
                 # the issue.
 
                 ff = 0.
+            else:
+                ff = self.ft_sensor_listener.get_force()
 
         f = np.clip(f2c + ff, -self.max_f, self.max_f)
 
