@@ -3,6 +3,8 @@ import rospy
 import optas
 import tf2_ros
 import numpy as np
+import tkinter as tk
+from tkinter import ttk
 import tf_conversions
 from custom_ros_tools.config import config_to_str
 from sklearn.neural_network import MLPRegressor
@@ -19,6 +21,111 @@ from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectReque
 from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
 from ros_pybullet_interface.msg import KeyboardEvent
 
+class Details:
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.num_demos = 0
+
+    def demo_added(self):
+        self.num_demos += 1
+
+class App:
+
+    def __init__(self, node):
+        self.node = node
+        self.root = tk.Tk()
+        self.frame = ttk.Frame(self.root, padding=10)
+        self.frame.grid()
+        self.frame.winfo_toplevel().title("Command Centre")
+        # ttk.Label(self.frame, text="Hello World!").grid(column=0, row=0)
+        self._is_busy = False
+
+        seppad = 300
+
+        ttk.Label(self.frame, text="Demo").grid(column=0, row=0, columnspan=2)
+        ttk.Button(self.frame, text="Start", command=self.start_teleop).grid(column=0, row=1, padx=10, pady=30)
+        ttk.Button(self.frame, text="Stop", command=self.stop_teleop).grid(column=1, row=1, padx=10, pady=30)
+        self.num_demo_msg = tk.Message(self.frame, width=300, text = "Number of demonstrations:\n0")
+        self.num_demo_msg.grid(row=0, column=2, columnspan=3, rowspan=2)
+
+        ttk.Separator(
+            master=self.frame,
+            orient=tk.HORIZONTAL,
+            style='blue.TSeparator',
+            class_= ttk.Separator,
+            takefocus= 1,
+            cursor='plus'
+        ).grid(row=2, column=0, columnspan=4, ipadx=seppad, pady=10)
+
+        ttk.Label(self.frame, text="AI").grid(column=0, row=3, columnspan=2)
+        ttk.Button(self.frame, text="Train", command=self.train_ai).grid(column=0, row=4, padx=10, pady=30)
+        ttk.Button(self.frame, text="Run", command=self.node.exec_behaviour_cloning).grid(column=1, row=4, padx=10, pady=30)
+
+        self.ai_state_msg = tk.Message(self.frame, width=300, text="NOT TRAINED")
+        self.ai_state_msg.grid(row=3, column=2, columnspan=3, rowspan=2)
+
+        ttk.Separator(
+            master=self.frame,
+            orient=tk.HORIZONTAL,
+            style='blue.TSeparator',
+            class_= ttk.Separator,
+            takefocus= 1,
+            cursor='plus'
+        ).grid(row=5, column=0, columnspan=4, ipadx=seppad)
+
+        ttk.Button(self.frame, text="Reset", command=self.reset).grid(column=0, row=6, padx=10, pady=30)
+        ttk.Button(self.frame, text="Quit", command=self.root.destroy).grid(column=1, row=6, padx=10, pady=30)
+
+    def start_teleop(self):
+        if self._is_busy:
+            rospy.logwarn('App is busy, can not start teleop!')
+            return
+        self._is_busy = True
+        self.node.start_teleop()
+
+    def stop_teleop(self):
+        if not self.node.teleop_is_on:
+            rospy.logwarn('Teleop is not running, nothing to stop!')
+            return
+        self.node.stop_teleop()
+        self._is_busy = False
+        self.num_demo_msg.config(text="Number of demonstrations:\n" + str(self.node.details.num_demos))
+
+    def train_ai(self):
+        if self._is_busy:
+            rospy.logwarn('App is busy, can not train AI!')
+            return
+        self._is_busy = True
+        self.ai_state_msg.config(text="TRAINING...")
+        if self.node.behaviour_cloning():
+            self.ai_state_msg.config(text="TRAINED")
+        else:
+            self.ai_state_msg.config(text="NOT TRAINED")
+        self._is_busy = False        
+
+    def run_ai(self):
+        if self._is_busy:
+            rospy.logwarn('App is busy, can not run AI!')
+            return
+        self.ai_state_msg.config(text="EXECUTING...")
+        self._is_busy = True
+        self.node.exec_behaviour_cloning()
+        self._is_busy = False
+
+    def reset(self):
+        self.node.reset()
+        self.ai_state_msg.config(text="NOT TRAINED")
+        self.num_demo_msg.config(text='Number of demonstrations:\n0')
+
+    def spin(self):
+        self.root.mainloop()
+
+    def close(self):
+        self.root.destroy()
+
 class BCDataCollector:
 
     box_goal = np.array([-1., 0., 0.15])
@@ -27,8 +134,12 @@ class BCDataCollector:
         self.reset()
 
     def reset(self):
+        self.ndata = 0
         self.state = []
         self.action = []
+
+    def is_empty(self):
+        return self.ndata == 0
 
     def dist_to_goal(self, b):
         return np.linalg.norm(b - self.box_goal)
@@ -44,6 +155,7 @@ class BCDataCollector:
         state = self.combine_state(qcurr, b)
         self.state.append(state)
         self.action.append(qnext.tolist())
+        self.ndata += 1
 
     def get(self):
         state = np.array(self.state)
@@ -287,6 +399,8 @@ class Node:
     def __init__(self):
         rospy.init_node('nsl_node')
 
+        self.details = Details()
+
         self.tf = TfInterface()
 
         self.ft_sensor_listener = FTSensorListener()
@@ -307,7 +421,7 @@ class Node:
         self.dmp_proc = DMPProcessor()
         self.dmp_data_collector = DMPDataCollector(interpolate=50)
 
-        self._teleop_is_on = False
+        self.teleop_is_on = False
         self._teleop_start_time = None
         self._teleop_no_ff_delay = 1. # sec
 
@@ -336,7 +450,10 @@ class Node:
         self.wrench_pub = rospy.Publisher('geomagic_touch_x_node/cmd_force', Wrench, queue_size=1)
         rospy.Timer(self.dur, self.force_feedback_update)
 
+        self.app = App(self)
+
     def reset(self):
+        self.details.reset()
         self.bc_data_collector.reset()
         self.dmp_data_collector.reset()
         self.bc = None
@@ -375,33 +492,54 @@ class Node:
     def remove_box(self):
         self.remove_pybullet_object('pushing_box')
 
+    def start_teleop(self):
+        if self.teleop_is_on:
+            rospy.logwarn('Tried to start teleop, but it is already on')
+            return
+        self.move_robot_to_home()
+        rospy.sleep(1.)
+        self.add_box()
+        self.dmp_data_collector.reset()
+        self._teleop_start_time = rospy.Time.now().to_sec()
+        self._teleop_timer = rospy.Timer(self.dur, self.teleop_update)
+        self.teleop_is_on = not self.teleop_is_on
+
+    def stop_teleop(self):
+        if not self.teleop_is_on:
+            rospy.logwarn('Tried to stop teleop, but it is not on')
+            return
+        self.details.demo_added()
+        self._teleop_timer.shutdown()
+        self.ft_sensor_listener.reset()
+        self.remove_box()
+        rospy.sleep(1)
+        self.move_robot_to_home()
+        self._teleop_timer = None
+        self.teleop_is_on = not self.teleop_is_on
+
     def toggle_teleop(self):
-        if not self._teleop_is_on:
+        if not self.teleop_is_on:
             # turn on teleop
-            self.move_robot_to_home()
-            rospy.sleep(1.)
-            self.add_box()
-            self.dmp_data_collector.reset()
-            self._teleop_start_time = rospy.Time.now().to_sec()
-            self._teleop_timer = rospy.Timer(self.dur, self.teleop_update)
+            self.start_teleop()
         else:
             # turn off teleop
-            self._teleop_timer.shutdown()
-            self.ft_sensor_listener.reset()
-            self.remove_box()
-            rospy.sleep(1)
-            self.move_robot_to_home()
-            self._teleop_timer = None
-
-        # Update variable
-        self._teleop_is_on = not self._teleop_is_on
+            self.stop_teleop()
 
     def behaviour_cloning(self):
+        if self.bc_data_collector.is_empty():
+            rospy.logwarn('Dataset is empty!')
+            return False
         self.bc = BC(self.bc_data_collector)
         self.bc.learn()
         rospy.logwarn('Finished behaviour cloning')
+        return True
 
     def exec_behaviour_cloning(self):
+
+        if self.bc is None:
+            rospy.logwarn('The AI has not been trained yet!')
+            return
+
         self.move_robot_to_home()
         self.add_box()
 
@@ -508,7 +646,7 @@ class Node:
     def force_feedback_update(self, event):
         f2c = self.to_centre_force_listener.get_to_centre_force()
         ff = 0.
-        if self._teleop_is_on:
+        if self.teleop_is_on:
             if (rospy.Time.now().to_sec() - self._teleop_start_time) < self._teleop_no_ff_delay:
 
                 # this is required because otherwise, when teleop is
@@ -536,7 +674,13 @@ class Node:
         self.wrench_pub.publish(msg)
 
     def spin(self):
-        rospy.spin()
+        self._check_timer = rospy.Timer(rospy.Duration(0.01), self._check_ros)
+        self.app.spin()
+
+    def _check_ros(self, event):
+        if rospy.is_shutdown():
+            self.app.close()
+            self._check_timer.shutdown()
 
 def main():
     Node().spin()
