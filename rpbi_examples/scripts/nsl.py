@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import time
 import rospy
 import optas
+import joblib
 import tf2_ros
 import numpy as np
 import tkinter as tk
@@ -76,8 +78,31 @@ class App:
             cursor='plus'
         ).grid(row=5, column=0, columnspan=4, ipadx=seppad)
 
-        ttk.Button(self.frame, text="Reset", command=self.reset).grid(column=0, row=6, padx=10, pady=30)
-        ttk.Button(self.frame, text="Quit", command=self.root.destroy).grid(column=1, row=6, padx=10, pady=30)
+        ttk.Label(self.frame, text="Pre-trained AI").grid(column=0, row=6, columnspan=2, pady=30)
+        ttk.Button(self.frame, text='AI(20)', command=self.ai_20).grid(row=7, column=0, padx=10)
+        ttk.Button(self.frame, text='AI(50)', command=self.ai_50).grid(row=7, column=1, padx=10)
+
+        ttk.Separator(
+            master=self.frame,
+            orient=tk.HORIZONTAL,
+            style='blue.TSeparator',
+            class_= ttk.Separator,
+            takefocus= 1,
+            cursor='plus'
+        ).grid(row=8, column=0, columnspan=4, ipadx=seppad, pady=20)
+
+        ttk.Button(self.frame, text="Reset", command=self.reset).grid(column=0, row=9, padx=10, pady=40)
+        ttk.Button(self.frame, text="Quit", command=self.root.destroy).grid(column=1, row=9, padx=10, pady=40)
+
+    def ai_20(self):
+        self.ai(replace_package('{rpbi_examples}/configs/nsl/bc_d20_1664663182235112824.regr'))
+
+    def ai_50(self):
+        self.ai(replace_package('{rpbi_examples}/configs/nsl/bc_d50_1664663453379648783.regr'))
+
+    def ai(self, filename):
+        bc = BC.load(filename)
+        self.node._exec_behaviour_cloning(bc)
 
     def start_teleop(self):
         if self._is_busy:
@@ -104,7 +129,7 @@ class App:
             self.ai_state_msg.config(text="TRAINED")
         else:
             self.ai_state_msg.config(text="NOT TRAINED")
-        self._is_busy = False        
+        self._is_busy = False
 
     def run_ai(self):
         if self._is_busy:
@@ -142,7 +167,7 @@ class BCDataCollector:
         return self.ndata == 0
 
     def dist_to_goal(self, b):
-        return np.linalg.norm(b - self.box_goal)
+        return np.linalg.norm(b[:3] - self.box_goal)
 
     def combine_state(self, qcurr, b):
         state = np.asarray(qcurr).tolist()
@@ -171,18 +196,28 @@ class BC:
         X_train, y_train = self.data.get()
         self.regr = MLPRegressor(
             hidden_layer_sizes=(100, 200, 100),
+            # hidden_layer_sizes=(300, 500, 300),
             random_state=1,
             max_iter=500,
             verbose=True,
         ).fit(X_train, y_train)
 
+    @staticmethod
+    def load(filename):
+        bc = BC(BCDataCollector())
+        bc.regr = joblib.load(filename)
+        return bc
+
     def predict(self, qc, b):
         state = self.data.combine_state(qc, b)
-
         state = np.array(state).reshape(1, -1)
-
         return self.regr.predict(state)
 
+    def save(self, num_demos):
+        stamp = time.time_ns()
+        filename = replace_package('{rpbi_examples}' + f'/configs/nsl/bc_d{num_demos}_{stamp}.regr')
+        joblib.dump(self.regr, filename)
+        rospy.logwarn(f'Saved {filename}')
 
 class KeyboardListener:
 
@@ -443,6 +478,7 @@ class Node:
             ord('r'): self.reset,
             ord('b'): self.behaviour_cloning,
             ord('c'): self.exec_behaviour_cloning,
+            ord('s'): self.save_bc,
         }
         KeyboardListener(key_action_map)
 
@@ -478,13 +514,12 @@ class Node:
 
         config['basePosition'] = base_position.tolist()
 
-        random_yaw = np.random.uniform(-np.pi, np.pi)
+        random_yaw = 0*np.random.uniform(-np.pi, np.pi)
         quat = tf_conversions.transformations.quaternion_from_euler(0, 0, random_yaw)
         config['baseOrientation'] = np.asarray(quat).tolist()
 
         obj = PybulletObject()
         obj.object_type = PybulletObject.DYNAMIC
-        # obj.filename = "{rpbi_examples}/configs/nsl/box.yaml"
         obj.config = config_to_str(config)
         req = AddPybulletObjectRequest(pybullet_object=obj)
         resp = self.add_pybullet_object(req)
@@ -534,11 +569,22 @@ class Node:
         rospy.logwarn('Finished behaviour cloning')
         return True
 
+    def save_bc(self):
+        if self.bc is None:
+            rospy.logwarn('AI not trained, can not save!')
+            return
+        self.bc.save(self.details.num_demos)
+
     def exec_behaviour_cloning(self):
 
         if self.bc is None:
             rospy.logwarn('The AI has not been trained yet!')
             return
+
+        self._exec_behaviour_cloning(self.bc)
+
+    def _exec_behaviour_cloning(self, bc):
+
 
         self.move_robot_to_home()
         self.add_box()
@@ -547,20 +593,20 @@ class Node:
         rate = rospy.Rate(self.hz)
 
         final_dist = 0.1
-        timeout = 20.
+        timeout = 10.
 
         start_time = rospy.Time.now().to_sec()
 
         while (rospy.Time.now().to_sec() - start_time) < timeout:
 
             # Get box position and check if it's at goal
-            b = self.get_box_position()
-            if self.bc.data.dist_to_goal(b) < final_dist:
+            b = self.get_box_pose()
+            if bc.data.dist_to_goal(b) < final_dist:
                 break
 
             # Update kuka
             qc = self.kuka_controller.get_qc()
-            qn = self.bc.predict(qc, b)
+            qn = bc.predict(qc, b)
             self.kuka_controller.send_command(qn)
 
             # Sleep
@@ -579,13 +625,14 @@ class Node:
         pg = np.clip(pg, [-0.325, -100, -100], [100, 100, 100]) # prevents haptic device going wild near limits
         self.dmp_data_collector.log(rospy.Time.now().to_sec(), pg)
         qc, qn = self.kuka_controller.command(pg)
-        b = self.get_box_position()
+        b = self.get_box_pose()
         if b is None: return
         self.bc_data_collector.log(qc, b, qn)
 
-    def get_box_position(self):
+    def get_box_pose(self):
         pos, ori = self.tf.get_tf('rpbi/world', 'rpbi/pushing_box')
-        return pos
+        if pos is None: return None
+        return np.array(pos).tolist() #+ np.array(ori).tolist()
 
     def learn_dmp(self):
         if self.dmp_data_collector.is_empty(): return
