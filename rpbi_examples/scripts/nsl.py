@@ -3,17 +3,74 @@ import rospy
 import optas
 import tf2_ros
 import numpy as np
+import tf_conversions
+from custom_ros_tools.config import config_to_str
+from sklearn.neural_network import MLPRegressor
 from dmp.data_collector import DMPDataCollector
 from dmp.dmp_proc import DMPProcessor
 from cob_srvs.srv import SetString
 from sensor_msgs.msg import JointState
 from ros_pybullet_interface.msg import PybulletObject
 from geometry_msgs.msg import TwistStamped, Wrench, WrenchStamped
+from custom_ros_tools.tf import TfInterface
 from custom_ros_tools.ros_comm import get_srv_handler
-from custom_ros_tools.config import replace_package
+from custom_ros_tools.config import replace_package, load_config
 from ros_pybullet_interface.srv import AddPybulletObject, AddPybulletObjectRequest
 from ros_pybullet_interface.srv import ResetJointState, ResetJointStateRequest
 from ros_pybullet_interface.msg import KeyboardEvent
+
+class BCDataCollector:
+
+    box_goal = np.array([-1., 0., 0.15])
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.state = []
+        self.action = []
+
+    def dist_to_goal(self, b):
+        return np.linalg.norm(b - self.box_goal)
+
+    def combine_state(self, qcurr, b):
+        state = np.asarray(qcurr).tolist()
+        b = np.asarray(b)
+        state += b.tolist()
+        state += [self.dist_to_goal(b)]
+        return state
+
+    def log(self, qcurr, b, qnext):
+        state = self.combine_state(qcurr, b)
+        self.state.append(state)
+        self.action.append(qnext.tolist())
+
+    def get(self):
+        state = np.array(self.state)
+        action = np.array(self.action)
+        return state, action
+
+class BC:
+
+    def __init__(self, data):
+        self.data = data
+
+    def learn(self):
+        X_train, y_train = self.data.get()
+        self.regr = MLPRegressor(
+            hidden_layer_sizes=(100, 200, 100),
+            random_state=1,
+            max_iter=500,
+            verbose=True,
+        ).fit(X_train, y_train)
+
+    def predict(self, qc, b):
+        state = self.data.combine_state(qc, b)
+
+        state = np.array(state).reshape(1, -1)
+
+        return self.regr.predict(state)
+
 
 class KeyboardListener:
 
@@ -122,15 +179,22 @@ class KukaController:
             idx = msg.name.index(name)
             self._qc[i] = msg.position[idx]
 
+    def send_command(self, q):
+        q = np.asarray(q).flatten().tolist()
+        msg = JointState(name=self.actuated_joint_names, position=q)
+        msg.header.stamp = rospy.Time.now()
+        self.joint_state_pub.publish(msg)
+
+    def get_qc(self):
+        return self._qc.copy()
+
     def command(self, pg):
-        qc = self._qc.copy()
+        qc = self.get_qc()
         self.solver.reset_parameters({'qc': optas.DM(qc), 'pg': optas.DM(pg)})
         solution = self.solver.solve()
         qg = qc + self.dt*solution[f'{self.kuka_name}/dq'].toarray().flatten()
-
-        msg = JointState(name=self.actuated_joint_names, position=qg.tolist())
-        msg.header.stamp = rospy.Time.now()
-        self.joint_state_pub.publish(msg)
+        self.send_command(qg)
+        return qc, qg
 
 class FTSensorListener:
 
@@ -223,6 +287,8 @@ class Node:
     def __init__(self):
         rospy.init_node('nsl_node')
 
+        self.tf = TfInterface()
+
         self.ft_sensor_listener = FTSensorListener()
 
         thresh_angle = np.deg2rad(30.)
@@ -232,11 +298,14 @@ class Node:
         # self.ee_vel_goal_listener = EEVelGoalListener()
         self.to_centre_force_listener = ToCentreForceListener()
 
+        self.bc_data_collector = BCDataCollector()
+        self.bc = None
+
         self._executing_dmp = False
         self.dmp = None
         self.goal = self.ee_pos_goal_listener.transform_pos_goal(np.array([-1., 0., 0.15]))
         self.dmp_proc = DMPProcessor()
-        self.data_collector = DMPDataCollector(interpolate=50)
+        self.dmp_data_collector = DMPDataCollector(interpolate=50)
 
         self._teleop_is_on = False
         self._teleop_start_time = None
@@ -251,10 +320,15 @@ class Node:
         self.remove_pybullet_object = get_srv_handler(
             'rpbi/remove_pybullet_object', SetString, persistent=True)
 
+        self.add_box_left = True
+
         key_action_map = {
             ord('t'): self.toggle_teleop,
             ord('l'): self.learn_dmp,
             ord('e'): self.exec_learned_plan,
+            ord('r'): self.reset,
+            ord('b'): self.behaviour_cloning,
+            ord('c'): self.exec_behaviour_cloning,
         }
         KeyboardListener(key_action_map)
 
@@ -262,14 +336,39 @@ class Node:
         self.wrench_pub = rospy.Publisher('geomagic_touch_x_node/cmd_force', Wrench, queue_size=1)
         rospy.Timer(self.dur, self.force_feedback_update)
 
+    def reset(self):
+        self.bc_data_collector.reset()
+        self.dmp_data_collector.reset()
+        self.bc = None
+        rospy.logwarn('Demo reset')
+
     def move_robot_to_home(self):
         req = ResetJointStateRequest(duration=.5)
         self.move_to_initial_joint_state(req)
 
     def add_box(self):
+
+        config = load_config("{rpbi_examples}/configs/nsl/box.yaml")
+
+        if not self.add_box_left:
+            base_position = np.array([-0.6, 0.25, 0.3])  # right
+        else:
+            base_position = np.array([-0.6, -0.25, 0.3])  # left
+
+        self.add_box_left = not self.add_box_left
+
+        base_position += np.array([np.random.uniform(-0.1, 0.1), 0, 0])
+
+        config['basePosition'] = base_position.tolist()
+
+        random_yaw = np.random.uniform(-np.pi, np.pi)
+        quat = tf_conversions.transformations.quaternion_from_euler(0, 0, random_yaw)
+        config['baseOrientation'] = np.asarray(quat).tolist()
+
         obj = PybulletObject()
         obj.object_type = PybulletObject.DYNAMIC
-        obj.filename = "{rpbi_examples}/configs/nsl/box.yaml"
+        # obj.filename = "{rpbi_examples}/configs/nsl/box.yaml"
+        obj.config = config_to_str(config)
         req = AddPybulletObjectRequest(pybullet_object=obj)
         resp = self.add_pybullet_object(req)
 
@@ -282,7 +381,7 @@ class Node:
             self.move_robot_to_home()
             rospy.sleep(1.)
             self.add_box()
-            self.data_collector.reset()
+            self.dmp_data_collector.reset()
             self._teleop_start_time = rospy.Time.now().to_sec()
             self._teleop_timer = rospy.Timer(self.dur, self.teleop_update)
         else:
@@ -297,17 +396,63 @@ class Node:
         # Update variable
         self._teleop_is_on = not self._teleop_is_on
 
+    def behaviour_cloning(self):
+        self.bc = BC(self.bc_data_collector)
+        self.bc.learn()
+        rospy.logwarn('Finished behaviour cloning')
+
+    def exec_behaviour_cloning(self):
+        self.move_robot_to_home()
+        self.add_box()
+
+        rospy.sleep(1.)
+        rate = rospy.Rate(self.hz)
+
+        final_dist = 0.1
+        timeout = 20.
+
+        start_time = rospy.Time.now().to_sec()
+
+        while (rospy.Time.now().to_sec() - start_time) < timeout:
+
+            # Get box position and check if it's at goal
+            b = self.get_box_position()
+            if self.bc.data.dist_to_goal(b) < final_dist:
+                break
+
+            # Update kuka
+            qc = self.kuka_controller.get_qc()
+            qn = self.bc.predict(qc, b)
+            self.kuka_controller.send_command(qn)
+
+            # Sleep
+            rate.sleep()
+
+        else:
+            rospy.logwarn('Behaviour cloning reached maximum time.')
+
+        rospy.logwarn('Finished executing behaviour cloning')
+        self.move_robot_to_home()
+        self.remove_box()
+
     def teleop_update(self, event):
         pg = self.ee_pos_goal_listener.get_ee_pos_goal()
         if pg is None: return
         pg = np.clip(pg, [-0.325, -100, -100], [100, 100, 100]) # prevents haptic device going wild near limits
-        self.data_collector.log(rospy.Time.now().to_sec(), pg)
-        self.kuka_controller.command(pg)
+        self.dmp_data_collector.log(rospy.Time.now().to_sec(), pg)
+        qc, qn = self.kuka_controller.command(pg)
+        b = self.get_box_position()
+        if b is None: return
+        self.bc_data_collector.log(qc, b, qn)
+
+    def get_box_position(self):
+        pos, ori = self.tf.get_tf('rpbi/world', 'rpbi/pushing_box')
+        return pos
 
     def learn_dmp(self):
-        if self.data_collector.is_empty(): return
+        if self.dmp_data_collector.is_empty(): return
 
-        t, pos_traj = self.data_collector.get()
+        t, pos_traj = self.dmp_data_collector.get()
         k_gain = 100.0
         d_gain = 2.0*np.sqrt(k_gain)
         num_bases = 4
@@ -329,7 +474,7 @@ class Node:
         # pos0 = self.kuka_controller.ee_pos(qgoal).toarray().flatten()
 
 
-        pos0 = np.array(self.data_collector.get_first()[1])
+        pos0 = np.array(self.dmp_data_collector.get_first()[1])
         rlim = 0.1
         vel0 = np.zeros(3)
         t0 = 0.0
@@ -339,7 +484,7 @@ class Node:
         dt = 1.0/200.
         integrate_iter = 5
         success, t, pos_traj, vel_traj = self.dmp_proc.generate_plan(
-            self.dmp, pos0, vel0, t0, np.array(self.data_collector.get_last()[1]),
+            self.dmp, pos0, vel0, t0, np.array(self.dmp_data_collector.get_last()[1]),
             goal_thresh, seg_length, tau, dt,
             integrate_iter,
         )
@@ -357,6 +502,8 @@ class Node:
         rospy.logwarn('Executed trajectory')
         rospy.sleep(2.)
         self.remove_box()
+
+        rospy.logwarn('Executed DMP')
 
     def force_feedback_update(self, event):
         f2c = self.to_centre_force_listener.get_to_centre_force()

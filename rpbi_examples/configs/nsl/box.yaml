@@ -1,5 +1,7 @@
 name: "pushing_box"
 
+broadcast_hz: 50
+
 createVisualShape:
   shapeType: "GEOM_BOX"
   halfExtents: [0.125, 0.125, 0.125]
