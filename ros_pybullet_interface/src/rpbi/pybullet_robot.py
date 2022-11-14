@@ -5,7 +5,7 @@ from .pybullet_robot_urdf import URDF
 from .pybullet_object import PybulletObject
 
 from ros_pybullet_interface.srv import RobotInfo, RobotInfoResponse
-from ros_pybullet_interface.srv import ResetJointState, ResetJointStateResponse
+from ros_pybullet_interface.srv import ResetJointState, ResetJointStateResponse, ResetJointStateRequest
 from ros_pybullet_interface.srv import CalculateInverseKinematics, CalculateInverseKinematicsResponse
 from ros_pybullet_interface.srv import ResetEffState, ResetEffStateResponse
 
@@ -37,6 +37,14 @@ class PybulletRobot(PybulletObject):
             self.srvs['move_to_init_joint_state'] = self.node.Service(f'rpbi/{self.name}/move_to_initial_joint_state', ResetJointState, self.service_move_to_initial_joint_state)
             self.srvs['move_to_eff_state'] = self.node.Service(f'rpbi/{self.name}/move_to_eff_state', ResetEffState, self.service_move_eff_to_state)
         self.srvs['ik'] = self.node.Service(f'rpbi/{self.name}/ik', CalculateInverseKinematics, self.service_ik)
+
+        # Set initial joint state
+        if self.move_to_initial_joint_state_on_startup:
+            self.service_move_to_initial_joint_state(ResetJointStateRequest(duration=0.01))
+
+    @property
+    def move_to_initial_joint_state_on_startup(self):
+        return self.config.get('move_to_initial_joint_state_on_startup', False)
 
     @property
     def color_alpha(self):

@@ -17,6 +17,8 @@ add_message_files(
   JointInfo.msg
   CalculateInverseKinematicsProblem.msg
   PybulletObject.msg
+  KeyboardEvent.msg
+  MouseEvent.msg
 )
 
 add_service_files(

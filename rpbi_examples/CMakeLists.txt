@@ -21,7 +21,8 @@ catkin_install_python(PROGRAMS
   scripts/orbit_node.py
   scripts/run_teleop.py
   scripts/run_lfd.py
-  scripts/run_human_interaction.py  
+  scripts/run_human_interaction.py
+  scripts/nsl.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
