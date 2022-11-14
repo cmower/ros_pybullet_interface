@@ -18,26 +18,26 @@ pip install catkin_tools
 # Clone required repositories
 cd $(catkin locate)/src
 
-git clone https://github.com/cmower/custom_ros_tools.git
-git clone https://github.com/cmower/dmp.git
-git clone https://github.com/cmower/ik_ros.git
-git clone https://github.com/cmower/operator_node.git
-git clone https://github.com/cmower/teleop.git
-git clone https://github.com/lrse/ros-keyboard.git
+git clone https://github.com/ros-pybullet/custom_ros_tools.git
+git clone https://github.com/ros-pybullet/dmp.git
+git clone https://github.com/ros-pybullet/ik_ros.git
+git clone https://github.com/ros-pybullet/operator_node.git
+git clone https://github.com/ros-pybullet/teleop.git
+git clone https://github.com/ros-pybullet/ros-keyboard.git
 
 
-git clone https://github.com/Kinovarobotics/ros_kortex.git
+git clone https://github.com/ros-pybullet/ros_kortex.git
 mv -v ros_kortex/kortex_description .
 rm -rfv ros_kortex
 
-git clone https://github.com/ipab-slmc/nextagea.git
+git clone https://github.com/ros-pybullet/nextagea.git
 mv -v nextagea/nextagea_description .
 rm -rfv nextagea
 
 git clone -b UoE_SLMC https://github.com/ipab-slmc/talos_robot.git
-git clone https://bitbucket.org/traclabs/trac_ik.git
-git clone https://github.com/lrse/ros-keyboard.git
-git clone https://github.com/ipab-slmc/exotica.git
+git clone https://github.com/ros-pybullet/exotica.git
+
+git clone https://github.com/ros-pybullet/trac_ik.git
 
 # ==========================================================================
 # Install dependancies
