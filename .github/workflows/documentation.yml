@@ -1,22 +1,18 @@
-name: Docs
-on: [push, pull_request, workflow_dispatch]
+name: "Documentation"
+on: [push, pull_request]
+
 jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - name: Install dependencies
-        run: |
-          pip install sphinx sphinx_rtd_theme
-      - name: Sphinx build
-        run: |
-          sphinx-build doc _build
+      - uses: sphinx-toolbox/sphinx-action@master
+        with:
+          pre-build-command: "pip install .[docs]"
+          docs-folder: "docs/"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: github.ref == 'refs/heads/master'
         with:
-          publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: _build/
-          force_orphan: true
+          publish_dir: docs/_build/html
