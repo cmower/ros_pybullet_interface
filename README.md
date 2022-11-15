@@ -3,6 +3,8 @@
 The ROS-PyBullet Interface is a framework that provides a bridge between the popular Robot Operating System (ROS) with a reliable impact/contact simulator PyBullet.
 Furthermore, this framework provides several interfaces that allow humans to interact with the simulator that facilitates Human-Robot Interaction in a virtual world.
 
+The documentation can be found [here](https://ros-pybullet.github.io/ros_pybullet_interface/).
+
 # Requirements
 
 * ROS Noetic
