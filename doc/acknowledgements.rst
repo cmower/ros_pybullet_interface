@@ -28,5 +28,6 @@ The main contributors to the development of the ROS-PyBullet Interface are as fo
 * `Christian Rauch <https://scholar.google.de/citations?user=xb8x12AAAAAJ&hl=de>`_, University of Edinburgh, Edinburgh, UK.
 * `Nazanin Zamani Behabadi <https://www.linkedin.com/in/nazzb/>`_, London, UK.
 * `Michael Gienger <https://scholar.google.de/citations?user=oU2jyxMAAAAJ&hl=de>`_, Honda Research Institute, Offenbach, Germany.
+* `Tom Vercauteren <https://cai4cai.ml/author/tom-vercauteren/>`_, King's College London, UK.
 * `Christos Bergeles <https://rvim.online/author/christos-bergeles/>`_, King's College London, UK.
 * `Sethu Vijayakumar <https://homepages.inf.ed.ac.uk/svijayak/>`_, University of Edinburgh, Edinburgh, and The Alan Turing Institute, UK.
