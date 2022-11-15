@@ -13,7 +13,7 @@ Furthermore, this framework provides several interfaces that allow humans to int
 
 1. [Create a catkin workspace.](https://catkin-tools.readthedocs.io/en/latest/quick_start.html#initializing-a-new-workspace)
 2. `cd` into the `src` directory.
-3. Clone this repository: `git clone https://github.com/cmower/ros_pybullet_interface.git`
+3. Clone this repository: `git clone https://github.com/ros-pybullet/ros_pybullet_interface.git`
 4. `cd ros_pybullet_interface`
 5. Inspect `install.sh`, and if you are happy then run: `bash install.sh`
 

@@ -10,11 +10,6 @@
 echo "Installing the ROS-PyBullet Interface ..."
 
 # ==========================================================================
-# Install catkin tools
-# https://catkin-tools.readthedocs.io/en/latest/
-pip install catkin_tools
-
-# ==========================================================================
 # Clone required repositories
 cd $(catkin locate)/src
 
@@ -34,7 +29,7 @@ git clone https://github.com/ros-pybullet/nextagea.git
 mv -v nextagea/nextagea_description .
 rm -rfv nextagea
 
-git clone -b UoE_SLMC https://github.com/ipab-slmc/talos_robot.git
+git clone -b UoE_SLMC https://github.com/ros-pybullet/talos_robot.git
 git clone https://github.com/ros-pybullet/exotica.git
 
 git clone https://github.com/ros-pybullet/trac_ik.git
