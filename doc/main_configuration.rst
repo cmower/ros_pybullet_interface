@@ -45,8 +45,8 @@ The benefit for this style-guide is that it allows you to easily tell the differ
 Furthermore, for the ``camelCase`` functions/parameters, you can look these up in the `PyBullet Quickstart Guide <https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.2ye70wns7io3>`_.
 Note, there are some exceptions to the rules however these are documented when necessary.
 
-Our basic "hello world example" is launched using `basic_example_kuka_lwr.launch <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kuka_lwr.launch>`_.
-The main configuration file, `config.yaml <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/configs/basic_example_kuka_lwr/config.yaml>`_, is given as follows.
+Our basic "hello world example" is launched using `basic_example_kuka_lwr.launch <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kuka_lwr.launch>`_.
+The main configuration file, `config.yaml <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/configs/basic_example_kuka_lwr/config.yaml>`_, is given as follows.
 
 .. code-block:: yaml
 

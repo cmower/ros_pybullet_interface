@@ -141,7 +141,7 @@ ik_ros
   :width: 600
   :alt: Alternative text
 
-The `ik_ros <https://github.com/cmower/ik_ros>`_ package is a standardized interface for inverse kinematics using ROS.
+The `ik_ros <https://github.com/ros-pybullet/ik_ros>`_ package is a standardized interface for inverse kinematics using ROS.
 Input data (e.g. end-effector task space goals) are directed to a problem setup node, that collects the information into a single message.
 The setup node then publishes a problem message at a given frequency.
 A solver node, that interfaces via a standardized plugin to an IK solver, then solves the problem and publishes the target joint state.
@@ -149,7 +149,7 @@ A solver node, that interfaces via a standardized plugin to an IK solver, then s
 safe_robot
 ----------
 
-A low-level `ROS package <https://github.com/cmower/safe_robot>`_ for the safe operation of robots.
+A low-level `ROS package <https://github.com/ros-pybullet/safe_robot>`_ for the safe operation of robots.
 Easily setup with a single launch file.
 The ``safe_robot_node.py`` acts as a remapper.
 Target joint states are passed through several safety checks, if safe then the command is sent to the robot, otherwise they are prevented.
@@ -163,5 +163,5 @@ Possible checks
 custom_ros_tools
 ----------------
 
-The `custom_ros_tools <https://github.com/cmower/custom_ros_tools>`_ package provides a collection of generic useful tools for ROS.
+The `custom_ros_tools <https://github.com/ros-pybullet/custom_ros_tools>`_ package provides a collection of generic useful tools for ROS.
 The package is extensively used in the ROS-PyBullet Interface.

@@ -34,7 +34,7 @@ From source
 
 1. `Create a catkin workspace <https://catkin-tools.readthedocs.io/en/latest/quick_start.html#initializing-a-new-workspace>`_ or use an existing workspace. `catkin_tools <https://catkin-tools.readthedocs.io/en/latest/>`_ is the preferred build system.
 2. ``cd`` to the ``src`` directory of your catkin workspace.
-3. Clone this repository: ``$ git clone https://github.com/cmower/ros_pybullet_interface.git``
+3. Clone this repository: ``$ git clone https://github.com/ros-pybullet/ros_pybullet_interface.git``
 4. Install source dependencies: ``$ rosinstall . --catkin --nobuild``
 5. Install binary dependencies: ``$ rosdep update ; rosdep install --from-paths ./ -iry``
 6. Compile the workspace: ``$ catkin build -s``

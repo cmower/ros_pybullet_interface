@@ -44,7 +44,7 @@ When this service is called, the response returns the current parameters for the
 
 An object is added to PyBullet.
 The service allows you to either load from file or pass the configuration for the object.
-The input for the service expects a ``ros_pybullet_interface/PybulletObject`` message - see `here <https://github.com/cmower/ros_pybullet_interface/blob/main/ros_pybullet_interface/msg/PybulletObject.msg>`_.
+The input for the service expects a ``ros_pybullet_interface/PybulletObject`` message - see `here <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/ros_pybullet_interface/msg/PybulletObject.msg>`_.
 
 For both cases (i.e. load from filename or configuration), an ``object_type`` must be given.
 Either ``PybulletObject.VISUAL``, ``PybulletObject.COLLISION``, ``PybulletObject.DYNAMIC``, ``PybulletObject.ROBOT``, ``PybulletObject.SOFT``, or ``PybulletObject.URDF``.

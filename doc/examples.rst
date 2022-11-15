@@ -3,7 +3,7 @@
 Examples
 ========
 
-The examples for the ROS-PyBullet Interface are collected in a dedicated ROS package `rpbi_examples <https://github.com/cmower/ros_pybullet_interface/tree/main/rpbi_examples>`_.
+The examples for the ROS-PyBullet Interface are collected in a dedicated ROS package `rpbi_examples <https://github.com/ros-pybullet/ros_pybullet_interface/tree/main/rpbi_examples>`_.
 The following gives details for each example and shows how to run them.
 
 Basic Examples
@@ -14,15 +14,15 @@ Basic Examples
    $ roslaunch basic_example_[NAME].launch
 
 The basic examples simply demonstrate the current robots that can be loaded into PyBullet out-of-the-box.
-Each example loads the given robot, and `a node <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/scripts/basic_robot_example_node.py>`_ that generates a standardized motion on the robot.
+Each example loads the given robot, and `a node <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/scripts/basic_robot_example_node.py>`_ that generates a standardized motion on the robot.
 Some of the basic examples demonstrate different features of the library (e.g. recording a video, loading a URDF from the ROS parameter ``robot_description``).
 The following list links to the launch file for all the currently available basic examples.
 
-* `Kuka LWR <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kuka_lwr.launch>`_
-* `Talos <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_talos.launch>`_
-* `Kinova <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kinova.launch>`_
-* `Human model <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_human_model.launch>`_
-* `Nextage <https://github.com/cmower/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_nextage.launch>`_
+* `Kuka LWR <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kuka_lwr.launch>`_
+* `Talos <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_talos.launch>`_
+* `Kinova <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_kinova.launch>`_
+* `Human model <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_human_model.launch>`_
+* `Nextage <https://github.com/ros-pybullet/ros_pybullet_interface/blob/main/rpbi_examples/launch/basic_example_nextage.launch>`_
 
 *Note*, the Kuka LWR example additionally demonstrates how to start recording videos and also how to attach a Force-Torque sensor to a robot joint.  
 
